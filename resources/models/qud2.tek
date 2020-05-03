@@ -1,0 +1,1 @@
+{"handshake":{"attributes":{"vPosition":{"bytes":[],"type":{"index":"VEC3"}},"vColor":{"bytes":[],"type":{"index":"VEC3"}},"vNormal":{"bytes":[],"type":{"index":"VEC3"}},"vTexture":{"bytes":[],"type":{"index":"VEC2"}}},"sizes":{"vTexture":{"index":"VEC2"},"vPosition":{"index":"VEC3"},"vNormal":{"index":"VEC3"},"vColor":{"index":"VEC3"}},"indices":[]},"indices":0}

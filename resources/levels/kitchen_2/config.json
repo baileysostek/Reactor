@@ -1,0 +1,24 @@
+{
+  "levels": [
+    "2-01.json",
+    "2-02.json",
+    "2-03.json",
+    "2-04.json",
+    "2-05.json",
+    "2-06.json",
+    "2-07.json",
+    "2-08.json",
+    "2-09.json",
+    "2-10.json"
+  ],
+  "completedLevels":{
+
+  },
+  "resources": {
+    "models": [
+      "stone.obj",
+      "mole.obj",
+      "avocado.obj"
+    ]
+  }
+}
