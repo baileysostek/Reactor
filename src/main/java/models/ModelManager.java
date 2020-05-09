@@ -1,6 +1,8 @@
 package models;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import graphics.renderer.GLTarget;
+import graphics.renderer.ShaderManager;
 import math.Vector2f;
 import math.Vector3f;
 import graphics.renderer.EnumGLDatatype;
@@ -62,7 +64,6 @@ public class ModelManager {
 
     private Model parseOBJ(int id, String[] lines){
         //Buffer lists
-        LinkedList<Integer>   indiciesList  = new LinkedList<>();
         LinkedList<Vector3f>  verteciesList = new LinkedList<>();
         LinkedList<Vector3f>  nomrmalsList  = new LinkedList<>();
         LinkedList<Vector3f>  facesList     = new LinkedList<>();
@@ -212,7 +213,6 @@ public class ModelManager {
                     String[] componentParts = component.split("/");
                     if(componentParts.length == 3) {
                         int index = Integer.parseInt(componentParts[0].trim()); //Index   //Always
-                        indiciesList.addLast(index); //Offset by 1
                         int textureIndex = 1;
                         if (!componentParts[1].trim().isEmpty()) {
                             textureIndex = Integer.parseInt(componentParts[1].trim()); //texture //Sometimes
@@ -286,30 +286,18 @@ public class ModelManager {
         System.out.print("\r"+"100%");
         System.out.println();
 
-        System.out.println("Positions, normals and textures are buffered.");
-
         Handshake modelHandshake = new Handshake();
-
-        //Indicies
-        int[] indicies = new int[indiciesList.size()];
-        for(int i = 0; i < indicies.length; i++){
-            indicies[i] = indiciesList.get(i);
-        }
-        modelHandshake.addIndicies(indicies);
-
         modelHandshake.addAttributeList("vPosition", vPositions, EnumGLDatatype.VEC3);
         modelHandshake.addAttributeList("vColor", vNormals, EnumGLDatatype.VEC3);
         modelHandshake.addAttributeList("vNormal", vNormals, EnumGLDatatype.VEC3);
         modelHandshake.addAttributeList("vTexture", vTextures, EnumGLDatatype.VEC2);
 
-        System.out.println("Handshake is built");
+        System.out.println("AABB");
+        for(Vector3f vec: getAABB(verteciesList)){
+            System.out.println(vec);
+        }
 
-//        System.out.println("AABB");
-//        for(Vector3f vec: getAABB(verteciesList)){
-//            System.out.println(vec);
-//        }
-
-        return new Model(id, modelHandshake, indicies.length, getAABB(verteciesList));
+        return new Model(id, modelHandshake, faceCount * 3, getAABB(verteciesList));
     }
 
     public Vector3f[] getAABB(LinkedList<Vector3f>  verteciesList){

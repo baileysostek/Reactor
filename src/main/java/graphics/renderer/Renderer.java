@@ -91,11 +91,10 @@ public class Renderer extends Engine {
 
     public void render(){
 
-        GL20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        GL20.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
-
+        GL20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         ShaderManager.getInstance().useShader(shaderID);
         GL20.glEnable(GL20.GL_DEPTH_TEST);
+        GL20.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 
         GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "view"), true, CameraManager.getInstance().getActiveCamera().getTransform());
 
@@ -107,42 +106,37 @@ public class Renderer extends Engine {
 
         GL20.glActiveTexture(GL20.GL_TEXTURE0);
 
+
+
         //Render calls from the loaded scene.
         SceneManager.getInstance().render();
 //        GL20.glUniform3fv(GL20.glGetUniformLocation(shaderID, "sunAngle"), new float[]{1, 0, 0});
 
+
         //Render all entities
         int lastID = -1;
         int lastTexture = -1;
+        int loads = 0;
         for(Entity entity : EntityManager.getInstance().getEntities()){
-            if(lastID != entity.getModel().getID()){
+
+            if(entity.getModel().getID() != lastID) {
                 ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
-                lastID = entity.getModel().getID();
+                loads++;
             }
 
-//            if(lastTexture != entity.getTextureID()) {
-//                GL20.glBindTexture(GL20.GL_TEXTURE_2D, entity.getTextureID());
-//                GL20.glUniform1i(GL20.glGetUniformLocation(shaderID, "textureID"), GL20.GL_TEXTURE0);
-//                lastTexture = entity.getTextureID();
-//            }
+            if(lastTexture != entity.getTextureID()) {
+                GL20.glBindTexture(GL20.GL_TEXTURE_2D, entity.getTextureID());
+                GL20.glUniform1i(GL20.glGetUniformLocation(shaderID, "textureID"), GL20.GL_TEXTURE0);
+                lastTexture = entity.getTextureID();
+            }
 
             //Mess with uniforms
             GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "transformation"), true, entity.getTransform());
+            GL42.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
 
-            //GL
-            if(ShaderManager.getInstance().getGLTarget().equals(GLTarget.GL40)) {
-                GL40.glDrawElements(RENDER_TYPE, entity.getModel().getNumIndicies(), GL11.GL_UNSIGNED_INT, 0);
-            }else{
-                //ES
-                GL30.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
-            }
-//            GL20.glDisableVertexAttribArray(0);
-//            GL30.glBindVertexArray(0);
-
+            lastID = entity.getModel().getID();
         }
 
-
-        GL20.glDisable(GL20.GL_DEPTH_TEST);
     }
 
     public void postpare(){

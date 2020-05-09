@@ -113,6 +113,11 @@ public class FraudTek {
 
                 WINDOW = new Window(WIDTH, HEIGHT).setTitle(TITLE);
                 WINDOW.setVsyncEnabled(VSYNC);
+                try {
+                    WINDOW.setWindowIcon("/textures/logo.png");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 WINDOW_POINTER = WINDOW.getWindow_p();
 
                 //We have a GL context after this call
@@ -125,8 +130,6 @@ public class FraudTek {
                 Renderer.initialize(WIDTH, HEIGHT);
 
 
-                //Initialize all of our modules
-                VAOManager.initialize();
                 ModelManager.initialize();
                 CameraManager.initialize();
                 EntityManager.initialize();
@@ -226,26 +229,34 @@ public class FraudTek {
                 }
             }
         }
-//
-//        JsonObject action = new JsonObject();
-//        action.addProperty("action", "convert");
-//        action.addProperty("model", "untitled.obj");
-//        switch (action.get("action").getAsString()) {
-//            case ("convert"): {
-//                Model model = ModelManager.getInstance().loadModel(action.get("model").getAsString());
-//                JsonObject saveData = model.serialize();
-//                System.out.println("Writing file to:"+"/models/" + action.get("model").getAsString().replace(".obj", ".tek"));
-//                StringUtils.write(saveData.toString(), "/models/" + action.get("model").getAsString().replace(".obj", ".tek"));
-//            }
-//        }
-//
-//
-//        Entity test = new Entity().setModel(ModelManager.getInstance().loadModel("untitled.tek")).setPosition(0, 4, -2);
-//        EntityManager.getInstance().addEntity(test);
+
+        //Scripting Test
 //        Script test = ScriptingEngine.getInstance().loadScript("MapGenerator/Main.js");
-        Script test = ScriptingEngine.getInstance().loadScript("Recursion.js");
-        test.getTokensInFile();
-        ScriptingEngine.getInstance().run(test, "fibonacci");
+//        Script test = ScriptingEngine.getInstance().loadScript("Recursion.js");
+//        test.getTokensInFile();
+//        ScriptingEngine.getInstance().run(test, "fibonacci");
+
+        String modelName = "cube2";
+
+        JsonObject action = new JsonObject();
+        action.addProperty("action", "convert");
+        action.addProperty("model", modelName+".obj");
+        switch (action.get("action").getAsString()) {
+            case ("convert"): {
+                Model model = ModelManager.getInstance().loadModel(action.get("model").getAsString());
+                JsonObject saveData = model.serialize();
+                System.out.println("Writing file to:"+"/models/" + action.get("model").getAsString().replace(".obj", ".tek"));
+                StringUtils.write(saveData.toString(), "/models/" + action.get("model").getAsString().replace(".obj", ".tek"));
+            }
+        }
+//
+
+        Entity test = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(-4, 4, -2);
+        EntityManager.getInstance().addEntity(test);
+
+//        Entity drag = new Entity().setModel(ModelManager.getInstance().loadModel("dragon.tek")).setPosition(4, 4, -2);
+//        EntityManager.getInstance().addEntity(drag);
+
 
         FraudTek.run();
         FraudTek.shutdown();

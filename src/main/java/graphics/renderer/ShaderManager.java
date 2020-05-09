@@ -8,6 +8,7 @@ import util.StringUtils;
 
 import java.nio.FloatBuffer;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 public class ShaderManager {
 
@@ -18,6 +19,8 @@ public class ShaderManager {
     private HashMap<String, Integer>    shaderInstances       = new HashMap<>();
     private HashMap<String, Shader>     shaders               = new HashMap<>();
     private HashMap<Integer, String>    shaderInstances_prime = new HashMap<>();
+
+    private HashMap<String, Boolean>    enabledArrays        = new HashMap<>();
 
     //Keep Track of the active shader
     private int activeShader = -1;
@@ -92,6 +95,31 @@ public class ShaderManager {
         //Now that we have our shaders compiled, we link them to a shader program.
         int programID = GL20.glCreateProgram();
 
+        //Add the parsed meta data into this
+        JsonParser parser = new JsonParser();
+        JsonObject shaderMeta = parser.parse(info).getAsJsonObject();
+        String version = shaderMeta.get("Version").getAsString();
+
+        //IN's are attributes that need to be bound to the current context.
+        JsonObject vertexData = shaderMeta.get("Vertex").getAsJsonObject();
+        JsonObject fragmentData = shaderMeta.get("Fragment").getAsJsonObject();
+        JsonObject attributesJSON = vertexData.get("Attributes").getAsJsonObject();
+        String[] attributes = new String[attributesJSON.size()];
+        int index = 0;
+        for(String uniformName : attributesJSON.keySet()){
+            String attributeName = uniformName;
+            attributes[index] = attributeName;
+            System.out.println("Adding attribute: " + attributes[index]);
+            index++;
+        }
+
+        int attributeIndex = 1;
+        for(String attribute : attributes){
+            GL20.glBindAttribLocation(programID, attributeIndex, attribute);
+            attributeIndex++;
+        }
+
+
         //Combine vertex and fragment shaders into one program
         GL20.glAttachShader(programID, vertexShader);
         GL20.glAttachShader(programID, fragmentShader);
@@ -115,24 +143,6 @@ public class ShaderManager {
         //These programs are no longer needed, so we can simply clean them up.
         GL20.glDeleteShader(vertexShader);
         GL20.glDeleteShader(fragmentShader);
-
-        //Add the parsed meta data into this
-        JsonParser parser = new JsonParser();
-        JsonObject shaderMeta = parser.parse(info).getAsJsonObject();
-        String version = shaderMeta.get("Version").getAsString();
-
-        //IN's are attributes that need to be bound to the current context.
-        JsonObject vertexData = shaderMeta.get("Vertex").getAsJsonObject();
-        JsonObject fragmentData = shaderMeta.get("Fragment").getAsJsonObject();
-        JsonObject attributesJSON = vertexData.get("Attributes").getAsJsonObject();
-        String[] attributes = new String[attributesJSON.size()];
-        int index = 0;
-        for(String uniformName : attributesJSON.keySet()){
-            String attributeName = uniformName;
-            attributes[index] = attributeName;
-            System.out.println("Adding attribute: " + attributes[index]);
-            index++;
-        }
 
         //Create a shader data object which will be used to hold data about this shader.
         Shader shader = new Shader(name, programID, version).setAttributes(attributes);
@@ -174,55 +184,43 @@ public class ShaderManager {
     public void loadHandshakeIntoShader(int programID, Handshake handshake){
         if(shaderInstances_prime.containsKey(programID)) {
             Shader shader = shaders.get(shaderInstances_prime.get(programID));
-            if(target.equals(GLTarget.GL40)){
-                GL30.glBindVertexArray(handshake.getVAO().getID());
-                for (int i = 0; i < handshake.getAttributeLength(); i++) {
-                    GL20.glEnableVertexAttribArray(i);
-                }
-            }else{
-                for(String attribute : shader.getAttributes()){
-                    loop:{
-                        //If handshake contains this buffered data.
-                        int attribPointer = GL20.glGetAttribLocation(programID, attribute);
+            int index = 1;
+            for(String attribute : shader.getAttributes()){
+                loop:{
+                    //Check to see if this handshake has this attribute.
+                    if (!handshake.hasAttribute(attribute)) {
+                        System.err.println("This handshake does not contain the attribute: " + attribute);
+                        break loop;
+                    }
 
-                        //If this attribute is out of range of the program IE compiler optomised it out skip over loading into memory.
-                        int errorCheck = GL20.glGetError();
-                        boolean error = false;
-                        while (errorCheck != GL20.GL_NO_ERROR) {
-                            System.out.println("GLError:" + errorCheck);
-                            if (errorCheck == GL20.GL_INVALID_VALUE) {
-                                error = true;
-                                System.out.println("Attribute[" + attribute + "] could not be found in Shader[" + shaderInstances_prime.get(programID) + ']');
-                                shader.removeAttribute(attribute);
-                            }
-                            errorCheck = GL20.glGetError();
-                        }
+                    //If handshake contains this buffered data.
+                    int attribPointer = GL20.glGetAttribLocation(programID, attribute);
 
-                        //If error, skip loading data into this attribute
-                        if (error) {
-                            break loop;
+                    //If this attribute is out of range of the program IE compiler optomised it out skip over loading into memory.
+                    int errorCheck = GL20.glGetError();
+                    boolean error = false;
+                    while (errorCheck != GL20.GL_NO_ERROR) {
+                        System.out.println("GLError:" + errorCheck);
+                        if (errorCheck == GL20.GL_INVALID_VALUE) {
+                            error = true;
+                            System.out.println("Attribute[" + attribute + "] could not be found in Shader[" + shaderInstances_prime.get(programID) + ']');
+                            shader.removeAttribute(attribute);
                         }
+                        errorCheck = GL20.glGetError();
+                    }
 
-                        if(error){
-                            System.out.println("Despite error we still enabling.");
-                        }
-                        //Enable vertex attribute
+                    //If error, skip loading data into this attribute
+                    if (error) {
+                        System.out.println("Error we breaking.");
+                        break loop;
+                    }
+
+                    if(attribPointer > 0) {
                         GL20.glEnableVertexAttribArray(attribPointer);
-
-                        //Check to see if this handshake has this attribute.
-                        if (!handshake.hasAttribute(attribute)) {
-                            System.err.println("This handshake does not contain the attribute: " + attribute);
-                        }
-
-                        if(error){
-                            System.out.println("Despite error we still loading into shader.");
-                        }
                         GL20.glVertexAttribPointer(attribPointer, handshake.getAttributeSize(attribute), GL20.GL_FLOAT, true, 0, (FloatBuffer) handshake.getAttribute(attribute));
                     }
                 }
             }
-            //Cleanup
-            GL20.glEnableVertexAttribArray(0);
         }
     }
 
