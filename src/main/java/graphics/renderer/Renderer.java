@@ -11,6 +11,11 @@ import platform.EnumDevelopment;
 import platform.PlatformManager;
 import scene.SceneManager;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.LinkedList;
+
 import static org.lwjgl.glfw.GLFW.*;
 
 public class Renderer extends Engine {
@@ -40,7 +45,7 @@ public class Renderer extends Engine {
         //TODO isdebug
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-            GLUtil.setupDebugMessageCallback();
+//            GLUtil.setupDebugMessageCallback();
         }
 
         shaderID = ShaderManager.getInstance().loadShader("main");
@@ -81,7 +86,7 @@ public class Renderer extends Engine {
             renderer = new Renderer(width, height);
             projectionMatrix = Maths.createProjectionMatrix(FOV, NEAR_PLANE, FAR_PLANE);
             GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(renderer.shaderID, "perspective"),false, MatrixUtils.createProjectionMatrix());
-            GL20.glEnable(GL20.GL_DEPTH_TEST);
+//            GL20.glEnable(GL20.GL_DEPTH_TEST);
         }
     }
 
@@ -93,15 +98,20 @@ public class Renderer extends Engine {
 
         GL20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         ShaderManager.getInstance().useShader(shaderID);
-        GL20.glEnable(GL20.GL_DEPTH_TEST);
+//        GL20.glEnable(GL20.GL_DEPTH_TEST);
         GL20.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "view"), true, CameraManager.getInstance().getActiveCamera().getTransform());
+        GL20.glEnable(GL20.GL_BLEND);
+        GL20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
-        float[] out = CameraManager.getInstance().getActiveCamera().getForwardDir().toVec3N();
-        out[0] *= -1.0f;
-        out[1] *= -1.0f;
-        out[2] *= -1.0f;
+        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
+
+        float[] out = new float[3];
+
+        out[0] = CameraManager.getInstance().getActiveCamera().getForwardDir().x() * -1.0f;
+        out[1] = CameraManager.getInstance().getActiveCamera().getForwardDir().y() * -1.0f;
+        out[2] = CameraManager.getInstance().getActiveCamera().getForwardDir().z() * -1.0f;
+
         GL20.glUniform3fv(GL20.glGetUniformLocation(shaderID, "inverseCamera"), out);
 
         GL20.glActiveTexture(GL20.GL_TEXTURE0);
@@ -130,9 +140,21 @@ public class Renderer extends Engine {
                 lastTexture = entity.getTextureID();
             }
 
+            if(entity.hasAttribute("t_scale")){
+                ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", entity.getAttribute("t_scale").getData());
+            }else{
+                ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", new org.joml.Vector2f(1.0f));
+            }
+
+            if(entity.hasAttribute("t_offset")){
+                ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", entity.getAttribute("t_offset").getData());
+            }else{
+                ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", new org.joml.Vector2f(0.0f));
+            }
+
             //Mess with uniforms
-            GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "transformation"), true, entity.getTransform());
-            GL42.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
+            GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "transformation"), false, entity.getTransform().get(new float[16]));
+            GL20.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
 
             lastID = entity.getModel().getID();
         }
@@ -143,6 +165,7 @@ public class Renderer extends Engine {
         GL20.glDisableVertexAttribArray(0);
         GL20.glDisableVertexAttribArray(1);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL20.glDisable(GL20.GL_BLEND);
     }
 
     @Override

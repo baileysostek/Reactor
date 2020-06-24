@@ -1,13 +1,16 @@
 package serialization;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 public class SerializationHelper {
+
+    //Our one Gson instance
+    private static Gson gson = new Gson();
+
     //When you dont care about the order that the keys are added to the object, use this
     public static JsonObject serializeHashMap(HashMap map){
         JsonObject out = new JsonObject();
@@ -44,5 +47,73 @@ public class SerializationHelper {
             out.add(indicies[i]);
         }
         return out;
+    }
+
+    //This is our getter to access our Gson instance
+    public static Gson getGson(){
+        return gson;
+    }
+
+    //This is essentially a left join
+    //Merge two objects together
+    public static JsonObject merge(JsonObject base, JsonObject addition){
+
+        if(addition == null){
+            return base;
+        }
+
+        for(String key : addition.keySet()){
+            if(base.has(key)){
+                JsonElement attribute = base.get(key);
+                JsonElement other     = addition.get(key);
+
+                //If null set to value of other.
+                if (attribute.isJsonNull()){
+                    attribute = other;
+                }
+
+                //If primitive, add other value
+                loop:{
+                    if (attribute.isJsonPrimitive()) {
+                        if (attribute.getAsJsonPrimitive().isBoolean()) {
+                            //Set to and
+                            attribute = new JsonPrimitive(attribute.getAsBoolean() && other.getAsBoolean());
+                        }
+                        if (attribute.getAsJsonPrimitive().isString()) {
+                            attribute = new JsonPrimitive(attribute.getAsString().equals(other.getAsString()) ? attribute.getAsString() : other.getAsString());
+                        }
+                        if (attribute.getAsJsonPrimitive().isNumber()) {
+                            attribute = new JsonPrimitive(attribute.getAsNumber().floatValue() + other.getAsNumber().floatValue());
+                        }
+                        break loop;
+                    }
+
+                    if (attribute.isJsonArray() && other.isJsonArray()) {
+                        JsonArray newArray = new JsonArray();
+                        for (Iterator<JsonElement> it = attribute.getAsJsonArray().iterator(); it.hasNext(); ) {
+                            newArray.add(it.next());
+                        }
+                        for (Iterator<JsonElement> it = other.getAsJsonArray().iterator(); it.hasNext(); ) {
+                            newArray.add(it.next());
+                        }
+                        attribute = newArray;
+                        break loop;
+                    }
+
+                    if (attribute.isJsonObject() && other.isJsonObject()) {
+                        attribute = SerializationHelper.merge(attribute.getAsJsonObject(), other.getAsJsonObject());
+                        break loop;
+                    }
+                }
+
+                //Set the attribute.
+                base.add(key, attribute);
+            }else{
+                //This key was not found so append it
+                base.add(key, addition.get(key));
+            }
+        }
+
+        return base;
     }
 }

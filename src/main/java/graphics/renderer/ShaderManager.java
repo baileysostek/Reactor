@@ -1,14 +1,13 @@
 package graphics.renderer;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 import util.StringUtils;
 
 import java.nio.FloatBuffer;
 import java.util.HashMap;
-import java.util.LinkedList;
 
 public class ShaderManager {
 
@@ -229,24 +228,39 @@ public class ShaderManager {
 
         EnumGLDatatype uniformType = shaders.get(shaderInstances_prime.get(activeShader)).getUniform(name);
 
+        //If we dont have this uniform variable, dont do anything.
+        if(uniformType == null){
+            return;
+        }
+
+        int location = GL20.glGetUniformLocation(activeShader, name);
+
         float[] data = new float[uniformType.getSize()];
 
         switch(uniformType){
+            case VEC2 : {
+                Vector2f vector2f = (Vector2f)uniform;
+                GL20.glUniform2f(location, vector2f.x(), vector2f.y());
+                break;
+            }
             case VEC3 : {
                 Vector3f vector3f = (Vector3f)uniform;
                 data[0] = vector3f.x();
                 data[1] = vector3f.y();
                 data[2] = vector3f.z();
+                GL20.glUniform3fv(location, data);
+                break;
+            }
+            case SAMPLER2D : {
+                int index = Integer.parseInt(uniform+"");
+//                data[0] = index;
+                GL20.glUniform1i(location, index);
                 break;
             }
             default:{
                 System.out.println("[loadUniformIntoActiveShader]Error: datatype " + uniformType +" is not supported yet.");
             }
         }
-
-        int location = GL20.glGetUniformLocation(activeShader, name);
-
-        GL20.glUniform3fv(location, data);
     }
 
     //Initialize code

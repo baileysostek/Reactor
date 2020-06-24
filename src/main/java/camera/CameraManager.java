@@ -1,25 +1,29 @@
 package camera;
 
-import math.Vector3f;
+import org.joml.Vector3f;
 
 public class CameraManager {
     //Singleton instance
     private static CameraManager cameraManager;
+
+    //This is the one active camera in the world
     private Camera activeCamera;
+
+    //TODO add camera stack so we can pop back to last cam with smooth transition.
 
     //This cameras generation info
     private CameraManager(){
         this.activeCamera = new Camera();
-
-        this.activeCamera.setPosition(new Vector3f(0f, -6f, -6f));
-//        this.activeCamera.setRotation(new Vector3f(-90f, 0f, 0f));
-
-        System.out.println("Forward: "+ activeCamera.getForwardDir());
     }
 
     //protected methods
     public Camera getActiveCamera(){
         return this.activeCamera;
+    }
+
+    //Set the camera
+    public void setActiveCamera(Camera cam){
+        this.activeCamera = cam;
     }
 
     //Singleton generation and access

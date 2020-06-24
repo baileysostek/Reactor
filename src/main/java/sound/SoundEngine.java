@@ -17,6 +17,9 @@ import static org.lwjgl.system.MemoryStack.stackMallocInt;
 
 public class SoundEngine{
 
+    //Singleton instance
+    private static SoundEngine soundEngine;
+
     //Sound data buffered
     private HashMap<String, Integer> bufferPointers = new HashMap<String, Integer>();
     //Speakers in world playing the sound buffer
@@ -25,7 +28,7 @@ public class SoundEngine{
     private final long context;
     private final long device;
 
-    public SoundEngine() {
+    private SoundEngine() {
         String defaultDeviceName = ALC10.alcGetString(0, ALC10.ALC_DEFAULT_DEVICE_SPECIFIER);
         device = ALC10.alcOpenDevice(defaultDeviceName);
         int[] attributes = {0};
@@ -105,11 +108,10 @@ public class SoundEngine{
     }
 
     public int getSound(String sourceName){
-        try {
+        if(this.bufferPointers.containsKey(sourceName)){
             return this.bufferPointers.get(sourceName);
-        }catch (NullPointerException e){
+        }else{
             System.out.println("The sound:"+sourceName+" could not be found. Has a call to Load been made for it yet?");
-            e.printStackTrace();
         }
         return 0;
     }
@@ -127,5 +129,15 @@ public class SoundEngine{
 
     public void setListener(Vector3f position){
 
+    }
+
+    public static void initialize(){
+        if(soundEngine == null){
+            soundEngine = new SoundEngine();
+        }
+    }
+
+    public static SoundEngine getInstance(){
+        return soundEngine;
     }
 }

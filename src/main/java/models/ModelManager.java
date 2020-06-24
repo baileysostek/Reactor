@@ -19,6 +19,7 @@ public class ModelManager {
 
     private static ModelManager modelManager;
     private HashMap<String, Model> cachedModels = new HashMap<>();
+    private int modelIDOffset = 0;
 
     private JsonParser parser = new JsonParser();
 
@@ -47,12 +48,12 @@ public class ModelManager {
 
         switch(fileExtension){
             case "obj": {
-                Model model = parseOBJ(cachedModels.size(), lines);
+                Model model = parseOBJ(this.getNextID(), lines);
                 cachedModels.put(modelName, model);
                 return model;
             }
             case "tek": {
-                Model model = new Model(cachedModels.size()).deserialize(parser.parse(data).getAsJsonObject());
+                Model model = new Model(this.getNextID()).deserialize(parser.parse(data).getAsJsonObject());
                 cachedModels.put(modelName, model);
                 return model;
             }
@@ -340,5 +341,15 @@ public class ModelManager {
 
     public static ModelManager getInstance(){
         return modelManager;
+    }
+
+    public int getNextID(){
+        int out = this.cachedModels.size()+modelIDOffset;
+        modelIDOffset++;
+        return out;
+    }
+
+    public void incrementCachedModels() {
+        modelIDOffset++;
     }
 }

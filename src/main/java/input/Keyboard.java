@@ -7,6 +7,8 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import util.Callback;
 
+import java.awt.event.KeyEvent;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class Keyboard extends Engine {
@@ -16,7 +18,41 @@ public class Keyboard extends Engine {
     private LinkedList<Callback>[] pressedCallbacks  = new LinkedList[keys.length];
     private LinkedList<Callback>[] releasedCallbacks = new LinkedList[keys.length];
 
+    //Hahsing to store where a callback lives
+    private HashMap<Callback, Integer> keyLookup = new HashMap<>();
+
     //Key List
+    public static final int A = KeyEvent.VK_A;
+    public static final int B = KeyEvent.VK_B;
+    public static final int C = KeyEvent.VK_C;
+    public static final int D = KeyEvent.VK_D;
+    public static final int E = KeyEvent.VK_E;
+    public static final int F = KeyEvent.VK_F;
+    public static final int G = KeyEvent.VK_G;
+    public static final int H = KeyEvent.VK_H;
+    public static final int I = KeyEvent.VK_I;
+    public static final int J = KeyEvent.VK_J;
+    public static final int K = KeyEvent.VK_K;
+    public static final int L = KeyEvent.VK_L;
+    public static final int M = KeyEvent.VK_M;
+    public static final int N = KeyEvent.VK_N;
+    public static final int O = KeyEvent.VK_O;
+    public static final int P = KeyEvent.VK_P;
+    public static final int Q = KeyEvent.VK_Q;
+    public static final int R = KeyEvent.VK_R;
+    public static final int S = KeyEvent.VK_S;
+    public static final int T = KeyEvent.VK_T;
+    public static final int U = KeyEvent.VK_U;
+    public static final int V = KeyEvent.VK_V;
+    public static final int W = KeyEvent.VK_W;
+    public static final int X = KeyEvent.VK_X;
+    public static final int Y = KeyEvent.VK_Y;
+    public static final int Z = KeyEvent.VK_Z;
+
+
+    //SPECIALTY
+    public static final int ESCAPE = 0x100;
+    public static final int DELETE = 0x256;
 
 
     private Keyboard(){
@@ -40,7 +76,7 @@ public class Keyboard extends Engine {
                     }
                 }else{
                     keys[key] = true;
-                    ChromaManager.getInstance().setKeyColor(key, 0, 0, 255);
+//                    ChromaManager.getInstance().setKeyColor(key, 0, 0, 255);
                     for(Callback c : pressedCallbacks[key]){
                         c.callback();
                     }
@@ -64,8 +100,30 @@ public class Keyboard extends Engine {
     }
 
     public void addPressCallback(int key, Callback callback){
+        //index where this callback lives
+        keyLookup.put(callback, key);
+        //Set the callback
         this.pressedCallbacks[key].add(callback);
     }
+
+    public void switchCallbackKey(Callback callback, int key) {
+        //If no callback do nothing
+        if(callback == null){
+            return;
+        }
+
+        //Check if we have the callback
+        if(keyLookup.containsKey(callback)){
+            //We have it
+            int index = keyLookup.get(callback);
+            //Remove from where it was
+            this.pressedCallbacks[index].remove(callback);
+
+        }
+        //Add it to where it should go
+        addPressCallback(key, callback);
+    }
+
 
     public boolean isKeyPressed(int key){
         return keys[key];

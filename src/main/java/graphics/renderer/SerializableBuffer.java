@@ -58,6 +58,9 @@ public class SerializableBuffer implements Serializable<SerializableBuffer> {
             }
         }
 
+        //NOW REMEMBER TO SET THE BUFFER INDEX BACK TO THE BEGINNING!
+        buffer.rewind();
+
         out.add("bytes", array);
         out.add("type", type.serialize());
         return out;

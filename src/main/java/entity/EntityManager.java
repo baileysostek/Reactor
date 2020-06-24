@@ -1,14 +1,12 @@
 package entity;
 
 import com.google.gson.JsonObject;
-import math.Vector3f;
 import org.joml.Intersectionf;
+import org.joml.RayAabIntersection;
 import org.joml.Vector2f;
+import org.joml.Vector3f;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -83,7 +81,7 @@ public class EntityManager {
     public void update(double delta){
         sync();
         for(Entity e : entities){
-            e.update(delta);
+            e.selfUpdate(delta);
         }
     }
 
@@ -99,34 +97,43 @@ public class EntityManager {
     }
 
     public LinkedList<Entity> getHitEntities(Vector3f pos, Vector3f dir, EnumEntityType ... types){
-        LinkedList<Entity> hits = new LinkedList<Entity>();
+
+        //Invert Pos
+        pos = new Vector3f(pos).mul(1, 1, -1);
+
+        LinkedList<Entity> check = new LinkedList<Entity>();
+        LinkedList<Entity> hits  = new LinkedList<Entity>();
+        //TODO
+        //Calculate view frustum to filter
 
         if(types.length == 0){
-            for(Entity e : entities){
-                Vector3f[] aabb = e.getAABB();
-                Vector3f mutablePos = new Vector3f(pos);
-                Vector3f mutableDir = new Vector3f(dir);
-                Vector2f hit = new Vector2f();
-                boolean hitCheck = Intersectionf.intersectRayAab(mutablePos.x(), mutablePos.y(), mutablePos.z(), mutableDir.x(), mutableDir.y(), mutableDir.z(), aabb[0].x(), aabb[0].y(), aabb[0].z(), aabb[1].x(), aabb[1].y(), aabb[1].z(), hit);
-                if(hitCheck){
-                    hits.push(e);
-                }
-            }
+            check.addAll(this.entities);
         }else{
             for(EnumEntityType type : types){
-                for(Entity e : getEntitiesOfType(type)){
-                    Vector3f[] aabb = e.getAABB();
-                    Vector3f mutablePos = new Vector3f(pos);
-                    Vector3f mutableDir = new Vector3f(dir);
-                    Vector2f hit = new Vector2f();
-                    boolean hitCheck = Intersectionf.intersectRayAab(mutablePos.x(), mutablePos.y(), mutablePos.z(), mutableDir.x(), mutableDir.y(), mutableDir.z(), aabb[0].x(), aabb[0].y(), aabb[0].z(), aabb[1].x(), aabb[1].y(), aabb[1].z(), hit);
-                    if(hitCheck){
-                        hits.push(e);
-                    }
-                }
+                check.addAll(getEntitiesOfType(type));
             }
         }
 
+        for(Entity e : check){
+            if(Intersectionf.testRayAab(new Vector3f(pos), new Vector3f(dir), new Vector3f(e.getPosition()).sub(1, 1, 1), new Vector3f(e.getPosition()).add(1, 1, 1))){
+                hits.add(e);
+            }
+        }
+
+        return hits;
+    }
+
+    public LinkedList<Entity> getHitEntities(Vector3f pos, Vector3f dir, Collection<Entity> check){
+        //Invert Pos
+        pos = new Vector3f(pos).mul(1, 1, -1);
+
+        LinkedList<Entity> hits  = new LinkedList<Entity>();
+
+        for(Entity e : check){
+            if(Intersectionf.testRayAab(new Vector3f(pos), new Vector3f(dir), new Vector3f(e.getPosition()).sub(1, 1, 1), new Vector3f(e.getPosition()).add(1, 1, 1))){
+                hits.add(e);
+            }
+        }
         return hits;
     }
 

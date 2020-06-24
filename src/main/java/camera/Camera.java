@@ -1,11 +1,15 @@
 package camera;
 
 import math.MatrixUtils;
-import math.Vector3f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 public class Camera {
-    private Vector3f pos = new Vector3f(0f, -0f, 0f);
-    private Vector3f rot = new Vector3f(0f, 0f, 0f);
+
+    //Transform variables
+    private Vector3f pos    = new Vector3f(0f);
+    private Vector3f rot    = new Vector3f(0f);
+    private Vector3f offset = new Vector3f(0f);
 
     public Camera(){
         //Pass by reference or value
@@ -13,7 +17,7 @@ public class Camera {
     }
 
     public Camera setPosition(Vector3f vec){
-        pos = new Vector3f(vec);
+        pos = new Vector3f(vec).mul(1, 1, -1);
         return this;
     }
 
@@ -27,19 +31,40 @@ public class Camera {
         return this;
     }
 
+    public void setOffset(Vector3f offset){
+        this.offset = offset;
+    }
+
+    public Vector3f getOffset(){
+        return this.offset;
+    }
+
     public float[] getTransform(){
+        Matrix4f transform = new Matrix4f().identity();
+
+        transform.rotateAffineXYZ(rot.x, rot.y, rot.z, transform);
+
+        transform.translate(new Vector3f(new Vector3f(pos).sub(offset)).mul(new Vector3f(-1, 1, 1)), transform);
+
+
         float[] modelMatrix = new float[]{
-            1, 0, 0, -pos.x(),
-            0, 1, 0, pos.y(),
-            0, 0, 1, pos.z(),
-            0, 0, 0, 1
+            transform.m00(), transform.m01(), transform.m02(), transform.m03(),
+            transform.m10(), transform.m11(), transform.m12(), transform.m13(),
+            transform.m20(), transform.m21(), transform.m22(), transform.m23(),
+            transform.m30(), transform.m31(), transform.m32(), transform.m33()
         };
 
-//        modelMatrix = MatrixUtils.rotateM(modelMatrix, 0,  rot.z(), 0f,0f, 1f);
-//        modelMatrix = MatrixUtils.rotateM(modelMatrix, 0,  rot.y(), 0f,1f, 0f);
-//        modelMatrix = MatrixUtils.rotateM(modelMatrix, 0,  rot.x(), 1f,0f, 0f);
-
         return modelMatrix;
+    }
+
+    public Matrix4f getTransformationMarix(){
+        Matrix4f transform = new Matrix4f().identity();
+
+        transform.rotateAffineXYZ(rot.x, rot.y, rot.z, transform);
+
+        transform.translate(new Vector3f(pos).mul(new Vector3f(-1, 1, 1)), transform);
+
+        return transform;
     }
 
     public Vector3f getForwardDir(){
@@ -56,15 +81,5 @@ public class Camera {
 
     public Vector3f getRotation() {
         return this.rot;
-    }
-
-    public float[] getView() {
-        float[] modelMatrix = MatrixUtils.getIdentityMatrix();
-
-        modelMatrix = MatrixUtils.rotateM(modelMatrix, 0,  rot.z(), 0f,0f, 1f);
-        modelMatrix = MatrixUtils.rotateM(modelMatrix, 0,  rot.y(), 0f,1f, 0f);
-        modelMatrix = MatrixUtils.rotateM(modelMatrix, 0,  rot.x(), 1f,0f, 0f);
-
-        return modelMatrix;
     }
 }

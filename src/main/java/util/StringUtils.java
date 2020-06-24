@@ -1,5 +1,10 @@
 package util;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
+import jdk.nashorn.internal.parser.JSONParser;
+
 import java.io.*;
 import java.util.HashMap;
 
@@ -8,6 +13,8 @@ public class StringUtils {
     private static HashMap<String, String> fileCache = new HashMap<>();
 
     private static String PATH = new File("").getAbsolutePath() + "\\resources\\";
+
+    private static JsonParser parser = new JsonParser();
 
     public static String load(String filePath){
         if(fileCache.containsKey(filePath)){
@@ -31,6 +38,18 @@ public class StringUtils {
         }
 
         return fileData.toString();
+    }
+
+    public static JsonObject loadJson(String fileName){
+        System.out.println("Loading JSON:"+PATH + fileName);
+        String data = load(fileName);
+        return parser.parse(data).getAsJsonObject();
+    }
+
+    public static JsonObject parseJson(String jsonData){
+        JsonReader reader = new JsonReader(new StringReader(jsonData));
+        reader.setLenient(true);
+        return parser.parse(reader).getAsJsonObject();
     }
 
     public static String getRelativePath(){

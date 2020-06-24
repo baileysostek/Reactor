@@ -46,7 +46,7 @@ public class Maths {
     public static Matrix4f createViewMatrix(Camera camera){
         Matrix4f matrix = new Matrix4f().identity();
 //        matrix.rotate
-        Vector3f offset = new Vector3f(camera.getPosition().toJOML());
+        Vector3f offset = new Vector3f(camera.getPosition());
         offset.mul(new Vector3f(-1, -1, -1));
         matrix.translate(offset);
         return matrix;

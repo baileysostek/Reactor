@@ -19,11 +19,11 @@ public class Model implements Serializable<Model> {
     private Handshake handshake;
 
     //Just used to create a new pointer so deserilize can be called
-    protected Model(int id){
+    public Model(int id){
         this.id = id;
     }
 
-    protected Model(int id, Handshake handshake, int numIndicies, Vector3f[] AABB){
+    public Model(int id, Handshake handshake, int numIndicies, Vector3f[] AABB){
 //        this.name      = name;
         this.id = id;
         this.handshake = handshake;
