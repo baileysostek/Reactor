@@ -16,6 +16,8 @@ import serialization.Serializable;
 import serialization.SerializationHelper;
 import util.Callback;
 import util.StringUtils;
+
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -34,36 +36,41 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     private EnumEntityType type = EnumEntityType.UNKNOWN;
 
-    //Texture ID to use when rendering
-    private int textureID = -1;
 
     //Attributes are the raw pieces of data that make up an entity;
     private HashMap<String, Attribute> attributes = new HashMap<>();
     //Components reference and set attributes on an entity, the Attributes are a state and the components are how they are modified.
     private LinkedList<Component> components = new LinkedList<Component>();
 
-    public Entity(String save){
-
-        this.deserialize(StringUtils.loadJson("levels/"+save));
-
-        //Every entity has some default attributes
-        this.addAttribute(new Attribute<Vector3f>("position", new Vector3f(0f)));
-        this.addAttribute(new Attribute<Vector3f>("rotation", new Vector3f(0f)));
-        this.addAttribute(new Attribute<Vector3f>("scale"   , new Vector3f(1f)));
-    }
-
-
+    //New entity template.
     public Entity(){
         //Every entity has some default attributes
-        this.addAttribute(new Attribute<Vector3f>("position", new Vector3f(0f)));
-        this.addAttribute(new Attribute<Vector3f>("rotation", new Vector3f(0f)));
-        this.addAttribute(new Attribute<Vector3f>("scale"   , new Vector3f(1f)));
+        addDefaultAttributes();
     }
 
+    //New entity from primative file
+    public Entity(String save){
+        this.deserialize(StringUtils.loadJson("levels/"+save));
+        //Every entity has some default attributes
+        addDefaultAttributes();
+    }
+
+    //new entity from JsonObject, deserialize entity.
     //Load an entity from a saveObject
     public Entity(JsonObject saveData) {
+        //Add default
+        addDefaultAttributes();
         //initializes self.
         deserialize(saveData);
+    }
+
+    private final void addDefaultAttributes(){
+        //Every entity has some default attributes
+        this.addAttribute(new Attribute<Vector3f>("position" , new Vector3f(0f)));
+        this.addAttribute(new Attribute<Vector3f>("rotation" , new Vector3f(0f)));
+        this.addAttribute(new Attribute<Vector3f>("scale"    , new Vector3f(1f)));
+        this.addAttribute(new Attribute<Integer> ("textureID", -1));
+        this.addAttribute(new Attribute<Boolean> ("autoScale", true));
     }
 
     //Type
@@ -80,19 +87,30 @@ public class Entity implements Transformable, Serializable<Entity> {
     //Attribute interface
     public final void addAttribute(Attribute attribute){
         //Add to our list of entities
+        //TODO this may break thing
+
         this.attributes.put(attribute.getName(), attribute);
         //Create subscriber to this attribute changing states
         attribute.subscribe(new Callback() {
             @Override
             public Object callback(Object... objects) {
-                //Cast passed attribute
-                Attribute attribute = (Attribute)objects[0];
-                //Update all components
-                syncAttributes(attribute, new LinkedList<Component>());
-                //No need to return anything.
-                return null;
+            //Cast passed attribute
+            Attribute attribute = (Attribute) objects[0];
+            //Update all components
+            syncAttributes(attribute, new LinkedList<Component>());
+            //IF this is an attribute with a classification that we sort based on we need to resort the entities.
+            //TODO have attribute classificaitons
+            if (attribute.getName().equals("zIndex")) {
+                EntityManager.getInstance().resort();
+            }
+
+//                System.out.println(attribute.getName()+" is being set to:"+attribute.getData());
+
+            //No need to return anything.
+            return null;
             }
         });
+
     }
 
     //Attributes when they update emmit a message, this is where that message is sent.
@@ -121,6 +139,20 @@ public class Entity implements Transformable, Serializable<Entity> {
         }else{
             return null;
         }
+    }
+
+    //Add this component to an entity
+    public void addComponent(Component component) {
+        this.components.add(component);
+        component.onAdd(this);
+    }
+
+    protected final Collection<Component> getComponents(){
+        return this.components;
+    }
+
+    protected final Collection<Attribute> getAttributes(){
+        return this.attributes.values();
     }
 
     //Transformation
@@ -215,15 +247,53 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Texture
     public final int getTextureID(){
-        return this.textureID;
+        if(!this.hasAttribute("textureID")){
+            this.addAttribute(new Attribute("textureID", -1));
+            System.out.println("[232] Set the texture ID to:"+this.getAttribute("textureID").getData());
+        }
+        return (int) this.getAttribute("textureID").getData();
     }
 
+    //TODO unify setTexture
     public final void setTexture(int id){
-        this.textureID = id;
+        if(!this.hasAttribute("textureID")){
+            this.addAttribute(new Attribute("textureID", id));
+            System.out.println("[241] Set the texture ID to:"+this.getAttribute("textureID").getData());
+        }else {
+            this.getAttribute("textureID").setData(id);
+            System.out.println("[244] Set the texture ID to:"+this.getAttribute("textureID").getData());
+        }
+    }
+
+    public final void setTexture(Sprite sprite){
+        if(!this.hasAttribute("textureID")){
+            this.addAttribute(new Attribute("textureID", -1));
+            System.out.println("[251] Set the texture ID to:"+this.getAttribute("textureID").getData());
+        }
+        if(sprite != null) {
+            this.getAttribute("textureID").setData(sprite.getTextureID());
+            System.out.println("[255] Set the texture ID to:"+this.getAttribute("textureID").getData());
+            //TODO if preserve scale
+            if(this.hasAttribute("autoScale")) {
+                if ((boolean) this.getAttribute("autoScale").getData()) {
+                    this.setScale(new Vector3f(sprite.getWidth() / 16f, 1, sprite.getHeight() / 16f));
+                }
+            }
+        }else{
+            this.getAttribute("textureID").setData(-1);
+            System.out.println("[262] Set the texture ID to:"+this.getAttribute("textureID").getData());
+        }
     }
 
     public final void setTexture(String texture){
-        this.textureID = SpriteBinder.getInstance().load(texture).getTextureID();
+        if(!this.hasAttribute("textureID")){
+            this.addAttribute(new Attribute("textureID", -1));
+            System.out.println("[269] Set the texture ID to:"+this.getAttribute("textureID").getData());
+        }
+        if(!texture.isEmpty()){
+            this.getAttribute("textureID").setData(SpriteBinder.getInstance().load(texture).getTextureID());
+            System.out.println("[273] Set the texture ID to:"+this.getAttribute("textureID").getData());
+        }
     }
 
     //Model
@@ -289,7 +359,7 @@ public class Entity implements Transformable, Serializable<Entity> {
         out.add("components", componentsArray);
 
         //Add our sprite
-        if(this.textureID > 0){
+        if(this.hasAttribute("textureID")){
             out.add("image", SpriteBinder.getInstance().getSprite(this.getTextureID()).serialize());
         }
 
@@ -302,11 +372,6 @@ public class Entity implements Transformable, Serializable<Entity> {
         //If we have a model
         if(data.has("model")) {
             this.model = new Model(ModelManager.getInstance().getNextID()).deserialize(data.get("model").getAsJsonObject());
-        }
-        //If we have a sprite
-        if(data.has("image")) {
-            Sprite sprite = new Sprite(data.get("image").getAsJsonObject());
-            this.setTexture(sprite.getTextureID());
         }
         //If we have any attributes
         if(data.has("attributes")) {
@@ -322,6 +387,12 @@ public class Entity implements Transformable, Serializable<Entity> {
                     e.printStackTrace();
                 }
             }
+        }
+        //If we have a sprite
+        if(data.has("image")) {
+            Sprite sprite = new Sprite(data.get("image").getAsJsonObject());
+            System.out.println("Deserializing sprite:"+sprite);
+            this.setTexture(sprite);
         }
         //If we have any components
         if(data.has("components")) {
@@ -345,11 +416,4 @@ public class Entity implements Transformable, Serializable<Entity> {
 
         return this;
     }
-
-    //Add this component to an entity
-    public void addComponent(Component component) {
-        this.components.add(component);
-        component.onAdd(this);
-    }
-
 }

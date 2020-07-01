@@ -11,6 +11,7 @@ import editor.Editor;
 import editor.components.container.Image;
 import editor.components.views.LevelEditor;
 import entity.Entity;
+import entity.EntityEditor;
 import entity.EntityManager;
 import entity.component.Interactable;
 import graphics.renderer.*;
@@ -303,21 +304,21 @@ public class FraudTek {
 //        Entity test2 = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(new Vector3f( 4, 4, -2));
 //        EntityManager.getInstance().addEntity(test);
 //
-        Entity drag = new Entity();
-        drag.setModel(ModelManager.getInstance().loadModel("quad.tek"));
-        drag.setPosition(new Vector3f(1.1f, 1.2f, 1.3f));
-        Interactable interactable = new Interactable();
-        drag.addComponent(interactable);
-        drag.getAttribute("interactable_range").setData(13.5);
-        interactable.getAttribute("interactable_range").setData(94.2);
-
-        JsonObject savetest = drag.serialize();
-
-        StringUtils.write(savetest.toString(), "/entities/test.tek");
-
-        Entity rebuilt = new Entity(savetest);
-
-        System.out.println(rebuilt);
+//        Entity drag = new Entity();
+//        drag.setModel(ModelManager.getInstance().loadModel("quad.tek"));
+//        drag.setPosition(new Vector3f(1.1f, 1.2f, 1.3f));
+//        Interactable interactable = new Interactable();
+//        drag.addComponent(interactable);
+//        drag.getAttribute("interactable_range").setData(13.5);
+//        interactable.getAttribute("interactable_range").setData(94.2);
+//
+//        JsonObject savetest = drag.serialize();
+//
+//        StringUtils.write(savetest.toString(), "/entities/test.tek");
+//
+//        Entity rebuilt = new Entity(savetest);
+//
+//        System.out.println(rebuilt);
 
 
 //        EntityManager.getInstance().addEntity(drag);
@@ -344,6 +345,8 @@ public class FraudTek {
 //        test.flush();
 //
 //        Editor.getInstance().addComponent(new Image(test.getTextureID()));
+
+//        Editor.getInstance().addComponent(new EntityEditor());
 
 
 

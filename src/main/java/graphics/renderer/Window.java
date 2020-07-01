@@ -194,6 +194,9 @@ public class Window {
             glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // the window will be resizable
         }
 
+        //Disable top window bar
+//        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+
         // Create the window
         this.window_p = glfwCreateWindow(this.width, this.height, this.title, NULL, NULL);
         if ( window_p == NULL )

@@ -1,5 +1,6 @@
 package editor;
 
+import com.google.gson.JsonObject;
 import editor.components.UIComponet;
 import editor.components.container.Axis;
 import editor.components.container.Transform;
@@ -14,6 +15,7 @@ import imgui.gl3.ImGuiImplGl3;
 import input.MousePicker;
 import org.joml.Vector2f;
 
+import java.net.SecureCacheResponse;
 import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -33,6 +35,11 @@ public class Editor {
 
     //All of our UIComponets
     private LinkedList<UIComponet> UIComponets = new LinkedList<>();
+
+    private static int IDs = 1;
+
+    //Editor config file
+    JsonObject config;
 
     private Editor(){
         //Create imgui context
@@ -132,6 +139,8 @@ public class Editor {
 
 
 //        //Add our UIComponets
+        config = new JsonObject();
+        config.addProperty("widgetWidth", 256);
 
     }
 
@@ -190,20 +199,26 @@ public class Editor {
     }
 
     public void render(){
-        Renderer.getInstance().render();
+        //Reset IDs;
+        IDs = 1;
 
         ImGui.newFrame();
-        ImGui.setNextWindowSize(600, 300, ImGuiCond.Once);
-        ImGui.setNextWindowPos(10, 10, ImGuiCond.Once);
+        ImGui.setNextWindowPos(0, 0, ImGuiCond.Once);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 0);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0, 0);
 
-        ImGui.begin("Custom window");  // Start Custom window
+        ImGui.setNextWindowSize(config.get("widgetWidth").getAsInt(), Renderer.getInstance().getHEIGHT());
+        ImGui.setNextWindowContentSize(config.get("widgetWidth").getAsInt(), Renderer.getInstance().getHEIGHT());
+        ImGui.begin("Custom window", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoTitleBar);
+
         //Render our UIComponets
         LinkedList<UIComponet> safeItterate = new LinkedList<>(UIComponets);
         for(UIComponet UIComponet : safeItterate){
             UIComponet.render();
         }
         ImGui.end();
-
+        ImGui.popStyleVar();
+        ImGui.popStyleVar();
 
         ImGui.showDemoWindow();
 
@@ -227,4 +242,7 @@ public class Editor {
         return editor;
     }
 
+    public int getNextID() {
+        return IDs++;
+    }
 }

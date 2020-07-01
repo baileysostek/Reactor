@@ -2,6 +2,8 @@ package entity.component;
 
 import util.Callback;
 
+import java.util.LinkedList;
+
 public class Attribute<T> {
 
     private String name;

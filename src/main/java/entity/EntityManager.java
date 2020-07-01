@@ -38,6 +38,7 @@ public class EntityManager {
     public void addEntity(Entity entity){
         lock.lock();
         try {
+            //Add the entity
             this.toAdd.add(entity);
         } finally {
             lock.unlock();
@@ -176,7 +177,7 @@ public class EntityManager {
         return null;
     }
 
-    public void sync() {
+    private void sync() {
         if(toAdd.size() > 0 || toRemove.size() > 0) {
             lock.lock();
             try {
@@ -184,6 +185,9 @@ public class EntityManager {
                     this.entities.add(e);
                     e.onAdd();
                     this.typedEntities.get(e.getType()).add(e);
+                    if(e.hasAttribute("zIndex")) {
+                        this.resort();
+                    }
                 }
                 toAdd.clear();
                 for (Entity e : toRemove) {
@@ -196,6 +200,15 @@ public class EntityManager {
                 lock.unlock();
             }
         }
+    }
+
+    public void resort(){
+        this.entities.sort((entity1, entity2) -> {
+            if(entity1.hasAttribute("zIndex") && entity2.hasAttribute("zIndex")){
+                return (int) entity1.getAttribute("zIndex").getData() - (int) entity2.getAttribute("zIndex").getData();
+            }
+            return 0;
+        });
     }
 
     public void removeEntity(Entity toRemove) {

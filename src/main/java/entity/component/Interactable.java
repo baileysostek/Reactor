@@ -14,7 +14,8 @@ public class Interactable extends Component{
     private Attribute<Integer> key;
     private Attribute<Float> range;
 
-    private Callback user_calback;
+    private boolean inRange = false;
+
     private Callback distance_check_callback;
 
     public Interactable(){
@@ -24,10 +25,12 @@ public class Interactable extends Component{
         distance_check_callback = new Callback() {
             @Override
             public Object callback(Object... objects) {
-                if(user_calback != null){
-                    if(DistanceCalculator.distance(parent.getPosition(), new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).mul(1, 0, -1)) <= range.getData()){
-                        user_calback.callback(objects);
-                    }
+                System.out.println("Test2:"+parent.getPosition());
+                System.out.println("Test2:"+new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).mul(1, 0, -1));
+                System.out.println("Test2:"+ range.getData());
+                if (DistanceCalculator.distance(parent.getPosition(), new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).mul(1, 0, -1)) <= range.getData()) {
+                    System.out.println("Test3");
+                    invoke("onInteract", objects);
                 }
                 return null;
             }
@@ -35,7 +38,6 @@ public class Interactable extends Component{
     }
 
     public Interactable setCallback(Callback callback){
-        this.user_calback = callback;
         Keyboard.getInstance().switchCallbackKey(distance_check_callback, key.getData());
         return this;
     }
@@ -65,10 +67,24 @@ public class Interactable extends Component{
     public void update(double delta) {
         if(parent != null) {
             if (DistanceCalculator.distance(parent.getPosition(), new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).mul(1, 0, -1)) <= range.getData()) {
-                parent.setScale(new Vector3f(1.5f));
+                invoke("inRange");
+                if(inRange == false){
+                    inRange = true;
+                    invoke("onInRange");
+                }
             }else{
-                parent.setScale(new Vector3f(1.0f));
+                invoke("outRange");
+                if(inRange == true){
+                    inRange = false;
+                    invoke("onOutRange");
+                }
             }
         }
+    }
+
+    //This components name
+    @Override
+    public String getName() {
+        return "Intractable";
     }
 }

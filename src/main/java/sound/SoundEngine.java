@@ -78,7 +78,8 @@ public class SoundEngine{
             bufferPointers.put(fileName, bufferPointer);
 
             //Send the data to OpenAL
-            AL10.alBufferData(bufferPointer, format, rawAudioBuffer, sampleRate);
+            //TODO remove comment below
+//            AL10.alBufferData(bufferPointer, format, rawAudioBuffer, sampleRate);
 
             //Free the memory allocated by STB
             LibCStdlib.free(rawAudioBuffer);

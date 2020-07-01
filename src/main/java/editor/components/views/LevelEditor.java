@@ -107,6 +107,8 @@ public class LevelEditor extends UIComponet {
                     tile.setTexture(selectedTexture);
                     tile.setPosition(new Vector3f(worldPos).add(new Vector3f(0, 0.01f * Im_layer.get(), 0)));
 
+                    tile.addAttribute(new Attribute<Integer>("zIndex", Im_layer.get()));
+
                     //Gen the linked list
                     ArrayList<Entity> entities = new ArrayList<Entity>(MAX_LAYERS);
                     for(int i = 0; i < MAX_LAYERS; i++){
@@ -132,6 +134,8 @@ public class LevelEditor extends UIComponet {
                         tile.setModel(ModelManager.getInstance().loadModel("quad.tek"));
                         tile.setTexture(selectedTexture);
                         tile.setPosition(new Vector3f(worldPos).add(new Vector3f(0, 0.01f * Im_layer.get(), 0)));
+
+                        tile.addAttribute(new Attribute<Integer>("zIndex", Im_layer.get()));
 
                         //Add to world
                         EntityManager.getInstance().addEntity(tile);

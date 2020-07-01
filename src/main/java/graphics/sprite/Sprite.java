@@ -69,11 +69,12 @@ public class Sprite implements Serializable<Sprite> {
         this.textureID = SpriteBinder.getInstance().genTexture();
         this.width = sprite.getWidth();
         this.height = sprite.getHeight();
-        this.pixels = sprite.getPixels();
 
-        for(int i = 0; i < (width * height); i++){
-            if(this.pixels == null){
-                this.pixels[i] = 0x00000000;
+        this.pixels = new int[width * height];
+
+        for(int j = 0; j < height; j++){
+            for(int i = 0; i < width; i++){
+                pixels[i + (j * width)] = sprite.pixels[i + (j * width)];
             }
         }
 
@@ -152,6 +153,7 @@ public class Sprite implements Serializable<Sprite> {
         return this;
     }
 
+    //This function fills the entire sprite with the color specified.
     public Sprite fill(Vector4f color){
         for(int j = 0; j < height; j++){
             for(int i = 0; i < width; i++){
@@ -159,6 +161,53 @@ public class Sprite implements Serializable<Sprite> {
             }
         }
         return this;
+    }
+
+    //This function outlines a sprite and returns a new instance of the sprite.
+    public Sprite outline(Vector4f color){
+        Sprite outlineSearch = new Sprite(this.width + 2, this.height + 2);
+        outlineSearch.overlay(this, 1, 1, this.width, this.height);
+        outlineSearch.flush();
+
+        Sprite outline = new Sprite(this.width + 2, this.height + 2);
+        outline.overlay(this, 1, 1, this.width, this.height);
+
+        for(int j = 0; j < outline.height; j++){
+            for(int i = 0; i < outline.width; i++){
+                if(isAdjasent(outlineSearch, i, j)){
+                    outline.setPixelColor(i, j, color);
+                }
+            }
+        }
+        outline.flush();
+
+
+        return outline;
+    }
+
+    //Chgecks if the coord at XY is adjasent to a tile and it itself is not visiable
+    private boolean isAdjasent(Sprite sprite, int x, int y){
+        //IF there is no color at the current pixel
+        if(sprite.pixels[x+(y * sprite.width)] >> 24 == 0){
+            //If the overlay sprite has data
+            //UP
+            if((sprite.pixels[x+(Math.max(0, y - 1) * sprite.width)] >> 24) != 0){
+                return true;
+            }
+            //DOWN
+            if((sprite.pixels[x+(Math.min(sprite.height-1, y + 1) * sprite.width)] >> 24) != 0){
+                return true;
+            }
+            //Left
+            if((sprite.pixels[Math.max(0, x - 1)+(y * sprite.width)] >> 24) != 0){
+                return true;
+            }
+            //Right
+            if((sprite.pixels[Math.min(sprite.width-1, x + 1)+(y * sprite.width)] >> 24) != 0){
+                return true;
+            }
+        }
+        return false;
     }
 
 

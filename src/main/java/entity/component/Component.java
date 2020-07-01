@@ -1,10 +1,13 @@
 package entity.component;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import entity.Entity;
 import serialization.Serializable;
 import util.Callback;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -13,12 +16,62 @@ public abstract class Component implements Serializable<Component>{
     protected Entity parent;
     private HashMap<String, Attribute> attributes = new HashMap<>();
 
+    //When this component triggers, execute the events attached
+//    private LinkedList<Event> events = new LinkedList<>();
+    private HashMap<String, LinkedList<Event>> events = new HashMap<String, LinkedList<Event>>();
+
     public Component(){}
 
     //This is called when this component gets added to an entity
     public void onAdd(Entity e){
         parent = e;
         syncAttributes(initialize());
+        setEventTargets(parent);
+    }
+
+    private void setEventTargets(Entity target) {
+        for(LinkedList<Event> eventTriggers : events.values()){
+            for(Event event : eventTriggers){
+                event.setParent(target);
+            }
+        }
+    }
+
+    //Events
+    public final void invoke(String name, Object ... objects){
+        if(events.containsKey(name)) {
+            LinkedList<Event> eventList = events.get(name);
+            for (Event e : eventList) {
+                e.invoke(objects);
+            }
+        }
+    }
+
+    public final void addEvent(String eventName, Event event){
+        if(event != null) {
+            //Set event entity parent
+            event.setParent(this.getParent());
+            //Add event
+            if(!events.containsKey(eventName)){
+                LinkedList<Event> eventList = new LinkedList<Event>();
+                eventList.addLast(event);
+                events.put(eventName, eventList);
+            }else{
+                events.get(eventName).addLast(event);
+            }
+        }
+    }
+
+    public final LinkedList<Event> getTriggeredEvents(String trigger){
+        if(this.events.containsKey(trigger)){
+            return this.events.get(trigger);
+        }else{
+            return new LinkedList<Event>();
+        }
+    }
+
+    private Entity getParent(){
+        return this.parent;
     }
 
     private void syncAttributes(LinkedList<Attribute> attributes){
@@ -70,29 +123,71 @@ public abstract class Component implements Serializable<Component>{
         }
     }
 
-    //abstract methods
-    protected abstract LinkedList<Attribute> initialize();
-    public abstract void update(double delta);
-
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject out = new JsonObject();
-
-        return out;
-    }
-
-    @Override
-    public Component deserialize(JsonObject data) {
-
-        return this;
-    }
-
     public Attribute getAttribute(String attributeName){
         if(this.attributes.containsKey(attributeName)){
             return this.attributes.get(attributeName);
         }else{
             return null;
         }
+    }
+
+    public final Collection<String> getTriggers(){
+        return this.events.keySet();
+    }
+
+    //abstract methods
+    protected abstract LinkedList<Attribute> initialize();
+    public abstract void update(double delta);
+    public abstract String getName();
+
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject out = new JsonObject();
+        for(String s : this.getTriggers()){
+            LinkedList<Event> triggeredEvents = this.events.get(s);
+            JsonArray events = new JsonArray(triggeredEvents.size());
+            for(Event e : triggeredEvents){
+                //Gen helper object for this event
+                JsonObject eventClass = new JsonObject();
+
+                //encode name of this event class
+                eventClass.addProperty("class", e.getClass().getName());
+                //encode this classes serialized data.
+                eventClass.add("value", e.serialize());
+
+                //add to array of events
+                events.add(eventClass);
+            }
+            out.add(s, events);
+        }
+        return out;
+    }
+
+    @Override
+    public Component deserialize(JsonObject data) {
+        for(String trigger : data.keySet()){
+            LinkedList<Event> triggeredEvents = new LinkedList<Event>();
+            JsonArray events = data.get(trigger).getAsJsonArray();
+            for(JsonElement eventData : events){
+                //Helper has a class and a value
+                JsonObject helper = eventData.getAsJsonObject();
+                try {
+                    //Try resolve the class that was encoded
+                    Class<?> classType = Class.forName(helper.get("class").getAsString());
+                    //Add our event
+                    triggeredEvents.addLast(((Event)classType.newInstance()).deserialize(helper.getAsJsonObject("value")));
+
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                }
+            }
+            this.events.put(trigger, triggeredEvents);
+        }
+        return this;
     }
 }
