@@ -50,9 +50,9 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //New entity from primative file
     public Entity(String save){
-        this.deserialize(StringUtils.loadJson("levels/"+save));
         //Every entity has some default attributes
         addDefaultAttributes();
+        this.deserialize(StringUtils.loadJson(save));
     }
 
     //new entity from JsonObject, deserialize entity.
@@ -104,7 +104,7 @@ public class Entity implements Transformable, Serializable<Entity> {
                 EntityManager.getInstance().resort();
             }
 
-//                System.out.println(attribute.getName()+" is being set to:"+attribute.getData());
+                System.out.println(attribute.getName()+" is being set to:"+attribute.getData());
 
             //No need to return anything.
             return null;
@@ -266,12 +266,13 @@ public class Entity implements Transformable, Serializable<Entity> {
     }
 
     public final void setTexture(Sprite sprite){
-        if(!this.hasAttribute("textureID")){
-            this.addAttribute(new Attribute("textureID", -1));
-            System.out.println("[251] Set the texture ID to:"+this.getAttribute("textureID").getData());
-        }
         if(sprite != null) {
-            this.getAttribute("textureID").setData(sprite.getTextureID());
+            if(!this.hasAttribute("textureID")){
+                this.addAttribute(new Attribute("textureID", sprite.getTextureID()));
+                System.out.println("[251] Set the texture ID to:"+this.getAttribute("textureID").getData());
+            }else {
+                this.getAttribute("textureID").setData(sprite.getTextureID());
+            }
             System.out.println("[255] Set the texture ID to:"+this.getAttribute("textureID").getData());
             //TODO if preserve scale
             if(this.hasAttribute("autoScale")) {
@@ -388,12 +389,6 @@ public class Entity implements Transformable, Serializable<Entity> {
                 }
             }
         }
-        //If we have a sprite
-        if(data.has("image")) {
-            Sprite sprite = new Sprite(data.get("image").getAsJsonObject());
-            System.out.println("Deserializing sprite:"+sprite);
-            this.setTexture(sprite);
-        }
         //If we have any components
         if(data.has("components")) {
             JsonArray components = data.get("components").getAsJsonArray();
@@ -412,6 +407,12 @@ public class Entity implements Transformable, Serializable<Entity> {
                     e.printStackTrace();
                 }
             }
+        }
+        //If we have a sprite
+        if(data.has("image")) {
+            Sprite sprite = new Sprite(data.get("image").getAsJsonObject());
+            System.out.println("Deserializing sprite:"+sprite);
+            this.setTexture(sprite.getTextureID());
         }
 
         return this;

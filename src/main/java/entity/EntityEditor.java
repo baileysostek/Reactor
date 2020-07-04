@@ -23,6 +23,7 @@ import java.util.LinkedList;
 
 public class EntityEditor extends UIComponet {
     private Callback mouseCallback;
+    private Callback dropFileInWorld;
     boolean pressed = false;
 
     //The entity we are interacting with
@@ -66,9 +67,11 @@ public class EntityEditor extends UIComponet {
             if(hits.size() > 0){
                 this.entity = hits.getFirst();
             }else {
-                Entity entity = new Entity(this.entity.serialize());
-                entity.setPosition(pos);
-                EntityManager.getInstance().addEntity(entity);
+                if(this.entity != null) {
+                    Entity entity = new Entity(this.entity.serialize());
+                    entity.setPosition(pos);
+                    EntityManager.getInstance().addEntity(entity);
+                }
             }
         }
 
@@ -77,11 +80,13 @@ public class EntityEditor extends UIComponet {
     @Override
     public void onAdd() {
         MousePicker.getInstance().addCallback(mouseCallback);
+        MousePicker.getInstance().addCallback(dropFileInWorld);
     }
 
     @Override
     public void onRemove() {
         MousePicker.getInstance().removeCallback(mouseCallback);
+        MousePicker.getInstance().removeCallback(dropFileInWorld);
     }
 
     @Override
@@ -96,17 +101,7 @@ public class EntityEditor extends UIComponet {
 
     @Override
     public void self_render() {
-        //World Outliner, list of all entities in the world
-        ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight() * 0.25f);
-        for(Entity e : new LinkedList<Entity>(EntityManager.getInstance().getEntities())){
-            int selected = ImGuiSelectableFlags.AllowDoubleClick;
-            ImGui.image(e.getTextureID(), 16, 16);
-            ImGui.sameLine();
-            if(ImGui.selectable(e.toString(), this.entity.equals(e), selected)){
-                this.entity = e;
-            }
-        }
-        ImGui.endChild();
+        ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight());
         //If we have an entity
         if(this.entity != null) {
             //Draw a line
@@ -149,26 +144,17 @@ public class EntityEditor extends UIComponet {
                     }
                 }
             }
-
-
-
-//        if (ImGui.beginCombo("", this.sheet.getName())){
-//            for (SpriteSheet sheet : spriteSheets){
-//                boolean is_selected = (this.sheet.getName().equals(sheet.getName()));
-//                if (ImGui.selectable(sheet.getName(), is_selected)){
-//                    this.sheet = sheet;
-//                }
-//                if (is_selected){
-//                    ImGui.setItemDefaultFocus();
-//                }
-//            }
-//            ImGui.endCombo();
-//        }
         }
+        ImGui.endChild();
     }
 
     @Override
     public void self_post_render() {
 
+    }
+
+    @Override
+    public String getName(){
+        return "Properties";
     }
 }

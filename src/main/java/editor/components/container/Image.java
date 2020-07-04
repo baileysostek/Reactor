@@ -35,4 +35,9 @@ public class Image extends UIComponet {
     public void self_post_render() {
 
     }
+
+    @Override
+    public String getName(){
+        return "Image";
+    }
 }

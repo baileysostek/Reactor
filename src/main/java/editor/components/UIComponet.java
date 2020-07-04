@@ -101,4 +101,5 @@ public abstract class UIComponet {
         child.onAdd();
     }
 
+    public abstract String getName();
 }

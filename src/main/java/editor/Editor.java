@@ -1,13 +1,20 @@
 package editor;
 
 import com.google.gson.JsonObject;
+import com.sun.javaws.jnl.ResourceVisitor;
 import editor.components.UIComponet;
 import editor.components.container.Axis;
 import editor.components.container.Transform;
+import editor.components.views.LevelEditor;
 import engine.FraudTek;
+import entity.EntityEditor;
+import entity.WorldOutliner;
 import graphics.renderer.Renderer;
+import graphics.sprite.SpriteBinder;
+import imgui.ImBool;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.ImVec2;
 import imgui.callbacks.ImStrConsumer;
 import imgui.callbacks.ImStrSupplier;
 import imgui.enums.*;
@@ -15,7 +22,10 @@ import imgui.gl3.ImGuiImplGl3;
 import input.MousePicker;
 import org.joml.Vector2f;
 
+import javax.annotation.Resource;
+import javax.swing.*;
 import java.net.SecureCacheResponse;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -34,12 +44,18 @@ public class Editor {
     private static final long[] mouseCursors = new long[ImGuiMouseCursor.COUNT];
 
     //All of our UIComponets
-    private LinkedList<UIComponet> UIComponets = new LinkedList<>();
+    private HashMap<EnumEditorLocation,  LinkedList<UIComponet>> UIComponets = new HashMap<EnumEditorLocation,  LinkedList<UIComponet>>();
 
     private static int IDs = 1;
 
     //Editor config file
     JsonObject config;
+
+    //Tab selected
+    private int selectedTab = 0;
+
+    //Our Components
+    ResourcesViewer resourcesViewer;
 
     private Editor(){
         //Create imgui context
@@ -142,6 +158,21 @@ public class Editor {
         config = new JsonObject();
         config.addProperty("widgetWidth", 256);
 
+        //Init our containers
+        for(EnumEditorLocation location : EnumEditorLocation.values()){
+            this.UIComponets.put(location, new LinkedList<UIComponet>());
+        }
+
+        //populate our editor
+        EntityEditor entityEditor = new EntityEditor();
+        addComponent(EnumEditorLocation.RIGHT, entityEditor);
+        WorldOutliner worldOutliner = new WorldOutliner(entityEditor);
+        addComponent(EnumEditorLocation.LEFT, worldOutliner);
+        LevelEditor levelEditor = new LevelEditor();
+        addComponent(EnumEditorLocation.LEFT, levelEditor);
+        resourcesViewer = new ResourcesViewer();
+        addComponent(EnumEditorLocation.LEFT, resourcesViewer);
+
     }
 
     //Public interfaces
@@ -149,8 +180,8 @@ public class Editor {
 
     }
 
-    public void addComponent(UIComponet UIComponet){
-        this.UIComponets.addLast(UIComponet);
+    public void addComponent(EnumEditorLocation location, UIComponet UIComponet){
+        this.UIComponets.get(location).addLast(UIComponet);
         UIComponet.onAdd();
     }
 
@@ -192,9 +223,11 @@ public class Editor {
 
         //Update all UIComponets
         //Buffer at start
-        LinkedList<UIComponet> safeItterate = new LinkedList<>(UIComponets);
-        for(UIComponet UIComponet : safeItterate){
-            UIComponet.update(delta);
+        for(EnumEditorLocation location : EnumEditorLocation.values()) {
+            LinkedList<UIComponet> safeItterate = new LinkedList<>(UIComponets.get(location));
+            for (UIComponet UIComponet : safeItterate) {
+                UIComponet.update(delta);
+            }
         }
     }
 
@@ -206,24 +239,91 @@ public class Editor {
         ImGui.setNextWindowPos(0, 0, ImGuiCond.Once);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 0);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0, 0);
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 0, 0);
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 0, 0);
+        ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1);
 
-        ImGui.setNextWindowSize(config.get("widgetWidth").getAsInt(), Renderer.getInstance().getHEIGHT());
-        ImGui.setNextWindowContentSize(config.get("widgetWidth").getAsInt(), Renderer.getInstance().getHEIGHT());
-        ImGui.begin("Custom window", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoTitleBar);
+        ImGui.setNextWindowSize(Renderer.getInstance().getWIDTH(), Renderer.getInstance().getHEIGHT());
+        ImGui.setNextWindowContentSize(Renderer.getInstance().getWIDTH(), Renderer.getInstance().getHEIGHT());
+        ImGui.begin("Editor_Window", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoTitleBar);
 
+        //Padding Var
+        ImVec2 padding = new ImVec2();
+        ImGui.getStyle().getFramePadding(padding);
+
+        ImGui.columns(3);
+
+        //Column 1
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 0, 2);
+        ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), ImGui.getWindowHeight());
         //Render our UIComponets
-        LinkedList<UIComponet> safeItterate = new LinkedList<>(UIComponets);
-        for(UIComponet UIComponet : safeItterate){
-            UIComponet.render();
+        ImGui.beginTabBar(getNextID()+"", ImGuiTabBarFlags.FittingPolicyDefault_);
+        int index = 0;
+        ImVec2 availDimensions = new ImVec2();
+        ImGui.getContentRegionAvail(availDimensions);
+        for(UIComponet UIComponet : UIComponets.get(EnumEditorLocation.LEFT)){
+            if(ImGui.beginTabItem(UIComponet.getName(),ImGuiTabBarFlags.FittingPolicyDefault_ | ImGuiTabBarFlags.NoCloseWithMiddleMouseButton)) {
+                ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), availDimensions.y);
+                UIComponet.render();
+                ImGui.endChildFrame();
+            }
+            index++;
+            ImGui.endTabItem();
         }
-        ImGui.end();
+        ImGui.endTabBar();
+        ImGui.endChildFrame();
+        ImGui.popStyleVar();
+
+        //Col 2
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 2, 2);
+        ImGui.nextColumn();
+            //Do our column math out here
+            float adj_height = ((float)Renderer.getInstance().getHEIGHT() / (float)Renderer.getInstance().getWIDTH()) * ImGui.getColumnWidth();
+            float colX = ImGui.getColumnOffset(ImGui.getColumnIndex());
+            float colY = 0;
+            ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth()  - (padding.x * 2), ImGui.getWindowHeight());
+                ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), adj_height);
+                    ImGui.image(Renderer.getInstance().getFrameBuffer().getTextureID(), ImGui.getColumnWidth(), adj_height , 0, 1, 1, 0);
+                    if(ImGui.isMouseHoveringRect(colX, colY, colX + ImGui.getColumnWidth(), colY + adj_height)){
+                        //Override mouse
+                        ImGui.getIO().setWantCaptureMouse(false);
+                        //Set Mouse Scale stuff
+                        MousePicker.getInstance().setOffset(-colX, 0,  ImGui.getColumnWidth() / Renderer.getInstance().getWIDTH(), adj_height / Renderer.getInstance().getHEIGHT());
+                    }
+                ImGui.endChildFrame();
+                //Render our UIComponets
+                renderComponentSet(EnumEditorLocation.CENTER);
+            ImGui.endChildFrame();
+        ImGui.popStyleVar();
+
+        //Col 3
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 2, 2);
+        ImGui.nextColumn();
+        ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), ImGui.getWindowHeight());
+        //Render our UIComponets
+        renderComponentSet(EnumEditorLocation.RIGHT);
+        ImGui.endChildFrame();
+        ImGui.popStyleVar();
+        ImGui.columns();
+
+        ImGui.popStyleVar();
+        ImGui.popStyleVar();
+        ImGui.popStyleVar();
         ImGui.popStyleVar();
         ImGui.popStyleVar();
 
-        ImGui.showDemoWindow();
+        //End
+        ImGui.end();
 
         ImGui.render();
         IMGUIGL.render(ImGui.getDrawData());
+    }
+
+    private void renderComponentSet(EnumEditorLocation enumEditorLocation){
+        LinkedList<UIComponet> safeItterate = new LinkedList<>(UIComponets.get(enumEditorLocation));
+        for(UIComponet UIComponet : safeItterate){
+            UIComponet.render();
+        }
     }
 
     public void onShutdown() {
@@ -244,5 +344,9 @@ public class Editor {
 
     public int getNextID() {
         return IDs++;
+    }
+
+    public ResourcesViewer getFileBrowser() {
+        return resourcesViewer;
     }
 }

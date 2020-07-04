@@ -148,11 +148,6 @@ public class FraudTek {
                 //We have a known window size, a shader, and a GL context, we can make a window.
                 Renderer.initialize(WIDTH, HEIGHT);
 
-                //If we are in developent mode init the console.
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
-                    Editor.initialize();
-                }
-
                 LogManager.initialize();
                 ModelManager.initialize();
                 CameraManager.initialize();
@@ -162,6 +157,11 @@ public class FraudTek {
 
                 //Add our initialized instances to our ScriptingManager
                 ScriptingEngine.initialize();
+
+                //If we are in developent mode init the console.
+                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                    Editor.initialize();
+                }
 
 
                 Renderer.getInstance();

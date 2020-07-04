@@ -64,4 +64,9 @@ public class Transform extends UIComponet {
     public void self_post_render() {
 
     }
+
+    @Override
+    public String getName(){
+        return "Transform";
+    }
 }

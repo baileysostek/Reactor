@@ -26,6 +26,12 @@ public class MousePicker extends Engine {
     private float MouseX = 0;
     private float MouseY = 0;
 
+    private float MouseOffsetX = 0;
+    private float MouseOffsetY = 0;
+    private float ScreenScaleX = 1;
+    private float ScreenScaleY = 1;
+
+
     public LinkedList<Callback> callbacks = new LinkedList<Callback>();
 
     public boolean mousePressed = false;
@@ -48,7 +54,9 @@ public class MousePicker extends Engine {
                     }
                 }
                 for(Callback c : callbacks){
-                    c.callback(button, action);
+                    if(c != null) {
+                        c.callback(button, action);
+                    }
                 }
             }
         });
@@ -70,8 +78,8 @@ public class MousePicker extends Engine {
         double newX = x.get();
         double newY = y.get();
 
-        MouseX = (float) newX;
-        MouseY = (float) newY;
+        MouseX = ((float) newX) + MouseOffsetX;
+        MouseY = ((float) newY) + MouseOffsetY;
 
         double deltaX = newX - (Renderer.getInstance().getWIDTH()/2);
         double deltaY = newY - (Renderer.getInstance().getHEIGHT()/2);
@@ -83,6 +91,12 @@ public class MousePicker extends Engine {
         this.viewMatrix = CameraManager.getInstance().getActiveCamera().getTransformationMarix();
 
         ray = calculateMouseRay();
+
+        //Reset mouse pos for this frame
+        MouseX -= MouseOffsetX;
+        MouseY -= MouseOffsetY;
+
+        resetOffset();
     }
 
     public Vector3f calculateMouseRay() {
@@ -120,8 +134,8 @@ public class MousePicker extends Engine {
     }
 
     private Vector2f getNormalisedDeviceCoordinates(float mouseX, float mouseY) {
-        float x = (2.0f * mouseX) / Renderer.getInstance().getWIDTH() - 1f;
-        float y = (2.0f * mouseY) / Renderer.getInstance().getHEIGHT() - 1f;
+        float x = (2.0f * mouseX) / (Renderer.getInstance().getWIDTH()  * ScreenScaleX) - 1f;
+        float y = (2.0f * mouseY) / (Renderer.getInstance().getHEIGHT() * ScreenScaleY) - 1f;
         return new Vector2f(x, y);
     }
 
@@ -138,7 +152,7 @@ public class MousePicker extends Engine {
     }
 
     public Vector2f getScreenCoords(){
-        return new Vector2f(MouseX, Renderer.getInstance().getHEIGHT()-MouseY);
+        return new Vector2f(MouseX, (Renderer.getInstance().getHEIGHT() * ScreenScaleY) - MouseY);
     }
 
     public Vector2f getGLScreenCoords(){
@@ -162,6 +176,21 @@ public class MousePicker extends Engine {
 
     public void removeCallback(Callback mouseCallback) {
         this.callbacks.remove(mouseCallback);
+    }
+
+    public void setOffset(float mouseOffsetX, float mouseOffsetY, float screenScaleX, float screenScaleY){
+        this.MouseOffsetX = mouseOffsetX;
+        this.MouseOffsetY = mouseOffsetY;
+        this.ScreenScaleX = screenScaleX;
+        this.ScreenScaleY = screenScaleY;
+    }
+
+    public void resetOffset(){
+        //Reset any offsets
+        MouseOffsetX = 0;
+        MouseOffsetY = 0;
+        ScreenScaleX = 1;
+        ScreenScaleY = 1;
     }
 
     public static Vector3f rayHitsPlane(Vector3f pos, Vector3f dir, Vector3f planeOrigin, Vector3f planeNormal){

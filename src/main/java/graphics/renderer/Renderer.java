@@ -37,6 +37,8 @@ public class Renderer extends Engine {
 
     private int shaderID = 0;
 
+    private FBO frameBuffer;
+
     private Renderer(int width, int height){
         //init
         // Set the clear color
@@ -59,6 +61,9 @@ public class Renderer extends Engine {
         GL20.glCullFace(GL20.GL_BACK);
 
         System.out.println("Shader ID:"+shaderID);
+
+        frameBuffer = new FBO(width, height);
+
     }
 
     public void setRenderType(int type){
@@ -70,6 +75,7 @@ public class Renderer extends Engine {
         HEIGHT = height;
         aspectRatio = (float)width / (float)height;
         projectionMatrix = Maths.createProjectionMatrix(FOV, NEAR_PLANE, FAR_PLANE);
+        frameBuffer.resize(width, height);
         GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "perspective"),false, MatrixUtils.createProjectionMatrix());
     }
 
@@ -95,6 +101,10 @@ public class Renderer extends Engine {
     }
 
     public void render(){
+        //Cleanup
+        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+            frameBuffer.bindFrameBuffer();
+        }
 
         GL20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         ShaderManager.getInstance().useShader(shaderID);
@@ -159,6 +169,10 @@ public class Renderer extends Engine {
             lastID = entity.getModel().getID();
         }
 
+        //Cleanup
+        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+            frameBuffer.unbindFrameBuffer();
+        }
     }
 
     public void postpare(){
@@ -166,6 +180,10 @@ public class Renderer extends Engine {
         GL20.glDisableVertexAttribArray(1);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL20.glDisable(GL20.GL_BLEND);
+    }
+
+    public FBO getFrameBuffer(){
+        return this.frameBuffer;
     }
 
     @Override

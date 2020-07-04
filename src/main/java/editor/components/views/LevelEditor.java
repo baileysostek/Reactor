@@ -161,7 +161,7 @@ public class LevelEditor extends UIComponet {
 
     @Override
     public void self_update(double delta) {
-        raycastForTile();
+//        raycastForTile();
         if(Keyboard.getInstance().isKeyPressed(Keyboard.DELETE)){
             String name = levelname.get().substring(0, levelname.get().length() - 1);
             levelname.set(name);
@@ -174,6 +174,7 @@ public class LevelEditor extends UIComponet {
 
     @Override
     public void self_render() {
+        ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight());
         ImGui.inputText("SaveLevel", levelname);
         if(ImGui.button("Save", 32, 32)){
             this.save();
@@ -214,6 +215,7 @@ public class LevelEditor extends UIComponet {
                 ImGui.sameLine();
             }
         }
+        ImGui.endChild();
     }
 
     @Override
@@ -359,8 +361,6 @@ public class LevelEditor extends UIComponet {
         //At this point texture atlas is generated and the entities have had their attributes modified.
         out.add("image", textureAtlas.serialize());
 
-        Editor.getInstance().addComponent(new Image(new Sprite(textureAtlas).getTextureID()));
-
         System.out.println(sprites.size()+" unique tiles created.");
 
         String levelName = levelname.get();
@@ -370,5 +370,10 @@ public class LevelEditor extends UIComponet {
 
         //Save our serialized output level
         StringUtils.write(out.toString(), "/levels/"+levelName);
+    }
+
+    @Override
+    public String getName(){
+        return "Level Editor";
     }
 }
