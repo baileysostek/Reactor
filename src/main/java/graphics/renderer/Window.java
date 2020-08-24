@@ -194,6 +194,8 @@ public class Window {
             glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // the window will be resizable
         }
 
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+
         //Disable top window bar
 //        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 

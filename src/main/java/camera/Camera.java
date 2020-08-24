@@ -11,6 +11,8 @@ public class Camera {
     private Vector3f rot    = new Vector3f(0f);
     private Vector3f offset = new Vector3f(0f);
 
+    private final Vector3f DEFAULT_ONE = new Vector3f(1);
+
     public Camera(){
         //Pass by reference or value
 //        System.out.println("Forward: "+ getForwardDir());
@@ -40,18 +42,23 @@ public class Camera {
     }
 
     public float[] getTransform(){
+        return getTransform(DEFAULT_ONE);
+    }
+
+    public float[] getTransform(Vector3f vector3f) {
         Matrix4f transform = new Matrix4f().identity();
 
         transform.rotateAffineXYZ(rot.x, rot.y, rot.z, transform);
 
-        transform.translate(new Vector3f(new Vector3f(pos).sub(offset)).mul(new Vector3f(-1, 1, 1)), transform);
+        transform.translate(new Vector3f(new Vector3f(pos).sub(offset).div(vector3f)).mul(new Vector3f(-1, 1, 1)), transform);
 
+//        transform.scale(vector3f.x, vector3f.y, vector3f.z);
 
         float[] modelMatrix = new float[]{
-            transform.m00(), transform.m01(), transform.m02(), transform.m03(),
-            transform.m10(), transform.m11(), transform.m12(), transform.m13(),
-            transform.m20(), transform.m21(), transform.m22(), transform.m23(),
-            transform.m30(), transform.m31(), transform.m32(), transform.m33()
+                transform.m00(), transform.m01(), transform.m02(), transform.m03(),
+                transform.m10(), transform.m11(), transform.m12(), transform.m13(),
+                transform.m20(), transform.m21(), transform.m22(), transform.m23(),
+                transform.m30(), transform.m31(), transform.m32(), transform.m33()
         };
 
         return modelMatrix;
@@ -82,4 +89,5 @@ public class Camera {
     public Vector3f getRotation() {
         return this.rot;
     }
+
 }

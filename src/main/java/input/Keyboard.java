@@ -51,8 +51,10 @@ public class Keyboard extends Engine {
 
 
     //SPECIALTY
-    public static final int ESCAPE = 0x100;
-    public static final int DELETE = 0x256;
+    public static final int ESCAPE    = 0x100;
+    public static final int DELETE    = 261;
+    public static final int BACKSPACE = 259;
+    public static final int SPACE     = KeyEvent.VK_SPACE;
 
 
     private Keyboard(){
@@ -125,8 +127,13 @@ public class Keyboard extends Engine {
     }
 
 
-    public boolean isKeyPressed(int key){
-        return keys[key];
+    public boolean isKeyPressed(int ... keys){
+        for(int a_key : keys){
+            if(this.keys[a_key]){
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isKeyPressed(float key){

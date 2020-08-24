@@ -1,5 +1,7 @@
 package editor;
 
+import camera.Camera;
+import camera.CameraManager;
 import com.google.gson.JsonObject;
 import com.sun.javaws.jnl.ResourceVisitor;
 import editor.components.UIComponet;
@@ -8,6 +10,7 @@ import editor.components.container.Transform;
 import editor.components.views.LevelEditor;
 import engine.FraudTek;
 import entity.EntityEditor;
+import entity.EntityManager;
 import entity.WorldOutliner;
 import graphics.renderer.Renderer;
 import graphics.sprite.SpriteBinder;
@@ -19,12 +22,21 @@ import imgui.callbacks.ImStrConsumer;
 import imgui.callbacks.ImStrSupplier;
 import imgui.enums.*;
 import imgui.gl3.ImGuiImplGl3;
+import input.Keyboard;
 import input.MousePicker;
 import org.joml.Vector2f;
+import org.joml.Vector3f;
+import platform.EnumDevelopment;
+import platform.EnumPlatform;
+import platform.PlatformManager;
+import util.Callback;
+import util.Debouncer;
 
 import javax.annotation.Resource;
 import javax.swing.*;
+import java.awt.event.KeyEvent;
 import java.net.SecureCacheResponse;
+import java.security.Key;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -43,6 +55,9 @@ public class Editor {
     // Mouse cursors provided by GLFW
     private static final long[] mouseCursors = new long[ImGuiMouseCursor.COUNT];
 
+    //Camera controls
+    float speed = 10.5f;
+
     //All of our UIComponets
     private HashMap<EnumEditorLocation,  LinkedList<UIComponet>> UIComponets = new HashMap<EnumEditorLocation,  LinkedList<UIComponet>>();
 
@@ -56,6 +71,9 @@ public class Editor {
 
     //Our Components
     ResourcesViewer resourcesViewer;
+
+    //Play Pause
+    Debouncer playPause = new Debouncer(false);
 
     private Editor(){
         //Create imgui context
@@ -153,6 +171,9 @@ public class Editor {
         IMGUIGL = new ImGuiImplGl3();
         IMGUIGL.init();
 
+        //Rotate camera towards ground
+        CameraManager.getInstance().getActiveCamera().setRotation( new Vector3f((float) (Math.PI / 2.0f), 0, 0));
+
 
 //        //Add our UIComponets
         config = new JsonObject();
@@ -167,11 +188,24 @@ public class Editor {
         EntityEditor entityEditor = new EntityEditor();
         addComponent(EnumEditorLocation.RIGHT, entityEditor);
         WorldOutliner worldOutliner = new WorldOutliner(entityEditor);
-        addComponent(EnumEditorLocation.LEFT, worldOutliner);
+        addComponent(EnumEditorLocation.LEFT_TAB, worldOutliner);
         LevelEditor levelEditor = new LevelEditor();
-        addComponent(EnumEditorLocation.LEFT, levelEditor);
+        addComponent(EnumEditorLocation.LEFT_TAB, levelEditor);
         resourcesViewer = new ResourcesViewer();
-        addComponent(EnumEditorLocation.LEFT, resourcesViewer);
+        addComponent(EnumEditorLocation.LEFT_BOTTOM, resourcesViewer);
+
+        Keyboard.getInstance().addPressCallback(Keyboard.P, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+                    PlatformManager.getInstance().setDevelopmentLevel(EnumDevelopment.PRODUCTION);
+                }else{
+                    PlatformManager.getInstance().setDevelopmentLevel(EnumDevelopment.DEVELOPMENT);
+                }
+                System.out.println("Pressed new state is:"+PlatformManager.getInstance().getDevelopmentStatus());
+                return null;
+            }
+        });
 
     }
 
@@ -212,7 +246,7 @@ public class Editor {
         mousePos.sub(0, Renderer.getInstance().getHEIGHT());
         mousePos.mul(1, -1);
 
-
+        //Mouse input
         io.setMousePos((float) mousePos.x(), (float) mousePos.y());
         io.setDeltaTime((float) delta);
 
@@ -220,6 +254,42 @@ public class Editor {
         final int imguiCursor = ImGui.getMouseCursor();
         glfwSetCursor(FraudTek.WINDOW_POINTER, mouseCursors[imguiCursor]);
         glfwSetInputMode(FraudTek.WINDOW_POINTER, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+        //Camera movemetn stuff
+        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+            if(Keyboard.getInstance().isKeyPressed(Keyboard.W)){
+                Camera cam = CameraManager.getInstance().getActiveCamera();
+                cam.getPosition().add(new Vector3f(0, 0, (float) (speed * delta)));
+            }
+
+            if(Keyboard.getInstance().isKeyPressed(Keyboard.S)){
+                Camera cam = CameraManager.getInstance().getActiveCamera();
+                cam.getPosition().add(new Vector3f(0, 0, (float) (-speed * delta)));
+            }
+
+            if(Keyboard.getInstance().isKeyPressed(Keyboard.A)){
+                Camera cam = CameraManager.getInstance().getActiveCamera();
+                cam.getPosition().add(new Vector3f((float) (-speed * delta), 0, 0));
+            }
+
+            if(Keyboard.getInstance().isKeyPressed(Keyboard.D)){
+                Camera cam = CameraManager.getInstance().getActiveCamera();
+                cam.getPosition().add(new Vector3f((float) (speed * delta), 0, 0));
+            }
+
+            if(Keyboard.getInstance().isKeyPressed(Keyboard.Q)){
+                Camera cam = CameraManager.getInstance().getActiveCamera();
+                cam.getPosition().add(new Vector3f(0, (float) (speed * delta), 0));
+            }
+
+            if(Keyboard.getInstance().isKeyPressed(Keyboard.E)){
+                Camera cam = CameraManager.getInstance().getActiveCamera();
+                cam.getPosition().add(new Vector3f(0, (float) (-speed * delta), 0));
+            }
+
+
+        }
+
 
         //Update all UIComponets
         //Buffer at start
@@ -255,22 +325,30 @@ public class Editor {
 
         //Column 1
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 0, 2);
-        ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), ImGui.getWindowHeight());
+        ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), ImGui.getWindowHeight()/2);
         //Render our UIComponets
         ImGui.beginTabBar(getNextID()+"", ImGuiTabBarFlags.FittingPolicyDefault_);
         int index = 0;
         ImVec2 availDimensions = new ImVec2();
         ImGui.getContentRegionAvail(availDimensions);
-        for(UIComponet UIComponet : UIComponets.get(EnumEditorLocation.LEFT)){
+        for(UIComponet UIComponet : UIComponets.get(EnumEditorLocation.LEFT_TAB)){
             if(ImGui.beginTabItem(UIComponet.getName(),ImGuiTabBarFlags.FittingPolicyDefault_ | ImGuiTabBarFlags.NoCloseWithMiddleMouseButton)) {
                 ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), availDimensions.y);
+                UIComponet.setVisable(true);
                 UIComponet.render();
                 ImGui.endChildFrame();
+            }else{
+                UIComponet.setVisable(false);
             }
             index++;
             ImGui.endTabItem();
         }
         ImGui.endTabBar();
+        ImGui.endChildFrame();
+        ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), ImGui.getWindowHeight()/2);
+        for(UIComponet UIComponet : UIComponets.get(EnumEditorLocation.LEFT_BOTTOM)){
+            UIComponet.render();
+        }
         ImGui.endChildFrame();
         ImGui.popStyleVar();
 
@@ -327,6 +405,12 @@ public class Editor {
     }
 
     public void onShutdown() {
+        //Destroy our listener threads
+        for(EnumEditorLocation location : UIComponets.keySet()){
+            for(UIComponet component : new LinkedList<>(UIComponets.get(location))) {
+                component.onShutdown();
+            }
+        }
         IMGUIGL.dispose();
         ImGui.destroyContext();
     }

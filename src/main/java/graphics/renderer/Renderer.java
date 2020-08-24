@@ -24,9 +24,9 @@ public class Renderer extends Engine {
     private static int WIDTH;
     private static int HEIGHT;
 
-    private static final float FOV = 70.0f;
-    private static final float NEAR_PLANE = 0.1f;
-    private static final float FAR_PLANE = 1024.0f;
+    public static final float FOV = 70;
+    public static final float NEAR_PLANE = 0.1f;
+    public static final float FAR_PLANE = 1024.0f;
     private static Matrix4f projectionMatrix;
 
     private float aspectRatio = 1.0f;
@@ -36,6 +36,7 @@ public class Renderer extends Engine {
     private static int RENDER_TYPE = GL11.GL_TRIANGLES;
 
     private int shaderID = 0;
+    private int lineShaderID = 0;
 
     private FBO frameBuffer;
 
@@ -51,6 +52,7 @@ public class Renderer extends Engine {
         }
 
         shaderID = ShaderManager.getInstance().loadShader("main");
+        lineShaderID = ShaderManager.getInstance().loadShader("vector");
         ShaderManager.getInstance().useShader(shaderID);
 
         WIDTH = width;
@@ -129,7 +131,6 @@ public class Renderer extends Engine {
 
 
         //Render calls from the loaded scene.
-        SceneManager.getInstance().render();
 //        GL20.glUniform3fv(GL20.glGetUniformLocation(shaderID, "sunAngle"), new float[]{1, 0, 0});
 
 
@@ -137,6 +138,7 @@ public class Renderer extends Engine {
         int lastID = -1;
         int lastTexture = -1;
         int loads = 0;
+        EntityManager.getInstance().resort();
         for(Entity entity : EntityManager.getInstance().getEntities()){
 
             if(entity.getModel().getID() != lastID) {
@@ -168,14 +170,46 @@ public class Renderer extends Engine {
 
             lastID = entity.getModel().getID();
         }
+    }
+
+    //TODO currently this is an immidate draw, it would be more efficeint to create a buffer that is written into as the Vector draw calls come in, then do one single draw.
+    public void drawLine(Vector3f from, Vector3f to, Vector3f color) {
+        // Vertex data
+        ShaderManager.getInstance().useShader(lineShaderID);
+//        GL40.glUseProgram(lineShaderID);
+//        GL20.glEnable(GL20.GL_DEPTH_TEST);
+//        GL20.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+
+        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(lineShaderID, "projectionMatrix"),false, MatrixUtils.createProjectionMatrix());
+
+        Handshake handshake = new Handshake();
+        handshake.addAttributeList("position", new float[]{
+            from.x(),
+            from.y(),
+            from.z(),
+            to.x(),
+            to.y(),
+            to.z()
+        }, EnumGLDatatype.VEC3);
+
+        //Mess with uniforms
+        ShaderManager.getInstance().loadHandshakeIntoShader(lineShaderID, handshake);
+
+        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(lineShaderID, "viewMatrix"), false, CameraManager.getInstance().getActiveCamera().getTransform(new org.joml.Vector3f(1, 1, aspectRatio)));
+        ShaderManager.getInstance().loadUniformIntoActiveShader("color", new org.joml.Vector3f(color.x(), color.y(), color.z()));
+
+        GL20.glDrawArrays(GL20.GL_LINES, 0, 2);
+
+        GL20.glUseProgram(0);
+    }
+
+    public void postpare(){
 
         //Cleanup
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             frameBuffer.unbindFrameBuffer();
         }
-    }
 
-    public void postpare(){
         GL20.glDisableVertexAttribArray(0);
         GL20.glDisableVertexAttribArray(1);
         GL11.glDisable(GL11.GL_DEPTH_TEST);

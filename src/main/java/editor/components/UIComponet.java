@@ -46,6 +46,16 @@ public abstract class UIComponet {
     public abstract void self_render();
     public abstract void self_post_render();
 
+    public void onShutdown(){
+        return;
+    };
+    public void onEnterPlay(){
+        return;
+    };
+    public void onEnterDevelopment(){
+        return;
+    };
+
     public UIComponet getParent(){
         return this.parent;
     }
@@ -99,6 +109,14 @@ public abstract class UIComponet {
         //If we haven't returned yet just add to end
         this.children.addLast(child);
         child.onAdd();
+    }
+
+    public void setVisable(boolean visable){
+        this.visable = visable;
+    }
+
+    public boolean isVisable(){
+        return visable;
     }
 
     public abstract String getName();

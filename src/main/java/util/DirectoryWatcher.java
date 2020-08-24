@@ -1,5 +1,8 @@
 package util;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.nio.file.*;
 import java.util.LinkedList;
 
@@ -10,6 +13,9 @@ public class DirectoryWatcher implements Runnable{
     private Thread thread;
     private String threadName;
     private boolean running;
+
+    private WatchService watchService;
+    private WatchKey     key;
 
     private LinkedList<Callback> callbacks = new LinkedList<Callback>();
 
@@ -22,30 +28,38 @@ public class DirectoryWatcher implements Runnable{
     public void run() {
         running = true;
         String stringPath = this.threadName.replaceFirst("/", "");
-        stringPath = (stringPath.substring(0, stringPath.length()-1));
-        stringPath = stringPath.replaceAll("/", "\\\\");
-        final Path path = Paths.get(stringPath);
+        stringPath = StringUtils.getRelativePath() + stringPath;
+        stringPath = stringPath.replaceAll("\\\\", "/");
+        if(stringPath.endsWith("/")){
+            stringPath = stringPath.substring(0, stringPath.length()-1);
+        }
 
-        try (final WatchService watchService = FileSystems.getDefault().newWatchService()) {
-            final WatchKey watchKey = path.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+        try{
+            watchService = FileSystems.getDefault().newWatchService();
+
+            Path path = Paths.get(stringPath);
+
+            path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
+
             while (running) {
-                try {
-                    final WatchKey wk = watchService.take();
-                    for (WatchEvent<?> event : wk.pollEvents()) {
-                        //we only register "ENTRY_MODIFY" so the context is always a Path.
-                        final Path changed = (Path) event.context();
-                        for (Callback callback : callbacks) {
-                            callback.callback(changed);
+                key = watchService.take();
+                if(key != null) {
+                    for (WatchEvent event : key.pollEvents()) {
+                        for(Callback callback : callbacks){
+                            callback.callback(event.kind(), event.context());
                         }
                     }
-                }catch (Exception e){
-                    //Stuff the error under the rug... TODO:stop these watcher threads gracefully
-                    running = false;
+                    key.reset();
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }catch (ClosedWatchServiceException e){
+            System.out.println("Removing Directory Watcher from:"+this.threadName);
         }
+
     }
 
     public void registerCallback(Callback callback){
@@ -54,8 +68,19 @@ public class DirectoryWatcher implements Runnable{
 
     public void destrory(){
         running = false;
-        if(thread.isAlive()){
-            thread.stop();
+        if(key != null){
+            try {
+                key.cancel();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if(watchService != null){
+            try {
+                watchService.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

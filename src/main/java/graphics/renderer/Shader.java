@@ -11,7 +11,7 @@ public class Shader {
     private String[] attributes;
     private HashMap<String, EnumGLDatatype> uniforms = new HashMap<>();
 
-    public Shader(String name, int programID, String version){
+    protected Shader(String name, int programID, String version){
         this.name = name;
         this.programID = programID;
         this.version = version;

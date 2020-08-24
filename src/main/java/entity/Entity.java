@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import entity.component.Attribute;
 import entity.component.Component;
 import entity.interfaces.Transformable;
+import graphics.renderer.Renderer;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import math.MatrixUtils;
@@ -25,7 +26,6 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Transform properties of an entity
     private Vector3f rotation = new Vector3f(0f);
-    private Vector3f scale    = new Vector3f(1f);
 
     private Matrix4f transform = new Matrix4f().identity();
 
@@ -70,7 +70,10 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.addAttribute(new Attribute<Vector3f>("rotation" , new Vector3f(0f)));
         this.addAttribute(new Attribute<Vector3f>("scale"    , new Vector3f(1f)));
         this.addAttribute(new Attribute<Integer> ("textureID", -1));
+        this.addAttribute(new Attribute<Integer> ("zIndex"   , 0));
         this.addAttribute(new Attribute<Boolean> ("autoScale", true));
+        this.addAttribute(new Attribute<String>  ("name"     , "Undefined"));
+        this.addAttribute(new Attribute<String>  ("type"     , ""));
     }
 
     //Type
@@ -104,7 +107,6 @@ public class Entity implements Transformable, Serializable<Entity> {
                 EntityManager.getInstance().resort();
             }
 
-                System.out.println(attribute.getName()+" is being set to:"+attribute.getData());
 
             //No need to return anything.
             return null;
@@ -124,6 +126,7 @@ public class Entity implements Transformable, Serializable<Entity> {
                 if (c.hasAttribute(observed.getName())) {
                     //Update component
                     c.setAttribute(observed, closedList);
+                    c.onAttributeUpdate(observed);
                 }
             }
         }
@@ -180,12 +183,12 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     @Override
     public final Vector3f getScale() {
-        return this.scale;
+        return new Vector3f((Vector3f) this.attributes.get("scale").getData()).mul(new Vector3f(1, 1, Renderer.getInstance().getAspectRatio()));
     }
 
     @Override
     public final Entity setScale(Vector3f scale) {
-        this.scale = scale;
+        this.attributes.get("scale").setData(new Vector3f(scale));
         return this;
     }
 
@@ -194,7 +197,7 @@ public class Entity implements Transformable, Serializable<Entity> {
         transform = transform.identity();
         transform.translate((Vector3f) this.attributes.get("position").getData(), transform);
         transform.rotateAffineXYZ(rotation.x, rotation.y, rotation.z, transform);
-        transform.scale(scale, transform);
+        transform.scale(getScale(), transform);
 
         if(this.parent != null){
             Matrix4f parent = new Matrix4f(this.parent.getTransform());
@@ -263,6 +266,7 @@ public class Entity implements Transformable, Serializable<Entity> {
             this.getAttribute("textureID").setData(id);
             System.out.println("[244] Set the texture ID to:"+this.getAttribute("textureID").getData());
         }
+        autoScaleSprite();
     }
 
     public final void setTexture(Sprite sprite){
@@ -274,16 +278,11 @@ public class Entity implements Transformable, Serializable<Entity> {
                 this.getAttribute("textureID").setData(sprite.getTextureID());
             }
             System.out.println("[255] Set the texture ID to:"+this.getAttribute("textureID").getData());
-            //TODO if preserve scale
-            if(this.hasAttribute("autoScale")) {
-                if ((boolean) this.getAttribute("autoScale").getData()) {
-                    this.setScale(new Vector3f(sprite.getWidth() / 16f, 1, sprite.getHeight() / 16f));
-                }
-            }
         }else{
             this.getAttribute("textureID").setData(-1);
             System.out.println("[262] Set the texture ID to:"+this.getAttribute("textureID").getData());
         }
+        autoScaleSprite();
     }
 
     public final void setTexture(String texture){
@@ -294,6 +293,20 @@ public class Entity implements Transformable, Serializable<Entity> {
         if(!texture.isEmpty()){
             this.getAttribute("textureID").setData(SpriteBinder.getInstance().load(texture).getTextureID());
             System.out.println("[273] Set the texture ID to:"+this.getAttribute("textureID").getData());
+        }
+        autoScaleSprite();
+    }
+
+    private final void autoScaleSprite(){
+        int texID = this.getTextureID();
+        if(texID >= 0) {
+            Sprite sprite = SpriteBinder.getInstance().getSprite(texID);
+            if (this.hasAttribute("autoScale")) {
+                if ((boolean) this.getAttribute("autoScale").getData()) {
+                    //TODO if 2D set y = 0 other preserve y
+                    this.setScale(new Vector3f(sprite.getWidth() / 16f, 0, sprite.getHeight() / 16f));
+                }
+            }
         }
     }
 
@@ -337,9 +350,13 @@ public class Entity implements Transformable, Serializable<Entity> {
         for(Attribute attribute : this.attributes.values()){
             //SOO we need to parse this object back to the initial class type, so we will make an intermediate object
             JsonObject helperObject = new JsonObject();
-            helperObject.addProperty("class", attribute.getData().getClass().getName());
-            helperObject.add("value", SerializationHelper.getGson().toJsonTree(attribute.getData()));
-            attributesObject.add(attribute.getName(), helperObject);
+            if(attribute.getData() != null) {
+                helperObject.addProperty("class", attribute.getData().getClass().getName());
+                helperObject.add("value", SerializationHelper.getGson().toJsonTree(attribute.getData()));
+                attributesObject.add(attribute.getName(), helperObject);
+            }else{
+                attributesObject.add(attribute.getName(), null);
+            }
         }
 
         //Add our attributes to out
@@ -361,7 +378,10 @@ public class Entity implements Transformable, Serializable<Entity> {
 
         //Add our sprite
         if(this.hasAttribute("textureID")){
-            out.add("image", SpriteBinder.getInstance().getSprite(this.getTextureID()).serialize());
+            Sprite temp = SpriteBinder.getInstance().getSprite(this.getTextureID());
+            if(temp != null) {
+                out.add("image", temp.serialize());
+            }
         }
 
         return out;
@@ -407,6 +427,9 @@ public class Entity implements Transformable, Serializable<Entity> {
                     e.printStackTrace();
                 }
             }
+//            for(Component c : this.components){
+//                c.postInitialize();
+//            }
         }
         //If we have a sprite
         if(data.has("image")) {

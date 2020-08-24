@@ -87,4 +87,9 @@ public class Interactable extends Component{
     public String getName() {
         return "Intractable";
     }
+
+    @Override
+    public void onAttributeUpdate(Attribute observed) {
+
+    }
 }

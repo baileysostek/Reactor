@@ -16,11 +16,17 @@ public abstract class Component implements Serializable<Component>{
     protected Entity parent;
     private HashMap<String, Attribute> attributes = new HashMap<>();
 
+    private static int GLOBAL_ID = 0;
+    private final  int ID;
+
     //When this component triggers, execute the events attached
 //    private LinkedList<Event> events = new LinkedList<>();
     private HashMap<String, LinkedList<Event>> events = new HashMap<String, LinkedList<Event>>();
 
-    public Component(){}
+    public Component(){
+        ID = GLOBAL_ID;
+        GLOBAL_ID++;
+    }
 
     //This is called when this component gets added to an entity
     public void onAdd(Entity e){
@@ -70,7 +76,7 @@ public abstract class Component implements Serializable<Component>{
         }
     }
 
-    private Entity getParent(){
+    public Entity getParent(){
         return this.parent;
     }
 
@@ -137,8 +143,10 @@ public abstract class Component implements Serializable<Component>{
 
     //abstract methods
     protected abstract LinkedList<Attribute> initialize();
+//    public abstract void postInitialize();
     public abstract void update(double delta);
     public abstract String getName();
+    public abstract void onAttributeUpdate(Attribute observed);
 
 
     @Override
@@ -190,4 +198,9 @@ public abstract class Component implements Serializable<Component>{
         }
         return this;
     }
+
+    public int getID(){
+        return this.ID;
+    }
+
 }

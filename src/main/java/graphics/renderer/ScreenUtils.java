@@ -17,13 +17,13 @@ public class ScreenUtils {
         float[] forward = {0, 0, -1, 1}; //Worldspace direction
 
         float aspectRatio = Renderer.getInstance().getAspectRatio();
-        float y_scale = (float) ((1f / Math.tan(Math.toRadians(MatrixUtils.FOV / 2f))));
+        float y_scale = (float) ((1f / Math.tan(Math.toRadians(Renderer.FOV / 2f))));
         float x_scale = y_scale / aspectRatio;
 
         float[] touchMatrix = MatrixUtils.getIdentityMatrix();
         System.out.println("xScale:" + x_scale + " yScale:"+y_scale + " ar:"+aspectRatio);
-        touchMatrix = MatrixUtils.rotateM(touchMatrix, 0, (screen[0] - (0.16f)) * -1f * (MatrixUtils.FOV / 0.95f), 0f,0f, 1f); //X
-        touchMatrix = MatrixUtils.rotateM(touchMatrix, 0, screen[1] * -1f * (MatrixUtils.FOV / aspectRatio), 1f,0f, 0f); //Y
+        touchMatrix = MatrixUtils.rotateM(touchMatrix, 0, (screen[0] - (0.16f)) * -1f * (Renderer.FOV / 0.95f), 0f,0f, 1f); //X
+        touchMatrix = MatrixUtils.rotateM(touchMatrix, 0, screen[1] * -1f * (Renderer.FOV / aspectRatio), 1f,0f, 0f); //Y
 
         float[] out     = {0, 0, 0, 0};
         out = MatrixUtils.multiplyMV(out, camera.getTransform(), 0, forward, 0);

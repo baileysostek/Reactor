@@ -2,15 +2,24 @@ package editor;
 
 import camera.CameraManager;
 import editor.components.UIComponet;
+import engine.FraudTek;
 import entity.Entity;
 import entity.EntityManager;
+import entity.component.Attribute;
+import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
 import imgui.enums.ImGuiTreeNodeFlags;
 import input.MousePicker;
+import models.ModelManager;
 import org.joml.Vector3f;
+import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWDropCallback;
+import org.lwjgl.system.MemoryUtil;
 import util.Callback;
 import util.FileObject;
+
+import java.util.LinkedList;
 
 public class ResourcesViewer extends UIComponet {
     //Represents all resources
@@ -27,6 +36,21 @@ public class ResourcesViewer extends UIComponet {
     public ResourcesViewer(){
         resources = new FileObject("");
 
+        //GLFW callback for dropping an item in the world
+        //Set the GLFW drop callback
+        //Callback stuff
+        GLFW.glfwSetDropCallback(FraudTek.WINDOW_POINTER, new GLFWDropCallback() {
+            @Override
+            public void invoke(long window, int count, long names) {
+            PointerBuffer charPointers = MemoryUtil.memPointerBuffer(names, count);
+            for (int i = 0; i < count; i++) {
+                String name = MemoryUtil.memUTF8(charPointers.get(i));
+                System.err.println(name); // <- test: print out the path
+            }
+            }
+        });
+
+
         //Genreate mouse callback for when we release the mouse
         dropFileInWorld = new Callback() {
             @Override
@@ -39,12 +63,27 @@ public class ResourcesViewer extends UIComponet {
                 if(isDraggingFile()) {
                     if(action == GLFW.GLFW_RELEASE) {
                         //Raycast for pos
-                        Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
-
-                        //If the file is a TEK file
-                        Entity newEntity = new Entity(draggedFile.getRelativePath());
-                        newEntity.setPosition(pos);
-                        EntityManager.getInstance().addEntity(newEntity);
+                        //TODO maybe change?
+                        Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
+                        if(pos != null) {
+                            switch (draggedFile.getFileExtension()) {
+                                case (".tek"): {
+                                    //If the file is a TEK file
+                                    Entity newEntity = new Entity(draggedFile.getRelativePath());
+                                    newEntity.setPosition(pos);
+                                    EntityManager.getInstance().addEntity(newEntity);
+                                    break;
+                                }
+                                case (".png"): {
+                                    Entity newEntity = new Entity();
+                                    newEntity.setModel(ModelManager.getInstance().loadModel("quad.tek"));
+                                    newEntity.setTexture(SpriteBinder.getInstance().load(draggedFile.getRelativePath().replace("/textures/", "")));
+                                    newEntity.setPosition(pos);
+                                    newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
+                                    EntityManager.getInstance().addEntity(newEntity);
+                                }
+                            }
+                        }
                     }
                 }
                 return null;
@@ -89,7 +128,7 @@ public class ResourcesViewer extends UIComponet {
             int nodeFlags_attributes = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
             if(ImGui.collapsingHeader(object.getName(), nodeFlags_attributes)) {
                 ImGui.indent();
-                for (FileObject fileObject : object.getChildren()) {
+                for (FileObject fileObject : new LinkedList<FileObject>(object.getChildren())) {
                     renderFileObject(fileObject);
                 }
                 ImGui.unindent();
@@ -103,9 +142,9 @@ public class ResourcesViewer extends UIComponet {
                 draggedFile = object;
 
                 //Render Tooltip
-                ImGui.setDragDropPayload("TEK", new byte[]{1}, 1);
+                ImGui.setDragDropPayload(object.getFileExtension(), new byte[]{1}, 1);
                 ImGui.beginTooltip();
-                ImGui.text(object.getName() + "Drag?");
+                ImGui.text(object.getName());
                 ImGui.endTooltip();
                 ImGui.endDragDropSource();
             }
@@ -116,6 +155,20 @@ public class ResourcesViewer extends UIComponet {
     @Override
     public void self_post_render() {
 
+    }
+
+    @Override
+    public void onShutdown(){
+        this.closeListeners(resources);
+    }
+
+    public void closeListeners(FileObject object){
+        if(object.isDirectory()) {
+            object.onShutdown();
+            for (FileObject child : object.getChildren()) {
+                closeListeners(child);
+            }
+        }
     }
 
     @Override

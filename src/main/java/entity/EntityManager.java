@@ -2,9 +2,9 @@ package entity;
 
 import com.google.gson.JsonObject;
 import org.joml.Intersectionf;
-import org.joml.RayAabIntersection;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
+import platform.EnumDevelopment;
+import platform.PlatformManager;
 
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -19,6 +19,7 @@ public class EntityManager {
     private LinkedList<Entity> toAdd    = new LinkedList<Entity>();
     private LinkedList<Entity> toRemove = new LinkedList<Entity>();
     private HashMap<EnumEntityType, LinkedList<Entity>> typedEntities = new HashMap<EnumEntityType, LinkedList<Entity>>();
+    private HashMap<EnumEntityType, LinkedList<Entity>> sceneEntities = new HashMap<EnumEntityType, LinkedList<Entity>>();
 
     //On remove see if a registered parent was removed, if it was, remove all children.
     private HashMap<Entity, LinkedList<Entity>> links = new HashMap<>();
@@ -73,7 +74,17 @@ public class EntityManager {
         Collections.sort(entities, new Comparator<Entity>() {
             @Override
             public int compare(Entity e1, Entity e2) {
-            return e1.getModel().getID() - e2.getModel().getID();
+                if(e1.getModel() != null && e2.getModel() != null){
+                    return e1.getModel().getID() - e2.getModel().getID();
+                }else{
+                    if(e1.getModel() != null){
+                        return 0 - e2.getModel().getID();
+                    }
+                    if(e2.getModel() != null){
+                        return 0 - e1.getModel().getID();
+                    }
+                }
+                return 0;
             }
         });
     }
@@ -81,8 +92,10 @@ public class EntityManager {
     //Update all entities
     public void update(double delta){
         sync();
-        for(Entity e : entities){
-            e.selfUpdate(delta);
+        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.PRODUCTION)) {
+            for (Entity e : entities) {
+                e.selfUpdate(delta);
+            }
         }
     }
 
@@ -116,7 +129,7 @@ public class EntityManager {
         }
 
         for(Entity e : check){
-            if(Intersectionf.testRayAab(new Vector3f(pos), new Vector3f(dir), new Vector3f(e.getPosition()).sub(1, 1, 1), new Vector3f(e.getPosition()).add(1, 1, 1))){
+            if(Intersectionf.testRayAab(new Vector3f(pos), new Vector3f(dir), new Vector3f(e.getPosition()).sub(new Vector3f(1, 0, 1).mul(e.getScale())).sub(0, 0.1f, 0), new Vector3f(e.getPosition()).add(new Vector3f(1, 0, 1).mul(e.getScale())).add(0, 0.1f, 0))){
                 hits.add(e);
             }
         }
@@ -131,7 +144,7 @@ public class EntityManager {
         LinkedList<Entity> hits  = new LinkedList<Entity>();
 
         for(Entity e : check){
-            if(Intersectionf.testRayAab(new Vector3f(pos), new Vector3f(dir), new Vector3f(e.getPosition()).sub(1, 1, 1), new Vector3f(e.getPosition()).add(1, 1, 1))){
+            if(Intersectionf.testRayAab(new Vector3f(pos), new Vector3f(dir),new Vector3f(e.getPosition()).sub(new Vector3f(1, 0, 1).mul(e.getScale())).sub(0, 0.1f, 0), new Vector3f(e.getPosition()).add(new Vector3f(1, 0, 1).mul(e.getScale()).add(0, 0.1f, 0)))){
                 hits.add(e);
             }
         }

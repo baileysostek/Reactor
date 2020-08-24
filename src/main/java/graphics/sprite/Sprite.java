@@ -185,6 +185,27 @@ public class Sprite implements Serializable<Sprite> {
         return outline;
     }
 
+    //This function outlines a sprite and returns a new instance of the sprite.
+    public Sprite outlineBlank(Vector4f color){
+        Sprite outlineSearch = new Sprite(this.width + 2, this.height + 2);
+        outlineSearch.overlay(this, 1, 1, this.width, this.height);
+        outlineSearch.flush();
+
+        Sprite outline = new Sprite(this.width + 2, this.height + 2);
+
+        for(int j = 0; j < outline.height; j++){
+            for(int i = 0; i < outline.width; i++){
+                if(isAdjasent(outlineSearch, i, j)){
+                    outline.setPixelColor(i, j, color);
+                }
+            }
+        }
+        outline.flush();
+
+
+        return outline;
+    }
+
     //Chgecks if the coord at XY is adjasent to a tile and it itself is not visiable
     private boolean isAdjasent(Sprite sprite, int x, int y){
         //IF there is no color at the current pixel

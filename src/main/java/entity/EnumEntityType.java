@@ -5,17 +5,10 @@ public enum EnumEntityType {
     UNKNOWN,
 
     //FraudTek
-    FLOOR,
-
-    //World Objects
-    MOLE,
-    HOLE,
-    AVOCADO,
-    ONION,
-    ONION_BLOCKER,
-    PEPPER,
-    PIPE,
-    WATER,
-    STONE,
-    ICE,
+    MODEL,
+    SOUND,
+    SPRITE,
+    LEVEL,
+    SHADER,
+    ENTITY,
 }

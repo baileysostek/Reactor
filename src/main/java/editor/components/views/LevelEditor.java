@@ -68,14 +68,15 @@ public class LevelEditor extends UIComponet {
         mouseCallback = new Callback() {
             @Override
             public Object callback(Object... objects) {
-            int button = (int) objects[0];
-            int action = (int) objects[1];
+                if(LevelEditor.super.isVisable()) {
+                    int button = (int) objects[0];
+                    int action = (int) objects[1];
 
-            pressed = (action == GLFW.GLFW_PRESS);
+                    pressed = (action == GLFW.GLFW_PRESS);
 
-            raycastForTile();
-
-            return null;
+                    raycastForTile();
+                }
+                return null;
             }
         };
 
@@ -89,9 +90,9 @@ public class LevelEditor extends UIComponet {
     }
 
     private void raycastForTile() {
-        if(pressed){
+        if(pressed && this.isVisable()){
             //Raycast to plane
-            Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
+            Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
             //Get hit pos
             if(pos != null){
                 //Get world pos
@@ -162,9 +163,11 @@ public class LevelEditor extends UIComponet {
     @Override
     public void self_update(double delta) {
 //        raycastForTile();
-        if(Keyboard.getInstance().isKeyPressed(Keyboard.DELETE)){
-            String name = levelname.get().substring(0, levelname.get().length() - 1);
-            levelname.set(name);
+        if(Keyboard.getInstance().isKeyPressed(Keyboard.DELETE, Keyboard.BACKSPACE)){
+            if(!levelname.get().isEmpty()) {
+                String name = levelname.get().substring(0, levelname.get().length() - 1);
+                levelname.set(name);
+            }
         }
     }
 

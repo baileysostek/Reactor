@@ -1,7 +1,8 @@
 package editor;
 
 public enum EnumEditorLocation {
-    LEFT,
+    LEFT_TAB,
+    LEFT_BOTTOM,
     CENTER,
     RIGHT;
 }

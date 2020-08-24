@@ -189,7 +189,7 @@ public class SpriteBinder extends Engine {
         if(this.sprites.containsKey(textureID)){
             return this.sprites.get(textureID);
         }
-        return null;
+        return spriteBinder.fileNotFound;
     }
 
 //    public void addExternallyGeneratedSprite(int id, Sprite sprite){

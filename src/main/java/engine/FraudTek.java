@@ -3,44 +3,37 @@ package engine;
 import camera.CameraManager;
 import com.codedisaster.steamworks.SteamAPI;
 import com.codedisaster.steamworks.SteamException;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import editor.Editor;
-import editor.components.container.Image;
-import editor.components.views.LevelEditor;
 import entity.Entity;
-import entity.EntityEditor;
 import entity.EntityManager;
-import entity.component.Interactable;
+import entity.component.Collision;
 import graphics.renderer.*;
-import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
+import input.Keyboard;
 import input.MousePicker;
 import logging.LogManager;
 import models.Model;
 import models.ModelManager;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.opengl.GL20;
+import physics.PhysicsEngine;
 import platform.EnumDevelopment;
 import platform.EnumPlatform;
 import platform.PlatformManager;
 import scene.SceneManager;
 import scripting.ScriptingEngine;
-import serialization.SerializationHelper;
 import sound.SoundEngine;
 import util.StringUtils;
 
-import java.nio.*;
+import java.awt.event.KeyEvent;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.stb.STBEasyFont.*;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.system.MemoryUtil.memByteBuffer;
 
 public class FraudTek {
 
@@ -102,7 +95,6 @@ public class FraudTek {
             PlatformManager platformManager = PlatformManager.setTargetPlatform(EnumPlatform.WINDOWS);
 
 
-
             if (platformManager.targetIs(EnumPlatform.WINDOWS)) {
                 GLFWErrorCallback.createPrint(System.err).set();
 
@@ -154,6 +146,7 @@ public class FraudTek {
                 EntityManager.initialize();
                 SceneManager.initialize();
                 SoundEngine.initialize();
+                PhysicsEngine.initialize();
 
                 //Add our initialized instances to our ScriptingManager
                 ScriptingEngine.initialize();
@@ -232,6 +225,8 @@ public class FraudTek {
 
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
             Editor.getInstance().update(delta);
+        }else{
+            PhysicsEngine.getInstance().update(delta);
         }
 
     }
@@ -240,10 +235,22 @@ public class FraudTek {
         //Render World.
         Renderer.getInstance().render();
 
+//        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+//            Renderer.getInstance().drawLine(new math.Vector3f(0, 0, 0), new math.Vector3f(1, 0, 0), new math.Vector3f(1, 0, 0));
+//            Renderer.getInstance().drawLine(new math.Vector3f(0, 0, 0), new math.Vector3f(0, 1, 0), new math.Vector3f(0, 1, 0));
+//            Renderer.getInstance().drawLine(new math.Vector3f(0, 0, 0), new math.Vector3f(0, 0, 1), new math.Vector3f(0, 0, 1));
+//        }
+
+        SceneManager.getInstance().render();
+
+        PhysicsEngine.getInstance().render();
+        Renderer.getInstance().postpare();
+
         //If Dev render UI
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
             Editor.getInstance().render();
         }
+
     }
 
     private static void shutdown(){
@@ -286,7 +293,7 @@ public class FraudTek {
 //        test.getTokensInFile();
 //        ScriptingEngine.getInstance().run(test, "fibonacci");
 
-//        String modelName = "quad";
+        String modelName = "sphere_smooth";
 ////
 //        JsonObject action = new JsonObject();
 //        action.addProperty("action", "convert");
@@ -300,7 +307,10 @@ public class FraudTek {
 //            }
 //        }
 //
-//        Entity test1 = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(new Vector3f(-4, 4, -2));
+        Entity test1 = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(new Vector3f(0, -5, 0));
+        test1.setTexture(SpriteBinder.getInstance().load("garbo"));
+        test1.addComponent(new Collision());
+        EntityManager.getInstance().addEntity(test1);
 //        Entity test2 = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(new Vector3f( 4, 4, -2));
 //        EntityManager.getInstance().addEntity(test);
 //
@@ -347,6 +357,8 @@ public class FraudTek {
 //        Editor.getInstance().addComponent(new Image(test.getTextureID()));
 
 //        Editor.getInstance().addComponent(new EntityEditor());
+
+        Keyboard.getInstance().isKeyPressed(KeyEvent.VK_W);
 
 
 

@@ -6,10 +6,6 @@ import org.joml.Vector4f;
 
 public class MatrixUtils {
 
-    public static final float FOV = 70.0f;
-    private static final float  NEAR_PLANE = 0.1f;
-    private static final float  FAR_PLANE = 1024.0f;
-
     public static float[] getIdentityMatrix(){
         return new float[]{
             1, 0, 0, 0,
@@ -43,15 +39,15 @@ public class MatrixUtils {
 
     public static float[] createProjectionMatrix() {
         float aspectRatio = (float) Renderer.getInstance().getWIDTH() / (float) Renderer.getInstance().getHEIGHT();
-        float y_scale = (float) ((1f / Math.tan(Math.toRadians(FOV / 2f))) * aspectRatio);
+        float y_scale = (float) ((1f / Math.tan(Math.toRadians(Renderer.FOV / 2f))) * aspectRatio);
         float x_scale = y_scale / aspectRatio;
-        float frustum_length = FAR_PLANE - NEAR_PLANE;
+        float frustum_length = Renderer.FAR_PLANE - Renderer.NEAR_PLANE;
 
         return new float[]{
             x_scale, 0, 0, 0,
             0, y_scale, 0, 0,
-            0, 0, -((FAR_PLANE + NEAR_PLANE) / frustum_length), -1.0f,
-            0, 0, -((2.0f * NEAR_PLANE * FAR_PLANE) / frustum_length), 0
+            0, 0, -((Renderer.FAR_PLANE + Renderer.NEAR_PLANE) / frustum_length), -1.0f,
+            0, 0, -((2.0f * Renderer.NEAR_PLANE * Renderer.FAR_PLANE) / frustum_length), 0
         };
     }
 
