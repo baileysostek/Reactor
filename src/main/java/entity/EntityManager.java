@@ -1,6 +1,7 @@
 package entity;
 
 import com.google.gson.JsonObject;
+import input.MousePicker;
 import org.joml.Intersectionf;
 import org.joml.Vector3f;
 import platform.EnumDevelopment;
@@ -112,9 +113,6 @@ public class EntityManager {
 
     public LinkedList<Entity> getHitEntities(Vector3f pos, Vector3f dir, EnumEntityType ... types){
 
-        //Invert Pos
-        pos = new Vector3f(pos).mul(-1, -1, -1);
-
         LinkedList<Entity> check = new LinkedList<Entity>();
         LinkedList<Entity> hits  = new LinkedList<Entity>();
         //TODO
@@ -129,7 +127,8 @@ public class EntityManager {
         }
 
         for(Entity e : check){
-            if(Intersectionf.testRayAab(new Vector3f(pos), new Vector3f(dir), new Vector3f(e.getPosition()).sub(new Vector3f(1, 0, 1).mul(e.getScale())).sub(0, 0.1f, 0), new Vector3f(e.getPosition()).add(new Vector3f(1, 0, 1).mul(e.getScale())).add(0, 0.1f, 0))){
+            Vector3f[] aabb = e.getAABB();
+            if(MousePicker.rayHitsAABB(pos, dir, aabb[0], aabb[1]) != null){
                 hits.add(e);
             }
         }
@@ -145,7 +144,8 @@ public class EntityManager {
 
         for(Entity e : check){
             //TODO calc hit based off AABB broadphase, then tri-test narrow-phase
-            if(Intersectionf.testRayAab(new Vector3f(pos), new Vector3f(dir), new Vector3f(e.getPosition()).sub(new Vector3f(1, 0, 1).mul(e.getScale())).sub(0, 0.1f, 0), new Vector3f(e.getPosition()).add(new Vector3f(1, 0, 1).mul(e.getScale()).add(0, 0.1f, 0)))){
+            Vector3f[] aabb = e.getAABB();
+            if(MousePicker.rayHitsAABB(pos, dir, aabb[0], aabb[1]) != null){
                 hits.add(e);
             }
         }

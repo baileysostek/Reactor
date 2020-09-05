@@ -52,9 +52,6 @@ public class FraudTek {
     //Local Static variables
     private static int     FRAMES = 0;
 
-    //todo remove me
-    static Entity test1;
-
     //Interface Methods
     public static void setWindowSize(int width, int height){
         if(!INITIALIZED) {
@@ -249,13 +246,13 @@ public class FraudTek {
         SceneManager.getInstance().update(delta);
         EntityManager.getInstance().update(delta);
 
-        Vector3f pos = MousePicker.rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
-        if(pos == null){
-            pos = new Vector3f(0);
-        }else{
-//            pos = pos.add(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).mul(1, 0, 0));
-        }
-        test1.setPosition(pos);
+//        Vector3f pos = MousePicker.rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
+//        if(pos == null){
+//            pos = new Vector3f(0);
+//        }else{
+////            pos = pos.add(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).mul(1, 0, 0));
+//        }
+//        test1.setPosition(pos);
 
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
             Editor.getInstance().update(delta);
@@ -269,11 +266,26 @@ public class FraudTek {
         //Render World.
         Renderer.getInstance().render();
 
-//        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
-//            Renderer.getInstance().drawLine(new math.Vector3f(0, 0, 0), new math.Vector3f(1, 0, 0), new math.Vector3f(1, 0, 0));
-//            Renderer.getInstance().drawLine(new math.Vector3f(0, 0, 0), new math.Vector3f(0, 1, 0), new math.Vector3f(0, 1, 0));
-//            Renderer.getInstance().drawLine(new math.Vector3f(0, 0, 0), new math.Vector3f(0, 0, 1), new math.Vector3f(0, 0, 1));
-//        }
+        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+            //Draw Origin
+            int size = 4096;
+            Renderer.getInstance().drawLine(new Vector3f(-size, 0, 0), new Vector3f(size, 0, 0), new Vector3f(1, 0, 0));
+            Renderer.getInstance().drawLine(new Vector3f(0, -size, 0), new Vector3f(0, size, 0), new Vector3f(0, 1, 0));
+            Renderer.getInstance().drawLine(new Vector3f(0, 0, -size), new Vector3f(0, 0, size), new Vector3f(0, 0, 1));
+
+            size = 50;
+            for(int i = -size; i <= size; i++){
+                if(i == 0){
+                    i++;
+                }
+                Vector3f color = new Vector3f(0.5f);
+                if(i % 10 == 0){
+                    color.add(0.5f , 0.5f, 0.5f);
+                }
+                Renderer.getInstance().drawLine(new Vector3f(-size, 0, i), new Vector3f(size, 0, i), color);
+                Renderer.getInstance().drawLine(new Vector3f(i, 0, -size), new Vector3f(i, 0, size), color);
+            }
+        }
 
         SceneManager.getInstance().render();
 
@@ -346,10 +358,10 @@ public class FraudTek {
 //            }
 //        }
 //
-        test1 = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(new Vector3f(0, 0, 0));
-        test1.setTexture(SpriteBinder.getInstance().load("garbo"));
-        EntityManager.getInstance().addEntity(test1);
-        test1.setScale(new Vector3f(0.25f));
+//        test1 = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(new Vector3f(0, 0, 0));
+//        test1.setTexture(SpriteBinder.getInstance().load("garbo"));
+//        EntityManager.getInstance().addEntity(test1);
+//        test1.setScale(new Vector3f(0.25f));
 
 //        LinkedList<Entity> spheres = new LinkedList<>();
 //

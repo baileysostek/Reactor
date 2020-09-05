@@ -43,7 +43,7 @@ public class Model implements Serializable<Model> {
     }
 
     public Vector3f[] getAABB(){
-        return this.aabb;
+        return new Vector3f[]{new Vector3f(this.aabb[0]), new Vector3f(this.aabb[1])};
     }
 
     @Override

@@ -75,10 +75,20 @@ public class ResourcesViewer extends UIComponet {
                             switch (draggedFile.getFileExtension()) {
                                 case (".tek"): {
                                     //If the file is a TEK file
-                                    Entity newEntity = new Entity(draggedFile.getRelativePath());
-                                    newEntity.setPosition(pos);
-                                    EntityManager.getInstance().addEntity(newEntity);
-                                    break;
+                                    if(draggedFile.getRelativePath().contains("/models/")) {
+                                        System.out.println(draggedFile.getRelativePath().replace("/models/", ""));
+                                        Entity newEntity = new Entity();
+                                        newEntity.setModel(ModelManager.getInstance().loadModel(draggedFile.getRelativePath().replace("/models/", "")));
+                                        newEntity.setPosition(pos);
+                                        newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
+                                        EntityManager.getInstance().addEntity(newEntity);
+                                        break;
+                                    }else{
+                                        Entity newEntity = new Entity(draggedFile.getRelativePath());
+                                        newEntity.setPosition(pos);
+                                        EntityManager.getInstance().addEntity(newEntity);
+                                        break;
+                                    }
                                 }
                                 case (".png"): {
                                     Entity newEntity = new Entity();

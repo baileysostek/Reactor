@@ -225,9 +225,10 @@ public class MousePicker extends Engine {
         }
     }
 
+    //TODO move to intersection class
     public static Vector3f rayHitsPlane(Vector3f pos, Vector3f dir, Vector3f planeOrigin, Vector3f planeNormal){
         //Invert the plane normal
-        planeNormal = new Vector3f(planeNormal).mul(1, 1, 1);
+        planeNormal = new Vector3f(planeNormal);
         //Invert Pos
         pos = new Vector3f(pos).mul(-1);
 
@@ -235,6 +236,20 @@ public class MousePicker extends Engine {
 //        Intersectionf.intersectRay
         if(scale >= 0){
             return new Vector3f(dir).mul(scale).add(pos);
+        }else{
+            return null;
+        }
+    }
+
+    public static Vector3f rayHitsAABB(Vector3f pos, Vector3f dir, Vector3f aabbMin, Vector3f aabbMax){
+        //Invert Pos
+        pos = new Vector3f(pos).mul(-1);
+
+        Vector2f result = new Vector2f();
+        boolean hit = Intersectionf.intersectRayAab(pos, dir, aabbMin, aabbMax, result);
+
+        if(hit){
+            return new Vector3f(dir).mul(new Vector3f(result.x, result.y, 1)).add(pos);
         }else{
             return null;
         }

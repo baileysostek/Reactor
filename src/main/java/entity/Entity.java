@@ -239,16 +239,12 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     public final Vector3f[] getAABB(){
         //Get the model transform
-        float[] transform = MatrixUtils.getIdentityMatrix();
-//        MatrixUtils.translate(transform, this.getPosition());
-//        Matrix.rotateM(transform, 0, (float) Math.toRadians(rotation.z()), 0f,0f, 1f);
-//        Matrix.rotateM(transform, 0, (float) Math.toRadians(rotation.y()), 0f,1f, 0f);
-//        Matrix.rotateM(transform, 0, (float) Math.toRadians(rotation.x()), 1f,0f, 0f);
 
         //Raw unNormaized and unTranslated AABB
         Vector3f[] out = this.model.getAABB();
 
-
+        out[0].add(this.getPosition());
+        out[1].add(this.getPosition());
 
         return out;
     }

@@ -169,12 +169,12 @@ public class Renderer extends Engine {
         org.joml.Vector3f max = aabb[1];
 
         //6 draw calls...
-        this.drawLine(min, new Vector3f(min).add(0, 0, 1), new Vector3f(1));
-        this.drawLine(min, new Vector3f(min).add(0, 1, 0), new Vector3f(1));
-        this.drawLine(min, new Vector3f(min).add(1, 0, 0), new Vector3f(1));
-        this.drawLine(max, new Vector3f(min).add(0, 0, -1), new Vector3f(1));
-        this.drawLine(max, new Vector3f(min).add(0, -1, 0), new Vector3f(1));
-        this.drawLine(max, new Vector3f(min).add(-1, 0, 0), new Vector3f(1));
+        this.drawLine(min, new Vector3f(min).add(0, 0, entity.getScale().z()) , new Vector3f(1));
+        this.drawLine(min, new Vector3f(min).add(0, entity.getScale().y(), 0) , new Vector3f(1));
+        this.drawLine(min, new Vector3f(min).add(entity.getScale().x(), 0, 0) , new Vector3f(1));
+        this.drawLine(max, new Vector3f(max).add(0, 0, -entity.getScale().z()), new Vector3f(1));
+        this.drawLine(max, new Vector3f(max).add(0, -entity.getScale().y(), 0), new Vector3f(1));
+        this.drawLine(max, new Vector3f(max).add(-entity.getScale().x(), 0, 0), new Vector3f(1));
     }
 
     public void drawLine(Vector3f from, Vector3f to, Vector3f color) {
