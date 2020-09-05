@@ -2,7 +2,7 @@ package entity.component.events;
 
 import com.google.gson.JsonObject;
 import entity.component.Event;
-import math.Vector3f;
+import org.joml.Vector3f;
 import util.Callback;
 
 

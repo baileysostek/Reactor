@@ -9,5 +9,6 @@ public interface Transformable {
     Transformable setRotation(Vector3f rot);
     Vector3f getRotation();
     Transformable setScale(Vector3f scale);
+    Transformable setScale(float scalar);
     Vector3f getScale();
 }

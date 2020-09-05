@@ -2,7 +2,6 @@ package physics;
 
 import com.bulletphysics.linearmath.IDebugDraw;
 import graphics.renderer.*;
-import input.Keyboard;
 import org.joml.Vector4f;
 
 import javax.vecmath.Vector3f;
@@ -26,7 +25,7 @@ public class BulletDebugDrawer extends IDebugDraw {
         Vector4f perspectiveFrom    = new Vector4f(from.x, from.y, from.z, 1);
         Vector4f perspectiveTo      = new Vector4f(to.x, to.y, to.z, 1);
 
-        Renderer.getInstance().drawLine(new math.Vector3f(perspectiveFrom.x, perspectiveFrom.y, perspectiveFrom.z), new math.Vector3f(perspectiveTo.x, perspectiveTo.y, perspectiveTo.z), new math.Vector3f(color.x, color.y, color.z));
+        Renderer.getInstance().drawLine(new org.joml.Vector3f(perspectiveFrom.x, perspectiveFrom.y, perspectiveFrom.z), new org.joml.Vector3f(perspectiveTo.x, perspectiveTo.y, perspectiveTo.z), new org.joml.Vector3f(color.x, color.y, color.z));
     }
 
     @Override

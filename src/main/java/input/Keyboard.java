@@ -56,6 +56,8 @@ public class Keyboard extends Engine {
     public static final int BACKSPACE = 259;
     public static final int SPACE     = KeyEvent.VK_SPACE;
 
+    public static final int CONTROL   = KeyEvent.VK_CONTROL;
+
 
     private Keyboard(){
         super();
@@ -69,7 +71,7 @@ public class Keyboard extends Engine {
         GLFW.glfwSetKeyCallback(FraudTek.WINDOW_POINTER, new GLFWKeyCallback() {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
-                System.out.println(key);
+//                System.out.println(key);
             if(key < keys.length && key >= 0){
                 if(action == GLFW.GLFW_RELEASE){
                     keys[key] = false;
@@ -106,6 +108,13 @@ public class Keyboard extends Engine {
         keyLookup.put(callback, key);
         //Set the callback
         this.pressedCallbacks[key].add(callback);
+    }
+
+    public void addReleaseCallback(int key, Callback callback){
+        //index where this callback lives
+        keyLookup.put(callback, key);
+        //Set the callback
+        this.releasedCallbacks[key].add(callback);
     }
 
     public void switchCallbackKey(Callback callback, int key) {

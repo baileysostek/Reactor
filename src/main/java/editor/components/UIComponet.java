@@ -25,6 +25,10 @@ public abstract class UIComponet {
         }
     }
 
+    public void preUIRender(){
+        return;
+    }
+
     public void render(){
         if(visable) {
             self_render();

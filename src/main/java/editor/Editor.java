@@ -1,9 +1,9 @@
 package editor;
 
 import camera.Camera;
+import camera.Camera3D;
 import camera.CameraManager;
 import com.google.gson.JsonObject;
-import com.sun.javaws.jnl.ResourceVisitor;
 import editor.components.UIComponet;
 import editor.components.container.Axis;
 import editor.components.container.Transform;
@@ -26,17 +26,13 @@ import input.Keyboard;
 import input.MousePicker;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.lwjgl.glfw.GLFW;
 import platform.EnumDevelopment;
 import platform.EnumPlatform;
 import platform.PlatformManager;
 import util.Callback;
 import util.Debouncer;
 
-import javax.annotation.Resource;
-import javax.swing.*;
-import java.awt.event.KeyEvent;
-import java.net.SecureCacheResponse;
-import java.security.Key;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -55,9 +51,6 @@ public class Editor {
     // Mouse cursors provided by GLFW
     private static final long[] mouseCursors = new long[ImGuiMouseCursor.COUNT];
 
-    //Camera controls
-    float speed = 10.5f;
-
     //All of our UIComponets
     private HashMap<EnumEditorLocation,  LinkedList<UIComponet>> UIComponets = new HashMap<EnumEditorLocation,  LinkedList<UIComponet>>();
 
@@ -74,6 +67,9 @@ public class Editor {
 
     //Play Pause
     Debouncer playPause = new Debouncer(false);
+
+    //Store variables for later
+    private Camera gameCamera = null;
 
     private Editor(){
         //Create imgui context
@@ -171,10 +167,6 @@ public class Editor {
         IMGUIGL = new ImGuiImplGl3();
         IMGUIGL.init();
 
-        //Rotate camera towards ground
-        CameraManager.getInstance().getActiveCamera().setRotation( new Vector3f((float) (Math.PI / 2.0f), 0, 0));
-
-
 //        //Add our UIComponets
         config = new JsonObject();
         config.addProperty("widgetWidth", 256);
@@ -199,13 +191,40 @@ public class Editor {
             public Object callback(Object... objects) {
                 if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
                     PlatformManager.getInstance().setDevelopmentLevel(EnumDevelopment.PRODUCTION);
+                    onPlay();
                 }else{
                     PlatformManager.getInstance().setDevelopmentLevel(EnumDevelopment.DEVELOPMENT);
+                    onExitPlay();
                 }
                 System.out.println("Pressed new state is:"+PlatformManager.getInstance().getDevelopmentStatus());
                 return null;
             }
         });
+
+        MousePicker.getInstance().addCallback(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                int button = (int) objects[0];
+                int action = (int) objects[1];
+
+                if(button == MousePicker.MOUSE_RIGHT) {
+                    //On Release Set selected to none
+                    if (action == GLFW.GLFW_RELEASE) {
+                        MousePicker.getInstance().unlockMouse();
+                    }
+                    if (action == GLFW.GLFW_PRESS) {
+                        MousePicker.getInstance().requestLockMouse();
+                    }
+                }
+
+                return null;
+            }
+        });
+
+        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+            CameraManager.getInstance().setActiveCamera(new Camera3D());
+            MousePicker.getInstance().unlockMouse();
+        }
 
     }
 
@@ -255,41 +274,6 @@ public class Editor {
         glfwSetCursor(FraudTek.WINDOW_POINTER, mouseCursors[imguiCursor]);
         glfwSetInputMode(FraudTek.WINDOW_POINTER, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
-        //Camera movemetn stuff
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
-            if(Keyboard.getInstance().isKeyPressed(Keyboard.W)){
-                Camera cam = CameraManager.getInstance().getActiveCamera();
-                cam.getPosition().add(new Vector3f(0, 0, (float) (speed * delta)));
-            }
-
-            if(Keyboard.getInstance().isKeyPressed(Keyboard.S)){
-                Camera cam = CameraManager.getInstance().getActiveCamera();
-                cam.getPosition().add(new Vector3f(0, 0, (float) (-speed * delta)));
-            }
-
-            if(Keyboard.getInstance().isKeyPressed(Keyboard.A)){
-                Camera cam = CameraManager.getInstance().getActiveCamera();
-                cam.getPosition().add(new Vector3f((float) (-speed * delta), 0, 0));
-            }
-
-            if(Keyboard.getInstance().isKeyPressed(Keyboard.D)){
-                Camera cam = CameraManager.getInstance().getActiveCamera();
-                cam.getPosition().add(new Vector3f((float) (speed * delta), 0, 0));
-            }
-
-            if(Keyboard.getInstance().isKeyPressed(Keyboard.Q)){
-                Camera cam = CameraManager.getInstance().getActiveCamera();
-                cam.getPosition().add(new Vector3f(0, (float) (speed * delta), 0));
-            }
-
-            if(Keyboard.getInstance().isKeyPressed(Keyboard.E)){
-                Camera cam = CameraManager.getInstance().getActiveCamera();
-                cam.getPosition().add(new Vector3f(0, (float) (-speed * delta), 0));
-            }
-
-
-        }
-
 
         //Update all UIComponets
         //Buffer at start
@@ -297,6 +281,14 @@ public class Editor {
             LinkedList<UIComponet> safeItterate = new LinkedList<>(UIComponets.get(location));
             for (UIComponet UIComponet : safeItterate) {
                 UIComponet.update(delta);
+            }
+        }
+    }
+
+    public void preUIRender(){
+        for(EnumEditorLocation location : EnumEditorLocation.values()) {
+            for (UIComponet uiComponet : UIComponets.get(location)) {
+                uiComponet.preUIRender();
             }
         }
     }
@@ -390,6 +382,8 @@ public class Editor {
         ImGui.popStyleVar();
         ImGui.popStyleVar();
 
+        ImGui.showDemoWindow();
+
         //End
         ImGui.end();
 
@@ -420,6 +414,21 @@ public class Editor {
         if(editor == null){
             editor = new Editor();
         }
+    }
+
+    public void onPlay(){
+        //restore the camera
+        if(this.gameCamera != null) {
+            CameraManager.getInstance().setActiveCamera(this.gameCamera);
+            this.gameCamera = null;
+        }
+    }
+
+    public void onExitPlay(){
+        //set camera back to our Camera
+        this.gameCamera = CameraManager.getInstance().getActiveCamera();
+        CameraManager.getInstance().setActiveCamera(new Camera3D());
+        MousePicker.getInstance().unlockMouse();
     }
 
     public static Editor getInstance(){

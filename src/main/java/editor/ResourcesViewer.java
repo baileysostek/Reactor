@@ -6,6 +6,7 @@ import engine.FraudTek;
 import entity.Entity;
 import entity.EntityManager;
 import entity.component.Attribute;
+import graphics.renderer.Renderer;
 import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
 import imgui.enums.ImGuiTreeNodeFlags;
@@ -65,6 +66,11 @@ public class ResourcesViewer extends UIComponet {
                         //Raycast for pos
                         //TODO maybe change?
                         Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
+
+                        if(pos == null){
+                            pos = new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition());
+                        }
+
                         if(pos != null) {
                             switch (draggedFile.getFileExtension()) {
                                 case (".tek"): {
@@ -81,6 +87,17 @@ public class ResourcesViewer extends UIComponet {
                                     newEntity.setPosition(pos);
                                     newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
                                     EntityManager.getInstance().addEntity(newEntity);
+                                    break;
+                                }
+                                case (".obj"): {
+                                    System.out.println(draggedFile.getRelativePath().replace("/models/", ""));
+                                    Entity newEntity = new Entity();
+                                    newEntity.setModel(ModelManager.getInstance().loadModel(draggedFile.getRelativePath().replace("/models/", "")));
+//                                    newEntity.setTexture(SpriteBinder.getInstance().load(draggedFile.getRelativePath().replace("/textures/", "")));
+                                    newEntity.setPosition(pos);
+                                    newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
+                                    EntityManager.getInstance().addEntity(newEntity);
+                                    break;
                                 }
                             }
                         }

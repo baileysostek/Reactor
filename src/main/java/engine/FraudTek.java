@@ -9,10 +9,9 @@ import com.google.gson.JsonParser;
 import editor.Editor;
 import entity.Entity;
 import entity.EntityManager;
-import entity.component.Collision;
+import entity.EntityUtils;
 import graphics.renderer.*;
 import graphics.sprite.SpriteBinder;
-import input.Keyboard;
 import input.MousePicker;
 import logging.LogManager;
 import models.Model;
@@ -28,7 +27,7 @@ import scripting.ScriptingEngine;
 import sound.SoundEngine;
 import util.StringUtils;
 
-import java.awt.event.KeyEvent;
+import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -52,6 +51,9 @@ public class FraudTek {
 
     //Local Static variables
     private static int     FRAMES = 0;
+
+    //todo remove me
+    static Entity test1;
 
     //Interface Methods
     public static void setWindowSize(int width, int height){
@@ -89,21 +91,35 @@ public class FraudTek {
     }
 
     public static void initialize() {
+        //Welcome to FraudTek!
+        System.out.println( "  ______                   _ _______   _    \n" +
+                            " |  ____|                 | |__   __| | |   \n" +
+                            " | |__ _ __ __ _ _   _  __| |  | | ___| | __\n" +
+                            " |  __| '__/ _` | | | |/ _` |  | |/ _ \\ |/ /\n" +
+                            " | |  | | | (_| | |_| | (_| |  | |  __/   < \n" +
+                            " |_|  |_|  \\__,_|\\__,_|\\__,_|  |_|\\___|_|\\_\\"
+        );
+
+
         if(!INITIALIZED) {
             INITIALIZED = true;
 
             PlatformManager platformManager = PlatformManager.setTargetPlatform(EnumPlatform.WINDOWS);
-
+            System.out.println("Initializing...");
 
             if (platformManager.targetIs(EnumPlatform.WINDOWS)) {
                 GLFWErrorCallback.createPrint(System.err).set();
 
+                System.out.print("Try init GLFW...");
                 if (!glfwInit()) {
+                    System.out.println("failed.");
                     throw new IllegalStateException("Unable to initialize GLFW");
                 }
+                System.out.println("success.");
 
                 //Try to init steam
                 try {
+                    System.out.print("Try init Steamworks...");
                     String libraryPath = StringUtils.getRelativePath() + "/libs/steam";
                     libraryPath = libraryPath.replace("\\resources\\", "");
                     System.out.println("Lib Path:"+libraryPath);
@@ -117,11 +133,20 @@ public class FraudTek {
                     }else{
                         System.out.println("Steam Running:"+SteamAPI.isSteamRunning());
                     }
+                    System.out.println("sucess.");
                 } catch (SteamException e) {
+                    System.out.println("failed.");
                     // Error extracting or loading native libraries
                     e.printStackTrace();
                 }
 
+                //Set the size to take up the screen.
+                long primaryMonitorPointer = glfwGetPrimaryMonitor();
+                WIDTH   = glfwGetVideoMode(primaryMonitorPointer).width();
+                HEIGHT  = glfwGetVideoMode(primaryMonitorPointer).height();
+
+                //Creating our window.
+                System.out.print("Creating Window:["+WIDTH+" x "+HEIGHT+"] Title:"+TITLE+" Vsync:"+VSYNC);
                 WINDOW = new Window(WIDTH, HEIGHT).setTitle(TITLE);
                 WINDOW.setVsyncEnabled(VSYNC);
                 try {
@@ -219,9 +244,18 @@ public class FraudTek {
     private static void tick(double delta){//Scalar to multiply positions by
 //        ChromaManager.getInstance().tick(delta);
         //Update all engine components, this gives the editors widgets time to update
+        CameraManager.getInstance().update(delta);
         MousePicker.getInstance().tick(delta);
         SceneManager.getInstance().update(delta);
         EntityManager.getInstance().update(delta);
+
+        Vector3f pos = MousePicker.rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
+        if(pos == null){
+            pos = new Vector3f(0);
+        }else{
+//            pos = pos.add(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).mul(1, 0, 0));
+        }
+        test1.setPosition(pos);
 
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
             Editor.getInstance().update(delta);
@@ -242,6 +276,11 @@ public class FraudTek {
 //        }
 
         SceneManager.getInstance().render();
+
+        //If Dev render UI
+        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+            Editor.getInstance().preUIRender();
+        }
 
         PhysicsEngine.getInstance().render();
         Renderer.getInstance().postpare();
@@ -307,10 +346,24 @@ public class FraudTek {
 //            }
 //        }
 //
-        Entity test1 = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(new Vector3f(0, -5, 0));
+        test1 = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(new Vector3f(0, 0, 0));
         test1.setTexture(SpriteBinder.getInstance().load("garbo"));
-        test1.addComponent(new Collision());
         EntityManager.getInstance().addEntity(test1);
+        test1.setScale(new Vector3f(0.25f));
+
+//        LinkedList<Entity> spheres = new LinkedList<>();
+//
+//        for(int i = 0; i < 100; i++){
+//            spheres.addLast(new Entity().setModel(ModelManager.getInstance().loadModel("sphere_smooth.tek")).setPosition(new Vector3f((float) (100 * Math.random()), (float) (100 * Math.random()), (float) (100 * Math.random()))));
+//        }
+//
+//        Entity group = EntityUtils.group(spheres);
+//        group.setPosition(new Vector3f(0));
+//        group.setScale(new Vector3f(1));
+//        group.setTexture(SpriteBinder.getInstance().getFileNotFoundID());
+//        EntityManager.getInstance().addEntity(group);
+
+
 //        Entity test2 = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(new Vector3f( 4, 4, -2));
 //        EntityManager.getInstance().addEntity(test);
 //
@@ -357,8 +410,6 @@ public class FraudTek {
 //        Editor.getInstance().addComponent(new Image(test.getTextureID()));
 
 //        Editor.getInstance().addComponent(new EntityEditor());
-
-        Keyboard.getInstance().isKeyPressed(KeyEvent.VK_W);
 
 
 

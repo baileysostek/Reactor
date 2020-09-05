@@ -2,8 +2,6 @@ package editor.components.container;
 
 import editor.components.UIComponet;
 import editor.components.input.Slider;
-import imgui.ImGui;
-import imgui.enums.ImGuiCol;
 import org.joml.Vector3f;
 
 public class Axis extends UIComponet {

@@ -1,5 +1,6 @@
 package math;
 
+import com.bulletphysics.linearmath.MatrixUtil;
 import graphics.renderer.Renderer;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -15,22 +16,6 @@ public class MatrixUtils {
         };
     }
 
-    //Translate matrix by an ammount.
-    public static float[] translate(float[] mat4,  Vector3f offset){
-        mat4[3]  += offset.x();
-        mat4[7]  += offset.y();
-        mat4[11] += offset.z();
-        return mat4;
-    }
-
-    //Set translation in space
-    public static float[] setTranslation(float[] mat4,  Vector3f offset){
-        mat4[3]  = offset.x();
-        mat4[7]  = offset.y();
-        mat4[11] = offset.z();
-        return mat4;
-    }
-
     public static float[] rotateM(float[] floatMatrix, int offset, float rotation, float xAxis, float yAxis, float zAxis){
         Matrix4f matrix4f = new Matrix4f().set(floatMatrix, offset);
         matrix4f.rotate(rotation, xAxis, yAxis, zAxis, matrix4f);
@@ -38,17 +23,7 @@ public class MatrixUtils {
     }
 
     public static float[] createProjectionMatrix() {
-        float aspectRatio = (float) Renderer.getInstance().getWIDTH() / (float) Renderer.getInstance().getHEIGHT();
-        float y_scale = (float) ((1f / Math.tan(Math.toRadians(Renderer.FOV / 2f))) * aspectRatio);
-        float x_scale = y_scale / aspectRatio;
-        float frustum_length = Renderer.FAR_PLANE - Renderer.NEAR_PLANE;
-
-        return new float[]{
-            x_scale, 0, 0, 0,
-            0, y_scale, 0, 0,
-            0, 0, -((Renderer.FAR_PLANE + Renderer.NEAR_PLANE) / frustum_length), -1.0f,
-            0, 0, -((2.0f * Renderer.NEAR_PLANE * Renderer.FAR_PLANE) / frustum_length), 0
-        };
+        return new Matrix4f().perspective(Renderer.FOV, Renderer.getInstance().getAspectRatio(), Renderer.NEAR_PLANE, Renderer.FAR_PLANE).get(new float[16]);
     }
 
     public static float[] scaleM(float[] matrix, int offset, float scaleX, float scaleY, float scaleZ){

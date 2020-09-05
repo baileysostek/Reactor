@@ -13,7 +13,7 @@ public class CameraManager {
 
     //This cameras generation info
     private CameraManager(){
-        this.activeCamera = new Camera();
+        this.activeCamera = new DynamicCamera();
     }
 
     //protected methods
@@ -23,7 +23,18 @@ public class CameraManager {
 
     //Set the camera
     public void setActiveCamera(Camera cam){
-        this.activeCamera = cam;
+        if(cam != null) {
+            if (this.activeCamera != null) {
+                this.activeCamera.onDeactivated();
+            }
+            this.activeCamera = cam;
+            cam.onActive();
+        }
+    }
+
+    //Do all our transformations and camera updates here
+    public void update(double delta){
+        this.activeCamera.update(delta);
     }
 
     //Singleton generation and access

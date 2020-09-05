@@ -30,6 +30,7 @@ switch (OperatingSystem.current()) {
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -41,16 +42,21 @@ dependencies {
     implementation "org.lwjgl:lwjgl-opengl:$lwjglVersion"
     implementation "org.lwjgl:lwjgl-stb:$lwjglVersion"
     implementation "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
+    implementation "org.joml:joml:${jomlVersion}"
+    implementation "com.code-disaster.steamworks4j:steamworks4j:${steamworks4jVersion}"
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'io.imgui.java:binding:1.75-0.7.2'
+    implementation 'io.imgui.java:lwjgl3:1.75-0.7.2'
     runtimeOnly "org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-assimp:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-openal:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-opengl:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives"
-    implementation "org.joml:joml:${jomlVersion}"
-    implementation "com.code-disaster.steamworks4j:steamworks4j:${steamworks4jVersion}"
-    implementation 'com.google.code.gson:gson:2.8.5'
+    runtimeOnly "io.imgui.java:$lwjglNatives:1.75-0.7.2"
+
     compile fileTree(include: ['*.jar'], dir: 'libs/JChroma')
+    compile fileTree(include: ['*.jar'], dir: 'libs/steam')
 }
 jar {
     archiveName = 'Name.jar'

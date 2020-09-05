@@ -12,7 +12,9 @@ import math.MatrixUtils;
 import models.Model;
 import models.ModelManager;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import org.w3c.dom.Attr;
 import serialization.Serializable;
 import serialization.SerializationHelper;
 import util.Callback;
@@ -23,9 +25,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 public class Entity implements Transformable, Serializable<Entity> {
-
-    //Transform properties of an entity
-    private Vector3f rotation = new Vector3f(0f);
 
     private Matrix4f transform = new Matrix4f().identity();
 
@@ -38,7 +37,8 @@ public class Entity implements Transformable, Serializable<Entity> {
 
 
     //Attributes are the raw pieces of data that make up an entity;
-    private HashMap<String, Attribute> attributes = new HashMap<>();
+    private HashMap<String, Attribute> attributes    = new HashMap<>();
+    private LinkedList<Attribute>      attributeList = new LinkedList<>();
     //Components reference and set attributes on an entity, the Attributes are a state and the components are how they are modified.
     private LinkedList<Component> components = new LinkedList<Component>();
 
@@ -69,7 +69,7 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.addAttribute(new Attribute<Vector3f>("position" , new Vector3f(0f)));
         this.addAttribute(new Attribute<Vector3f>("rotation" , new Vector3f(0f)));
         this.addAttribute(new Attribute<Vector3f>("scale"    , new Vector3f(1f)));
-        this.addAttribute(new Attribute<Integer> ("textureID", -1));
+        this.addAttribute(new Attribute<Integer> ("textureID", SpriteBinder.getInstance().getFileNotFoundID()));
         this.addAttribute(new Attribute<Integer> ("zIndex"   , 0));
         this.addAttribute(new Attribute<Boolean> ("autoScale", true));
         this.addAttribute(new Attribute<String>  ("name"     , "Undefined"));
@@ -89,10 +89,15 @@ public class Entity implements Transformable, Serializable<Entity> {
     //Adds an attribute to this entity, and creates a subscriber that iterates through all components which may subscribe to this event.
     //Attribute interface
     public final void addAttribute(Attribute attribute){
-        //Add to our list of entities
-        //TODO this may break thing
-
+        //Add to our list of entities, if it already exists, remove so can add.
+        if(this.attributes.containsKey(attribute.getName())){
+            Attribute toRemove = this.attributes.get(attribute.getName());
+            this.attributeList.set(this.attributeList.lastIndexOf(toRemove), attribute);
+        }else{
+            this.attributeList.addLast(attribute);
+        }
         this.attributes.put(attribute.getName(), attribute);
+
         //Create subscriber to this attribute changing states
         attribute.subscribe(new Callback() {
             @Override
@@ -155,7 +160,7 @@ public class Entity implements Transformable, Serializable<Entity> {
     }
 
     protected final Collection<Attribute> getAttributes(){
-        return this.attributes.values();
+        return this.attributeList;
     }
 
     //Transformation
@@ -172,18 +177,18 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     @Override
     public final Entity setRotation(Vector3f rot) {
-         this.rotation = rot;
+         this.attributes.get("rotation").setData(rot);
          return this;
     }
 
     @Override
     public final Vector3f getRotation() {
-        return this.rotation;
+        return (Vector3f) this.attributes.get("rotation").getData();
     }
 
     @Override
     public final Vector3f getScale() {
-        return new Vector3f((Vector3f) this.attributes.get("scale").getData()).mul(new Vector3f(1, 1, Renderer.getInstance().getAspectRatio()));
+        return new Vector3f((Vector3f) this.attributes.get("scale").getData());
     }
 
     @Override
@@ -192,11 +197,22 @@ public class Entity implements Transformable, Serializable<Entity> {
         return this;
     }
 
+    @Override
+    public final Entity setScale(float scale) {
+        this.attributes.get("scale").setData(new Vector3f(scale));
+        return this;
+    }
+
     //Get transform
     public final Matrix4f getTransform(){
         transform = transform.identity();
         transform.translate((Vector3f) this.attributes.get("position").getData(), transform);
-        transform.rotateAffineXYZ(rotation.x, rotation.y, rotation.z, transform);
+        Vector3f rotation = (Vector3f) this.attributes.get("rotation").getData();
+        Quaternionf qPitch   = new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), rotation.x);
+        Quaternionf qRoll    = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), rotation.y);
+        Quaternionf qYaw     = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), rotation.z);
+        Quaternionf orientation = (qPitch.mul(qRoll.mul(qYaw))).normalize();
+        transform.rotate(orientation);
         transform.scale(getScale(), transform);
 
         if(this.parent != null){
@@ -221,26 +237,20 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     }
 
-    //Gets aabb in worldspace, I guess at this point its just a bb? because there is no more aa
     public final Vector3f[] getAABB(){
         //Get the model transform
         float[] transform = MatrixUtils.getIdentityMatrix();
+//        MatrixUtils.translate(transform, this.getPosition());
 //        Matrix.rotateM(transform, 0, (float) Math.toRadians(rotation.z()), 0f,0f, 1f);
 //        Matrix.rotateM(transform, 0, (float) Math.toRadians(rotation.y()), 0f,1f, 0f);
 //        Matrix.rotateM(transform, 0, (float) Math.toRadians(rotation.x()), 1f,0f, 0f);
 
         //Raw unNormaized and unTranslated AABB
-        math.Vector3f[] out = this.model.getAABB();
+        Vector3f[] out = this.model.getAABB();
 
-        float[] min = out[0].toVec4();
-        float[] min_out = new float[]{0, 0, 0, 1};
-        min_out = MatrixUtils.multiplyMV(min_out, transform, 0, min, 0);
 
-        float[] max = out[1].toVec4();
-        float[] max_out = new float[]{0, 0, 0, 1};
-        max_out = MatrixUtils.multiplyMV(max_out, transform, 0, max, 0);
 
-        return new Vector3f[]{};
+        return out;
     }
 
     //Override me
@@ -304,7 +314,7 @@ public class Entity implements Transformable, Serializable<Entity> {
             if (this.hasAttribute("autoScale")) {
                 if ((boolean) this.getAttribute("autoScale").getData()) {
                     //TODO if 2D set y = 0 other preserve y
-                    this.setScale(new Vector3f(sprite.getWidth() / 16f, 0, sprite.getHeight() / 16f));
+                    this.setScale(new Vector3f(sprite.getWidth() / 16f, 1, sprite.getHeight() / 16f));
                 }
             }
         }

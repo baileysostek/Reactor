@@ -13,7 +13,6 @@ import com.bulletphysics.dynamics.character.KinematicCharacterController;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
-import com.sun.javafx.geom.Vec3f;
 import entity.Entity;
 import input.Keyboard;
 import physics.PhysicsEngine;

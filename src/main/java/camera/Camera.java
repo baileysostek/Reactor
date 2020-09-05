@@ -1,36 +1,107 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package camera;
 
-import math.MatrixUtils;
+import engine.Constants;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-public class Camera {
+/**
+ *
+ * @author Bailey
+ */
+public abstract class Camera {
 
-    //Transform variables
-    private Vector3f pos    = new Vector3f(0f);
-    private Vector3f rot    = new Vector3f(0f);
+    protected Matrix4f transform = new Matrix4f();
+
+    private Vector3f rotationV = new Vector3f(0, 0, 0);
+    private Vector3f position = new Vector3f(0, 0, 0);
     private Vector3f offset = new Vector3f(0f);
 
-    private final Vector3f DEFAULT_ONE = new Vector3f(1);
+    protected float speed = 0.1f;
 
     public Camera(){
-        //Pass by reference or value
-//        System.out.println("Forward: "+ getForwardDir());
+
     }
 
-    public Camera setPosition(Vector3f vec){
-        pos = new Vector3f(vec).mul(1, 1, -1);
-        return this;
+    public Camera(Vector3f position, Vector3f rotation){
+        this.position = position;
+        Quaternionf qPitch   = new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), rotation.x);
+        Quaternionf qRoll    = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), rotation.y);
+        Quaternionf qYaw     = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), rotation.z);
+
+        Quaternionf orientation = (qPitch.mul(qRoll.mul(qYaw))).normalize();
+        transform.rotate(orientation);
     }
 
-    public Camera setRotation(Vector3f vec){
-        rot = new Vector3f(vec);
-        return this;
+    //Callback for when the camera becomes the active camera
+    public void onActive(){
+        return;
     }
 
-    public Camera setPositionRef(Vector3f vec){
-        pos = vec;
-        return this;
+    //Callback for when this camera is Deactivated.
+    public void onDeactivated(){
+        return;
+    }
+
+    public Vector3f getPosition() {
+        return this.position;
+    }
+
+    public void setPosition(Vector3f position) {
+        this.position = position;
+    }
+
+    public Quaternionf getRotation() {
+        Quaternionf out = new Quaternionf();
+        this.transform.getUnnormalizedRotation(out);
+        return out;
+    }
+
+    public void setRotation(Vector3f rotation){
+        Matrix4f out = new Matrix4f();
+        rotationV = rotation;
+        Quaternionf qPitch   = new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), rotation.x);
+        Quaternionf qRoll    = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), rotation.y);
+        Quaternionf qYaw     = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), rotation.z);
+
+        Quaternionf orientation = (qPitch.mul(qRoll.mul(qYaw).normalize())).normalize();
+        out.rotate(orientation);
+
+        this.transform = out;
+    }
+
+    public void setRotation(Quaternionf quat){
+        Matrix4f out = new Matrix4f();
+        quat.getEulerAnglesXYZ(rotationV);
+        out.rotate(quat);
+        this.transform = out;
+    }
+
+    //Get and set Rotation
+    public void rotate(float dx, float dy, float dz){
+        this.rotationV.add(new Vector3f(dx, dy, dz));
+
+        Quaternionf qPitch   = new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), dx);
+        Quaternionf qRoll    = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), dy);
+        Quaternionf qYaw     = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), dz);
+
+        Quaternionf orientation = (qPitch.mul(qRoll.mul(qYaw).normalize())).normalize();
+
+        transform.rotate(orientation);
+    }
+
+    public void rotate(Quaternionf rot){
+        transform.rotate(rot);
+        this.rotationV.add(rot.getEulerAnglesXYZ(new Vector3f(0,0,0)));
+    }
+
+    public void translate(Vector3f translation){
+        this.position.add(translation);
     }
 
     public void setOffset(Vector3f offset){
@@ -41,18 +112,23 @@ public class Camera {
         return this.offset;
     }
 
-    public float[] getTransform(){
-        return getTransform(DEFAULT_ONE);
+    public Vector3f getLookingDirection(){
+        return new Vector3f(Constants.FUNDAMENTAL_FORWARD_VECTOR()).mulTransposeDirection(transform);
     }
 
-    public float[] getTransform(Vector3f vector3f) {
-        Matrix4f transform = new Matrix4f().identity();
+    public abstract void update(double delta);
 
-        transform.rotateAffineXYZ(rot.x, rot.y, rot.z, transform);
+    public Vector3f getRotationV() {
+        return rotationV;
+    }
 
-        transform.translate(new Vector3f(new Vector3f(pos).sub(offset).div(vector3f)).mul(new Vector3f(-1, 1, 1)), transform);
+    public Matrix4f getTransformationMatrix(){
+        return new Matrix4f().identity().mul(new Matrix4f(this.transform)).translate(new Vector3f(this.position));
+    }
 
-//        transform.scale(vector3f.x, vector3f.y, vector3f.z);
+    public float[] getTransform() {
+        Matrix4f transform = getTransformationMatrix();
+
 
         float[] modelMatrix = new float[]{
                 transform.m00(), transform.m01(), transform.m02(), transform.m03(),
@@ -64,30 +140,5 @@ public class Camera {
         return modelMatrix;
     }
 
-    public Matrix4f getTransformationMarix(){
-        Matrix4f transform = new Matrix4f().identity();
-
-        transform.rotateAffineXYZ(rot.x, rot.y, rot.z, transform);
-
-        transform.translate(new Vector3f(pos).mul(new Vector3f(-1, 1, 1)), transform);
-
-        return transform;
-    }
-
-    public Vector3f getForwardDir(){
-        float[] forward = {0, 0, -1, 1}; //Worldspace direction
-        float[] out     = {0, 0, 0, 0};
-        out = MatrixUtils.multiplyMV(out, getTransform(), 0, forward, 0);
-//        System.out.println("Forward:"+out[0]+","+out[1]+","+out[2]+","+out[3]);
-        return new Vector3f(out[0] / out[3], out[1] / out[3], out[2] / out[3]);
-    }
-
-    public Vector3f getPosition() {
-        return this.pos;
-    }
-
-    public Vector3f getRotation() {
-        return this.rot;
-    }
 
 }

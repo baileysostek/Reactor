@@ -192,6 +192,13 @@ public class SpriteBinder extends Engine {
         return spriteBinder.fileNotFound;
     }
 
+    public int getFileNotFoundID() {
+        if(this.fileNotFound == null){
+            return -1;
+        }
+        return this.fileNotFound.getTextureID();
+    }
+
 //    public void addExternallyGeneratedSprite(int id, Sprite sprite){
 //        this.textureIDs.put(id+"", new ImageData(0,0,id));
 //    }

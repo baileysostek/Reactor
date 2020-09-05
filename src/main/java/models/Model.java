@@ -1,10 +1,9 @@
 package models;
 
 import com.google.gson.JsonObject;
-import math.Vector3f;
 import graphics.renderer.Handshake;
+import org.joml.Vector3f;
 import serialization.Serializable;
-import util.StringUtils;
 
 public class Model implements Serializable<Model> {
 
@@ -13,7 +12,7 @@ public class Model implements Serializable<Model> {
     private int numIndicies = 0;
     private int id;
 
-    private Vector3f[] aabb;
+    private Vector3f[] aabb = new Vector3f[]{new Vector3f(-1), new Vector3f(1)};
 
     //VAO
     private Handshake handshake;

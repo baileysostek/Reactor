@@ -136,10 +136,6 @@ public class Vector2f {
         };
     }
 
-    public Vector3f toVec3(){
-        return new Vector3f(this.x(), this.y, 0);
-    }
-
     //Override toString
     @Override
     public String toString(){

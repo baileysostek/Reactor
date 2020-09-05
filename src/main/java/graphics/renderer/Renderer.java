@@ -4,17 +4,13 @@ import camera.CameraManager;
 import engine.Engine;
 import entity.Entity;
 import entity.EntityManager;
-import math.*;
-import org.joml.Matrix4f;
-import org.lwjgl.opengl.*;
+import math.MatrixUtils;
+import org.joml.Vector3f;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
-import scene.SceneManager;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -27,7 +23,6 @@ public class Renderer extends Engine {
     public static final float FOV = 70;
     public static final float NEAR_PLANE = 0.1f;
     public static final float FAR_PLANE = 1024.0f;
-    private static Matrix4f projectionMatrix;
 
     private float aspectRatio = 1.0f;
 
@@ -40,12 +35,13 @@ public class Renderer extends Engine {
 
     private FBO frameBuffer;
 
+    private static float[] projectionMatrix = new float[16];
+
     private Renderer(int width, int height){
         //init
         // Set the clear color
         GL.createCapabilities();
 
-        //TODO isdebug
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 //            GLUtil.setupDebugMessageCallback();
@@ -68,49 +64,40 @@ public class Renderer extends Engine {
 
     }
 
+    public static void initialize(int width, int height){
+        if(renderer == null){
+            renderer = new Renderer(width, height);
+            projectionMatrix = MatrixUtils.createProjectionMatrix();
+            GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(renderer.shaderID, "perspective"),false, projectionMatrix);
+            renderer.resize(width, height);
+        }
+    }
+
     public void setRenderType(int type){
         RENDER_TYPE = type;
     }
 
     public void resize(int width, int height){
+
         WIDTH = width;
         HEIGHT = height;
         aspectRatio = (float)width / (float)height;
-        projectionMatrix = Maths.createProjectionMatrix(FOV, NEAR_PLANE, FAR_PLANE);
         frameBuffer.resize(width, height);
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "perspective"),false, MatrixUtils.createProjectionMatrix());
-    }
 
-    public int getWIDTH(){
-        return WIDTH;
-    }
+        projectionMatrix = MatrixUtils.createProjectionMatrix();
 
-    public int getHEIGHT(){
-        return HEIGHT;
-    }
-
-    public static void initialize(int width, int height){
-        if(renderer == null){
-            renderer = new Renderer(width, height);
-            projectionMatrix = Maths.createProjectionMatrix(FOV, NEAR_PLANE, FAR_PLANE);
-            GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(renderer.shaderID, "perspective"),false, MatrixUtils.createProjectionMatrix());
-//            GL20.glEnable(GL20.GL_DEPTH_TEST);
-        }
-    }
-
-    public static Renderer getInstance(){
-        return renderer;
+        GL20.glViewport(0, 0, width, height);
     }
 
     public void render(){
-        //Cleanup
+        //TODO Cleanup, This code should live in the Shader class, and also the  PRojection Matrix should be beuffered on resize and not regenerated per frame, only regen on screen resize.
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             frameBuffer.bindFrameBuffer();
         }
 
         GL20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         ShaderManager.getInstance().useShader(shaderID);
-//        GL20.glEnable(GL20.GL_DEPTH_TEST);
+        GL20.glEnable(GL20.GL_DEPTH_TEST);
         GL20.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 
         GL20.glEnable(GL20.GL_BLEND);
@@ -118,11 +105,13 @@ public class Renderer extends Engine {
 
         GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
 
+        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
+
         float[] out = new float[3];
 
-        out[0] = CameraManager.getInstance().getActiveCamera().getForwardDir().x() * -1.0f;
-        out[1] = CameraManager.getInstance().getActiveCamera().getForwardDir().y() * -1.0f;
-        out[2] = CameraManager.getInstance().getActiveCamera().getForwardDir().z() * -1.0f;
+        out[0] = CameraManager.getInstance().getActiveCamera().getLookingDirection().x() * -1.0f;
+        out[1] = CameraManager.getInstance().getActiveCamera().getLookingDirection().y() * -1.0f;
+        out[2] = CameraManager.getInstance().getActiveCamera().getLookingDirection().z() * -1.0f;
 
         GL20.glUniform3fv(GL20.glGetUniformLocation(shaderID, "inverseCamera"), out);
 
@@ -172,7 +161,22 @@ public class Renderer extends Engine {
         }
     }
 
-    //TODO currently this is an immidate draw, it would be more efficeint to create a buffer that is written into as the Vector draw calls come in, then do one single draw.
+    //TODO currently this is an immediate draw, it would be more efficient to create a buffer that is written into as the Vector draw calls come in, then do one single draw.
+
+    public void drawAABB(Entity entity) {
+        org.joml.Vector3f[] aabb = entity.getAABB();
+        org.joml.Vector3f min = aabb[0];
+        org.joml.Vector3f max = aabb[1];
+
+        //6 draw calls...
+        this.drawLine(min, new Vector3f(min).add(0, 0, 1), new Vector3f(1));
+        this.drawLine(min, new Vector3f(min).add(0, 1, 0), new Vector3f(1));
+        this.drawLine(min, new Vector3f(min).add(1, 0, 0), new Vector3f(1));
+        this.drawLine(max, new Vector3f(min).add(0, 0, -1), new Vector3f(1));
+        this.drawLine(max, new Vector3f(min).add(0, -1, 0), new Vector3f(1));
+        this.drawLine(max, new Vector3f(min).add(-1, 0, 0), new Vector3f(1));
+    }
+
     public void drawLine(Vector3f from, Vector3f to, Vector3f color) {
         // Vertex data
         ShaderManager.getInstance().useShader(lineShaderID);
@@ -180,7 +184,7 @@ public class Renderer extends Engine {
 //        GL20.glEnable(GL20.GL_DEPTH_TEST);
 //        GL20.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(lineShaderID, "projectionMatrix"),false, MatrixUtils.createProjectionMatrix());
+        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(lineShaderID, "projectionMatrix"),false, projectionMatrix);
 
         Handshake handshake = new Handshake();
         handshake.addAttributeList("position", new float[]{
@@ -195,7 +199,7 @@ public class Renderer extends Engine {
         //Mess with uniforms
         ShaderManager.getInstance().loadHandshakeIntoShader(lineShaderID, handshake);
 
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(lineShaderID, "viewMatrix"), false, CameraManager.getInstance().getActiveCamera().getTransform(new org.joml.Vector3f(1, 1, aspectRatio)));
+        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(lineShaderID, "viewMatrix"), false, CameraManager.getInstance().getActiveCamera().getTransform());
         ShaderManager.getInstance().loadUniformIntoActiveShader("color", new org.joml.Vector3f(color.x(), color.y(), color.z()));
 
         GL20.glDrawArrays(GL20.GL_LINES, 0, 2);
@@ -222,13 +226,26 @@ public class Renderer extends Engine {
 
     @Override
     public void onShutdown() {
+
     }
 
-    public Matrix4f getProjectionMatrix() {
+    public float[] getProjectionMatrix(){
         return projectionMatrix;
     }
 
     public float getAspectRatio() {
         return aspectRatio;
+    }
+
+    public static int getWIDTH(){
+        return WIDTH;
+    }
+
+    public static int getHEIGHT(){
+        return HEIGHT;
+    }
+
+    public static Renderer getInstance(){
+        return renderer;
     }
 }
