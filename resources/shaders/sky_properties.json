@@ -1,0 +1,19 @@
+{
+  "Name":"vector",
+  "Version": "#version 400",
+  "Vertex":{
+    "Attributes": {
+      "position": "vec3"
+    },
+    "Uniforms": {
+      "projectionMatrix":"mat4",
+      "viewMatrix":"mat4"
+    },
+    "Varying": {
+    }
+  },
+  "Fragment":{
+    "Uniforms": {
+    }
+  }
+}

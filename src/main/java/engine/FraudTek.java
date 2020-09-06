@@ -12,6 +12,7 @@ import entity.EntityManager;
 import entity.EntityUtils;
 import graphics.renderer.*;
 import graphics.sprite.Colors;
+import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import input.MousePicker;
 import logging.LogManager;
@@ -292,7 +293,10 @@ public class FraudTek {
             //Draw a Ring
 //            Renderer.getInstance().drawRing(new Vector3f(0), new Vector2f(1), 45, new Vector3f(1, 1, 0));
 
-            Renderer.getInstance().drawArrow(new Vector3f(0, 6, 0), new Vector3f(CameraManager.getInstance().getActiveCamera().getLookingDirection()), new Vector3f(0.5f, 0.5f, 1.25f), 13, new Vector3f(1, 1, 1));
+//            Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
+//            if(pos != null) {
+//                Renderer.getInstance().drawArrow(new Vector3f(5, 5, 5), new Vector3f(pos), new Vector3f(0.5f, 0.5f, 1.25f), 13, new Vector3f(1, 1, 1));
+//            }
 
         }
 
