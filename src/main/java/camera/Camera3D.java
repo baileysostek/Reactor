@@ -41,17 +41,13 @@ public class Camera3D extends Camera{
         }
         if(Keyboard.getInstance().isKeyPressed(Keyboard.A)){
             //TODO store a buffered quaternion set and Matrix 4f set to reduce memory fragmentation
-            Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), -90);
-            Quaternionf out = new Quaternionf(super.getRotation().mul(offsetRot).normalize());
-//
-            super.translate((super.getLookingDirection().mul(super.speed)).rotate(out));
+            Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -90).normalize();
+            super.translate((new Vector3f(0, 0, -1).mul(super.speed)).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * super.getRotationV().y())).normalize()));
         }
-        if(Keyboard.getInstance().isKeyPressed(Keyboard.A)){
+        if(Keyboard.getInstance().isKeyPressed(Keyboard.D)){
             //TODO store a buffered quaternion set and Matrix 4f set to reduce memory fragmentation
-            Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), 90);
-            Quaternionf out = new Quaternionf(super.getRotation().mul(offsetRot).normalize());
-
-            super.translate((super.getLookingDirection().mul(super.speed)).rotate(out));
+            Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), 90).normalize();
+            super.translate((new Vector3f(0, 0, -1).mul(super.speed)).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * super.getRotationV().y())).normalize()));
         }
         if(Keyboard.getInstance().isKeyPressed(Keyboard.E)){
             super.translate(new Vector3f(0, -speed, 0));

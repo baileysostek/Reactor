@@ -83,7 +83,12 @@ public class SkyboxRenderer {
         ShaderManager.getInstance().loadHandshakeIntoShader(skyShaderID, handshake);
 
         //Mess with uniforms
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(skyShaderID, "viewMatrix"), false, CameraManager.getInstance().getActiveCamera().getTransform());
+        float[] viewMatrix = CameraManager.getInstance().getActiveCamera().getTransform();
+        viewMatrix[12] = 0;
+        viewMatrix[13] = 0;
+        viewMatrix[14] = 0;
+
+        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(skyShaderID, "viewMatrix"), false, viewMatrix);
         GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(skyShaderID, "projectionMatrix"),false, Renderer.getInstance().getProjectionMatrix());
 
         GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, textureID);
