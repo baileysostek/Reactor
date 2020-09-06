@@ -39,6 +39,9 @@ public class Renderer extends Engine {
 
     private static float[] projectionMatrix = new float[16];
 
+    //Skybox
+    private SkyboxRenderer skyboxRenderer;
+
     //ImmediateDraw
     private ImmediateDrawLine     drawerLine;
     private ImmediateDrawTriangle drawTriangle;
@@ -67,6 +70,8 @@ public class Renderer extends Engine {
         System.out.println("Shader ID:"+shaderID);
 
         frameBuffer = new FBO(width, height);
+
+        skyboxRenderer = new SkyboxRenderer();
 
         drawerLine = new ImmediateDrawLine();
         drawTriangle = new ImmediateDrawTriangle();
@@ -178,12 +183,24 @@ public class Renderer extends Engine {
         org.joml.Vector3f max = aabb[1];
 
         //6 draw calls...
-        this.drawLine(min, new Vector3f(min).add(0, 0, entity.getScale().z()) , new Vector3f(1));
-        this.drawLine(min, new Vector3f(min).add(0, entity.getScale().y(), 0) , new Vector3f(1));
-        this.drawLine(min, new Vector3f(min).add(entity.getScale().x(), 0, 0) , new Vector3f(1));
-        this.drawLine(max, new Vector3f(max).add(0, 0, -entity.getScale().z()), new Vector3f(1));
-        this.drawLine(max, new Vector3f(max).add(0, -entity.getScale().y(), 0), new Vector3f(1));
-        this.drawLine(max, new Vector3f(max).add(-entity.getScale().x(), 0, 0), new Vector3f(1));
+        this.drawLine(min, new Vector3f(max.x, min.y, min.z) , new Vector3f(1));
+        this.drawLine(min, new Vector3f(min.x, max.y, min.z) , new Vector3f(1));
+        this.drawLine(min, new Vector3f(min.x, min.y, max.z) , new Vector3f(1));
+
+        this.drawLine(max, new Vector3f(min.x, max.y, max.z) , new Vector3f(1));
+        this.drawLine(max, new Vector3f(max.x, min.y, max.z) , new Vector3f(1));
+        this.drawLine(max, new Vector3f(max.x, max.y, min.z) , new Vector3f(1));
+
+        //Bottom
+        this.drawLine(new Vector3f(min.x, max.y, min.z), new Vector3f(max.x, max.y, min.z) , new Vector3f(1));
+        this.drawLine(new Vector3f(min.x, max.y, min.z), new Vector3f(min.x, max.y, max.z) , new Vector3f(1));
+
+        this.drawLine(new Vector3f(max.x, min.y, max.z), new Vector3f(max.x, min.y, min.z) , new Vector3f(1));
+        this.drawLine(new Vector3f(max.x, min.y, max.z), new Vector3f(min.x, min.y, max.z) , new Vector3f(1));
+
+        this.drawLine(new Vector3f(max.x, min.y, min.z), new Vector3f(max.x, max.y, min.z) , new Vector3f(1));
+        this.drawLine(new Vector3f(min.x, min.y, max.z), new Vector3f(min.x, max.y, max.z) , new Vector3f(1));
+
     }
 
     public void drawRing(Vector3f origin, Vector2f radius, int points, Vector3f color) {
@@ -215,7 +232,7 @@ public class Renderer extends Engine {
     public void drawCone(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
         float angle_spacing = 360.0f / (float)points;
 
-        Vector3f usableRay = new Vector3f(ray).mul(scale.z);
+        Vector3f usableRay = new Vector3f(ray).mul(Math.max(scale.x, 1), Math.max(scale.y, 1), Math.max(scale.x, 1));
 
         Vector3f lastPoint = null;
         Vector3f firstPoint = null;
@@ -305,8 +322,9 @@ public class Renderer extends Engine {
     }
 
     public void drawArrow(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
-        this.drawCylinder(origin, ray, new Vector3f(scale).mul(0.5f, 0.5f, 1), points, color);
-        this.drawCone(new Vector3f(ray).add(origin), ray, scale, points, color);
+        float ratio = scale.z / ray.distance(origin);
+        this.drawCylinder(origin, new Vector3f(ray).sub(origin).mul(1f - ratio), new Vector3f(scale).mul(0.5f, 0.5f, 1), points, color);
+        this.drawCone(new Vector3f(ray).mul(1f - ratio).add(new Vector3f(origin).mul(ratio)), new Vector3f(ray).sub(origin).mul(ratio), scale, points, color);
     }
 
     public void drawLine(Vector3f from, Vector3f to, Vector3f color) {
@@ -318,7 +336,10 @@ public class Renderer extends Engine {
     }
 
     public void postpare(){
-        //Cleanup
+        //Render our Skybox
+        skyboxRenderer.render();
+
+        //Render our lines!
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             drawerLine.render();
             drawTriangle.render();

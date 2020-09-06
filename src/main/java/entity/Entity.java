@@ -245,6 +245,9 @@ public class Entity implements Transformable, Serializable<Entity> {
         //Raw unNormaized and unTranslated AABB
         Vector3f[] out = this.model.getAABB();
 
+        out[0].mulDirection(this.getTransform());
+        out[1].mulDirection(this.getTransform());
+
         out[0].add(this.getPosition());
         out[1].add(this.getPosition());
 

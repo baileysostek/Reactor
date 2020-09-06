@@ -161,10 +161,12 @@ public class EntityEditor extends UIComponet {
     @Override
     public void preUIRender(){
         if(this.entity != null) {
-            //Direct Draw?
-            Renderer.getInstance().drawArrow(new Vector3f(entity.getPosition()).add(1, 0, 0), new Vector3f(1, 0, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
-            Renderer.getInstance().drawArrow(new Vector3f(entity.getPosition()).add(0, 1, 0), new Vector3f(0, 1, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
-            Renderer.getInstance().drawArrow(new Vector3f(entity.getPosition()).add(0, 0, 1), new Vector3f(0, 0, 1), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
+            //Direct draw AABB
+            Renderer.getInstance().drawAABB(entity);
+            //Direct Draw Axis arrows
+            Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(1, 0, 0).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
+            Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 1, 0).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
+            Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 0, 1).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
         }
     }
 

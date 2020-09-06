@@ -22,6 +22,8 @@ public class SpriteBinder extends Engine {
     private HashMap<String, Integer> spriteNames = new HashMap<String, Integer>();
     private HashMap<Integer, String> spriteNamesPrime = new HashMap<Integer, String>();
 
+    private LinkedList<Integer> extraIDS = new LinkedList<Integer>();
+
     //File not found sprite
     private Sprite fileNotFound;
 
@@ -145,6 +147,38 @@ public class SpriteBinder extends Engine {
         return new SpriteSheet(0, 0, 0, 0, "", new LinkedList<Sprite>());
     }
 
+    public int loadCubeMap(String location){
+        int textureID = this.genTexture();
+
+        GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, textureID);
+
+        String[] names = new String[]{"RIGHT", "LEFT", "TOP", "BOTTOM", "BACK", "FRONT"};
+
+        for(int i = 0; i < 6; i++){
+            Sprite sprite = SpriteBinder.getInstance().load(location+"/"+names[i].toLowerCase()+".png");
+
+            int[] pixels = sprite.getPixels();
+            ByteBuffer buffer = ByteBuffer.allocateDirect(pixels.length * 4);
+            for (int pixel : pixels) {
+                buffer.put((byte) ((pixel >> 16) & 0xFF));
+                buffer.put((byte) ((pixel >> 8) & 0xFF));
+                buffer.put((byte) (pixel & 0xFF));
+                buffer.put((byte) (pixel >> 24));
+            }
+            buffer.flip();
+
+            GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL11.GL_RGBA, sprite.getWidth(), sprite.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+        }
+
+        GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+
+        extraIDS.addLast(textureID);
+
+        return textureID;
+    }
+
     public static SpriteBinder getInstance(){
         if(spriteBinder == null){
             spriteBinder = new SpriteBinder();
@@ -157,6 +191,10 @@ public class SpriteBinder extends Engine {
     public void onShutdown() {
         for(Sprite sprite : sprites.values()){
             this.delete(sprite);
+        }
+
+        for(int i : extraIDS){
+            GL20.glDeleteTextures(i);
         }
     }
 

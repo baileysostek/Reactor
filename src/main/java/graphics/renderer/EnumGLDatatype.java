@@ -12,6 +12,7 @@ public enum EnumGLDatatype implements Serializable<EnumGLDatatype> {
     VEC4 (Float.BYTES, 4 ),
 
     SAMPLER2D(Integer.BYTES, 1 ),
+    SAMPLER3D(Integer.BYTES, 1 ),
 
     //Matrix
     MAT3(Float.BYTES, 9 ),

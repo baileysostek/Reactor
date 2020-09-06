@@ -257,6 +257,12 @@ public class ShaderManager {
                 GL20.glUniform1i(location, index);
                 break;
             }
+            case SAMPLER3D : {
+                int index = Integer.parseInt(uniform+"");
+//                data[0] = index;
+                GL20.glUniform1i(location, index);
+                break;
+            }
             default:{
                 System.out.println("[loadUniformIntoActiveShader]Error: datatype " + uniformType +" is not supported yet.");
             }
