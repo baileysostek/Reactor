@@ -3,8 +3,6 @@ package entity;
 import camera.CameraManager;
 import editor.Editor;
 import editor.components.UIComponet;
-import editor.components.container.Axis;
-import entity.Entity;
 import entity.component.Attribute;
 import entity.component.Component;
 import entity.component.Event;
@@ -12,25 +10,21 @@ import graphics.renderer.Renderer;
 import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
-import graphics.sprite.SpriteSheet;
 import imgui.*;
 import imgui.enums.ImGuiCol;
-import imgui.enums.ImGuiSelectableFlags;
-import imgui.enums.ImGuiStyleVar;
 import imgui.enums.ImGuiTreeNodeFlags;
 import input.Keyboard;
 import input.MousePicker;
-import models.ModelManager;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import util.Callback;
 
+import java.awt.*;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import static entity.EditorTool.*;
+import static entity.EditorTool.NONE;
 
 public class EntityEditor extends UIComponet {
     private Callback mouseCallback;
@@ -39,16 +33,9 @@ public class EntityEditor extends UIComponet {
 
     //The entity we are interacting with
     private Entity entity;
-    private Sprite outline = null;
-    private Entity outlineEntity;
 
     //Tools
     private EditorTool selectedTool = NONE;
-    private Entity axisArrowX;
-    private Entity axisArrowY;
-    private Entity axisArrowR;
-
-    private LinkedList<Entity> menuEntities = new LinkedList<>();
 
     //Editor resources
     Sprite entityNotFound;
@@ -56,33 +43,6 @@ public class EntityEditor extends UIComponet {
     public EntityEditor(){
         //Load resources and set variables
         entityNotFound = SpriteBinder.getInstance().load("fileNotFound.png");
-
-        //Gen start of outline
-        outlineEntity = new Entity();
-        outlineEntity.setModel(ModelManager.getInstance().loadModel("quad.tek"));
-        outlineEntity.addAttribute(new Attribute<Integer>("zIndex", Integer.MAX_VALUE));
-
-        //Arrows
-        axisArrowX = new Entity();
-        axisArrowX.setModel(ModelManager.getInstance().loadModel("quad.tek"));
-        axisArrowX.setTexture(new Sprite(SpriteBinder.getInstance().load("arrow.png").outline(new Vector4f(1, 0, 0, 1))));
-        axisArrowX.addAttribute(new Attribute<Integer>("zIndex", Integer.MAX_VALUE));
-        axisArrowX.setRotation(new Vector3f(0, (float) -Math.toRadians(90f), 0));
-
-        axisArrowY = new Entity();
-        axisArrowY.setModel(ModelManager.getInstance().loadModel("quad.tek"));
-        axisArrowY.setTexture(new Sprite(SpriteBinder.getInstance().load("arrow.png").outline(new Vector4f(0, 1, 0, 1))));
-        axisArrowY.addAttribute(new Attribute<Integer>("zIndex", Integer.MAX_VALUE));
-
-        axisArrowR = new Entity();
-        axisArrowR.setModel(ModelManager.getInstance().loadModel("quad.tek"));
-        axisArrowR.setTexture(new Sprite(SpriteBinder.getInstance().load("rotate.png").outline(new Vector4f(0, 0, 1, 1))));
-        axisArrowR.addAttribute(new Attribute<Integer>("zIndex", Integer.MAX_VALUE));
-
-        //Add all menu entities
-        menuEntities.addLast(axisArrowX);
-        menuEntities.addLast(axisArrowY);
-        menuEntities.addLast(axisArrowR);
 
         //Genreate mouse callback
         mouseCallback = new Callback() {
@@ -136,20 +96,9 @@ public class EntityEditor extends UIComponet {
                         case MOVE_XYZ:
                             break;
                         case MOVE_X: {
-                            Vector3f deltaX = new Vector3f(pos);
-                            this.axisArrowX.setPosition(new Vector3f(deltaX.x(), axisArrowX.getPosition().y(), axisArrowX.getPosition().z()));
-                            this.entity.setPosition(new Vector3f(axisArrowX.getPosition()).add(new Vector3f(this.entity.getScale()).mul(-1, 0, 0)));
-                            this.outlineEntity.setPosition(this.entity.getPosition());
-
-                            //Remove unused tools
-
                             break;
                         }
                         case MOVE_Y: {
-                            Vector3f deltaY = new Vector3f(pos);
-                            this.axisArrowY.setPosition(new Vector3f(axisArrowY.getPosition().x(), axisArrowY.getPosition().y(), deltaY.z()));
-                            this.entity.setPosition(new Vector3f(axisArrowY.getPosition()).add(new Vector3f(this.entity.getScale()).mul(0, 0, 1)));
-                            this.outlineEntity.setPosition(this.entity.getPosition());
                             break;
                         }
                         case MOVE_Z:
@@ -163,53 +112,19 @@ public class EntityEditor extends UIComponet {
                         case SCALE_XYZ:
                             break;
                     }
-                    //Set pos of other tools
-                    //Set the pos of the editor arrows
-                    axisArrowX.setPosition(new Vector3f(this.entity.getPosition()).add(new Vector3f(1, 0, 0).mul(this.entity.getScale())));
-                    axisArrowY.setPosition(new Vector3f(this.entity.getPosition()).add(new Vector3f(0, 0, -1).mul(this.entity.getScale())));
-                    axisArrowR.setPosition(new Vector3f(this.entity.getPosition()).add(new Vector3f(1, 0, -1).mul(this.entity.getScale())));
                 } else {
-                    //No tool selected, lets see if we hit a tool or hit an entity
-                    LinkedList<Entity> menuHits = EntityManager.getInstance().getHitEntities(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), menuEntities);
-                    if (!menuHits.isEmpty()) {
-                        //We have an entity selected
-                        if (this.entity != null) {
-                            //Check for hit
-                            Entity hit = menuHits.getFirst();
-                            //Get the first hit
-                            if (hit.equals(axisArrowX)) {
-                                this.selectedTool = MOVE_X;
+                    //We hit nothing so lets do the next action.
+                    LinkedList<Entity> hits = EntityManager.getInstance().getHitEntities(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()));
+                    if (hits.size() > 0) {
+                        if (this.entity != hits.getFirst()) {
+                            for (Entity e : hits) {
+                                System.out.println(e.serialize());
                             }
-                            if (hit.equals(axisArrowY)) {
-                                this.selectedTool = MOVE_Y;
-                            }
+                            this.entity = hits.getFirst();
                         }
+
                     } else {
-                        //We hit nothing so lets do the next action.
-                        LinkedList<Entity> hits = EntityManager.getInstance().getHitEntities(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()));
-                        if (hits.size() > 0) {
-                            if (this.entity != hits.getFirst() && !hits.getFirst().equals(outlineEntity)) {
-                                for (Entity e : hits) {
-                                    System.out.println(e.serialize());
-                                }
-                                this.entity = hits.getFirst();
-                                outline = new Sprite(SpriteBinder.getInstance().getSprite(this.entity.getTextureID())).outline(Colors.RED);
-                                outlineEntity.setTexture(outline);
-                                outlineEntity.setPosition(new Vector3f(this.entity.getPosition()));
-                                EntityManager.getInstance().addEntity(outlineEntity);
-
-                                //Set the pos of the editor arrows
-                                axisArrowX.setPosition(new Vector3f(this.entity.getPosition()).add(new Vector3f(1, 0, 0).mul(this.entity.getScale())));
-                                axisArrowY.setPosition(new Vector3f(this.entity.getPosition()).add(new Vector3f(0, 0, -1).mul(this.entity.getScale())));
-                                axisArrowR.setPosition(new Vector3f(this.entity.getPosition()).add(new Vector3f(1, 0, -1).mul(this.entity.getScale())));
-                                EntityManager.getInstance().addEntity(axisArrowX);
-                                EntityManager.getInstance().addEntity(axisArrowY);
-                                EntityManager.getInstance().addEntity(axisArrowR);
-                            }
-
-                        } else {
-                            clearSelected();
-                        }
+                        clearSelected();
                     }
                 }
             }
@@ -219,10 +134,6 @@ public class EntityEditor extends UIComponet {
 
     public void clearSelected(){
         this.entity = null;
-        EntityManager.getInstance().removeEntity(outlineEntity);
-        EntityManager.getInstance().removeEntity(axisArrowX);
-        EntityManager.getInstance().removeEntity(axisArrowY);
-        EntityManager.getInstance().removeEntity(axisArrowR);
     }
 
     @Override
@@ -251,7 +162,9 @@ public class EntityEditor extends UIComponet {
     public void preUIRender(){
         if(this.entity != null) {
             //Direct Draw?
-            Renderer.getInstance().drawAABB(entity);
+            Renderer.getInstance().drawArrow(new Vector3f(entity.getPosition()).add(1, 0, 0), new Vector3f(1, 0, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
+            Renderer.getInstance().drawArrow(new Vector3f(entity.getPosition()).add(0, 1, 0), new Vector3f(0, 1, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
+            Renderer.getInstance().drawArrow(new Vector3f(entity.getPosition()).add(0, 0, 1), new Vector3f(0, 0, 1), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
         }
     }
 
@@ -408,6 +321,17 @@ class AttributeRenderer{
                     ImInt value = new ImInt(data);
 
                     ImGui.inputInt(attribute.getName(), value);
+
+                    attribute.setData(value.get());
+
+                    break loop;
+                }
+
+                if (attribute.getData() instanceof String) {
+                    String data = (String) attribute.getData();
+                    ImString value = new ImString(data);
+
+                    ImGui.inputText(attribute.getName(), value);
 
                     attribute.setData(value.get());
 

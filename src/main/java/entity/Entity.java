@@ -5,16 +5,13 @@ import com.google.gson.JsonObject;
 import entity.component.Attribute;
 import entity.component.Component;
 import entity.interfaces.Transformable;
-import graphics.renderer.Renderer;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
-import math.MatrixUtils;
 import models.Model;
 import models.ModelManager;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-import org.w3c.dom.Attr;
 import serialization.Serializable;
 import serialization.SerializationHelper;
 import util.Callback;
@@ -112,7 +109,6 @@ public class Entity implements Transformable, Serializable<Entity> {
                 EntityManager.getInstance().resort();
             }
 
-
             //No need to return anything.
             return null;
             }
@@ -135,6 +131,10 @@ public class Entity implements Transformable, Serializable<Entity> {
                 }
             }
         }
+    }
+
+    public void onAttributeChanged(Attribute observed){
+        return;
     }
 
     public final boolean hasAttribute(String attributeName) {
@@ -206,19 +206,21 @@ public class Entity implements Transformable, Serializable<Entity> {
     //Get transform
     public final Matrix4f getTransform(){
         transform = transform.identity();
-        transform.translate((Vector3f) this.attributes.get("position").getData(), transform);
-        Vector3f rotation = (Vector3f) this.attributes.get("rotation").getData();
-        Quaternionf qPitch   = new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), rotation.x);
-        Quaternionf qRoll    = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), rotation.y);
-        Quaternionf qYaw     = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), rotation.z);
-        Quaternionf orientation = (qPitch.mul(qRoll.mul(qYaw))).normalize();
-        transform.rotate(orientation);
-        transform.scale(getScale(), transform);
 
         if(this.parent != null){
             Matrix4f parent = new Matrix4f(this.parent.getTransform());
             transform.mul(parent, transform);
         }
+
+        Vector3f rotation = (Vector3f) this.attributes.get("rotation").getData();
+        Quaternionf qPitch   = new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), rotation.x);
+        Quaternionf qRoll    = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), rotation.y);
+        Quaternionf qYaw     = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), rotation.z);
+        Quaternionf orientation = (qPitch.mul(qRoll.mul(qYaw))).normalize();
+
+        transform.translate((Vector3f) this.attributes.get("position").getData(), transform);
+        transform.rotate(orientation);
+        transform.scale(getScale(), transform);
 
         return this.transform;
     }
@@ -445,5 +447,13 @@ public class Entity implements Transformable, Serializable<Entity> {
         }
 
         return this;
+    }
+
+    public String getName() {
+        String name = this.toString();
+        if (this.hasAttribute("name")) {
+            name = (String) this.getAttribute("name").getData();
+        }
+        return name;
     }
 }

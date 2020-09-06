@@ -5,12 +5,14 @@ import engine.Engine;
 import entity.Entity;
 import entity.EntityManager;
 import math.MatrixUtils;
-import org.joml.Vector3f;
+import org.joml.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
+
+import java.lang.Math;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -37,6 +39,10 @@ public class Renderer extends Engine {
 
     private static float[] projectionMatrix = new float[16];
 
+    //ImmediateDraw
+    private ImmediateDrawLine     drawerLine;
+    private ImmediateDrawTriangle drawTriangle;
+
     private Renderer(int width, int height){
         //init
         // Set the clear color
@@ -61,6 +67,9 @@ public class Renderer extends Engine {
         System.out.println("Shader ID:"+shaderID);
 
         frameBuffer = new FBO(width, height);
+
+        drawerLine = new ImmediateDrawLine();
+        drawTriangle = new ImmediateDrawTriangle();
 
     }
 
@@ -177,40 +186,142 @@ public class Renderer extends Engine {
         this.drawLine(max, new Vector3f(max).add(-entity.getScale().x(), 0, 0), new Vector3f(1));
     }
 
+    public void drawRing(Vector3f origin, Vector2f radius, int points, Vector3f color) {
+        float angle_spacing = 360.0f / (float)points;
+        Vector3f lastPoint = null;
+        Vector3f firstPoint = null;
+        for(int i = 0; i < points; i++){
+            float angle = (float) Math.toRadians((i * angle_spacing));
+
+            float x = (float) (Math.cos(angle));
+            float y = (float) (Math.sin(angle));
+
+            Vector3f thisPoint = new Vector3f(origin).add(x * radius.x, y * radius.y, 0);
+
+            if(lastPoint != null) {
+                drawLine(lastPoint, thisPoint, color);
+            }else{
+                firstPoint = thisPoint;
+            }
+
+            lastPoint = thisPoint;
+        }
+
+        if(lastPoint != null && firstPoint != null){
+            drawLine(lastPoint, firstPoint, color);
+        }
+    }
+
+    public void drawCone(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
+        float angle_spacing = 360.0f / (float)points;
+
+        Vector3f usableRay = new Vector3f(ray).mul(scale.z);
+
+        Vector3f lastPoint = null;
+        Vector3f firstPoint = null;
+
+        Vector3f tip = new Vector3f(usableRay).mul(1, 1, 1).add(origin);
+        Vector3f up = new Vector3f(0, (float) Math.cos(usableRay.z * Math.PI), (float) Math.cos(usableRay.y * Math.PI));
+
+        Vector3f xAxis = new Vector3f(up).cross(usableRay).normalize();
+        Vector3f yAxis = new Vector3f(usableRay).cross(xAxis).normalize();
+
+        Matrix3f rotationMatrix = new Matrix3f().set(new float[]{
+            xAxis.x, xAxis.y, xAxis.z,
+            yAxis.x, yAxis.y, yAxis.z,
+            usableRay.x, usableRay.y, usableRay.z,
+        });
+
+        for(int i = 0; i < points; i++){
+            float angle = (float) Math.toRadians((i * angle_spacing));
+
+            float x = (float) (Math.cos(angle));
+            float y = (float) (Math.sin(angle));
+
+            Vector3f thisPoint = new Vector3f(x * scale.x, y * scale.y, 0).mul(rotationMatrix).add(origin);
+
+            if(lastPoint != null) {
+                drawTriangle.drawTriangle(lastPoint, thisPoint, tip, color);
+            }else{
+                firstPoint = thisPoint;
+            }
+
+            lastPoint = thisPoint;
+        }
+
+        if(lastPoint != null && firstPoint != null){
+            drawTriangle.drawTriangle(lastPoint, firstPoint, tip, color);
+        }
+    }
+
+    public void drawCylinder(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
+        float angle_spacing = 360.0f / (float)points;
+
+        Vector3f usableRay = new Vector3f(ray);
+
+
+        Vector3f lastPoint = null;
+        Vector3f lastThatPoint = null;
+        Vector3f firstPoint = null;
+        Vector3f firstThatPoint = null;
+
+        Vector3f tip = new Vector3f(usableRay).mul(1, 1, 1).add(origin);
+        Vector3f up = new Vector3f(0, (float) Math.cos(usableRay.z * Math.PI), (float) Math.cos(usableRay.y * Math.PI));
+
+        Vector3f xAxis = new Vector3f(up).cross(usableRay).normalize();
+        Vector3f yAxis = new Vector3f(usableRay).cross(xAxis).normalize();
+
+        Matrix3f rotationMatrix = new Matrix3f().set(new float[]{
+                xAxis.x, xAxis.y, xAxis.z,
+                yAxis.x, yAxis.y, yAxis.z,
+                usableRay.x, usableRay.y, usableRay.z,
+        });
+
+        for(int i = 0; i < points; i++){
+            float angle = (float) Math.toRadians((i * angle_spacing));
+
+            float x = (float) (Math.cos(angle));
+            float y = (float) (Math.sin(angle));
+
+            Vector3f thisPoint = new Vector3f(x * scale.x, y * scale.y, 0).mul(rotationMatrix).add(origin);
+            Vector3f thatPoint = new Vector3f(x * scale.x, y * scale.y, 0).mul(rotationMatrix).add(origin).add(usableRay);
+
+            if(lastPoint != null) {
+                drawTriangle.drawTriangle(lastPoint, thisPoint, thatPoint, color);
+                drawTriangle.drawTriangle(lastPoint, lastThatPoint, thatPoint, color);
+            }else{
+                firstPoint = thisPoint;
+                firstThatPoint = thatPoint;
+            }
+
+            lastPoint = thisPoint;
+            lastThatPoint = thatPoint;
+        }
+
+        if(lastPoint != null && firstPoint != null){
+            drawTriangle.drawTriangle(lastPoint, firstPoint, lastThatPoint, color);
+            drawTriangle.drawTriangle(firstPoint, lastThatPoint, firstThatPoint, color);
+        }
+    }
+
+    public void drawArrow(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
+        this.drawCylinder(origin, ray, new Vector3f(scale).mul(0.5f, 0.5f, 1), points, color);
+        this.drawCone(new Vector3f(ray).add(origin), ray, scale, points, color);
+    }
+
     public void drawLine(Vector3f from, Vector3f to, Vector3f color) {
-        // Vertex data
-        ShaderManager.getInstance().useShader(lineShaderID);
-//        GL40.glUseProgram(lineShaderID);
-//        GL20.glEnable(GL20.GL_DEPTH_TEST);
-//        GL20.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+        drawerLine.drawLine(from, to, color);
+    }
 
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(lineShaderID, "projectionMatrix"),false, projectionMatrix);
-
-        Handshake handshake = new Handshake();
-        handshake.addAttributeList("position", new float[]{
-            from.x(),
-            from.y(),
-            from.z(),
-            to.x(),
-            to.y(),
-            to.z()
-        }, EnumGLDatatype.VEC3);
-
-        //Mess with uniforms
-        ShaderManager.getInstance().loadHandshakeIntoShader(lineShaderID, handshake);
-
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(lineShaderID, "viewMatrix"), false, CameraManager.getInstance().getActiveCamera().getTransform());
-        ShaderManager.getInstance().loadUniformIntoActiveShader("color", new org.joml.Vector3f(color.x(), color.y(), color.z()));
-
-        GL20.glDrawArrays(GL20.GL_LINES, 0, 2);
-
-        GL20.glUseProgram(0);
+    public void drawLine(Vector3f from, Vector3f to, Vector4f color) {
+        drawerLine.drawLine(from, to, new Vector3f(color.x, color.y, color.z));
     }
 
     public void postpare(){
-
         //Cleanup
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+            drawerLine.render();
+            drawTriangle.render();
             frameBuffer.unbindFrameBuffer();
         }
 

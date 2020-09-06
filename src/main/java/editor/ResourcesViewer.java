@@ -76,11 +76,12 @@ public class ResourcesViewer extends UIComponet {
                                 case (".tek"): {
                                     //If the file is a TEK file
                                     if(draggedFile.getRelativePath().contains("/models/")) {
-                                        System.out.println(draggedFile.getRelativePath().replace("/models/", ""));
+                                        String filename = draggedFile.getRelativePath().replace("/models/", "");
                                         Entity newEntity = new Entity();
-                                        newEntity.setModel(ModelManager.getInstance().loadModel(draggedFile.getRelativePath().replace("/models/", "")));
+                                        newEntity.setModel(ModelManager.getInstance().loadModel(filename));
                                         newEntity.setPosition(pos);
                                         newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
+                                        newEntity.addAttribute(new Attribute<String>("name", filename));
                                         EntityManager.getInstance().addEntity(newEntity);
                                         break;
                                     }else{
@@ -92,20 +93,23 @@ public class ResourcesViewer extends UIComponet {
                                 }
                                 case (".png"): {
                                     Entity newEntity = new Entity();
+                                    String filename = draggedFile.getRelativePath().replace("/textures/", "");
                                     newEntity.setModel(ModelManager.getInstance().loadModel("quad.tek"));
-                                    newEntity.setTexture(SpriteBinder.getInstance().load(draggedFile.getRelativePath().replace("/textures/", "")));
+                                    newEntity.setTexture(SpriteBinder.getInstance().load(filename));
                                     newEntity.setPosition(pos);
                                     newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
+                                    newEntity.addAttribute(new Attribute<String>("name", filename));
                                     EntityManager.getInstance().addEntity(newEntity);
                                     break;
                                 }
                                 case (".obj"): {
-                                    System.out.println(draggedFile.getRelativePath().replace("/models/", ""));
+                                    String filename = draggedFile.getRelativePath().replace("/models/", "");
                                     Entity newEntity = new Entity();
-                                    newEntity.setModel(ModelManager.getInstance().loadModel(draggedFile.getRelativePath().replace("/models/", "")));
+                                    newEntity.setModel(ModelManager.getInstance().loadModel(filename));
 //                                    newEntity.setTexture(SpriteBinder.getInstance().load(draggedFile.getRelativePath().replace("/textures/", "")));
                                     newEntity.setPosition(pos);
                                     newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
+                                    newEntity.addAttribute(new Attribute<String>("name", filename));
                                     EntityManager.getInstance().addEntity(newEntity);
                                     break;
                                 }
@@ -214,4 +218,12 @@ public class ResourcesViewer extends UIComponet {
     public FileObject getDraggedFile() {
         return this.draggedFile;
     }
+}
+
+enum ResourceType{
+    IMAGE,
+    MODEL,
+    SCRIPT,
+    SOUND,
+    ENTITY
 }
