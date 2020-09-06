@@ -8,12 +8,7 @@ public class Attribute<T> {
 
     private String name;
     private T attribute;
-    private Callback onUpdate = new Callback() {
-        @Override
-        public Object callback(Object... objects) {
-            return null;
-        }
-    };
+    private LinkedList<Callback> subscribers = new LinkedList<Callback>();
 
     public Attribute(String name, T data){
         this.name = name;
@@ -21,8 +16,12 @@ public class Attribute<T> {
     }
 
     public void setData(T newData){
-        this.attribute = newData;
-        this.onUpdate.callback(this);
+        if(attribute != newData) {
+            this.attribute = newData;
+            for (Callback callback : subscribers) {
+                callback.callback(this);
+            }
+        }
     }
 
     protected void setDataUnsafe(T newData){
@@ -34,7 +33,15 @@ public class Attribute<T> {
     }
 
     public void subscribe(Callback c){
-        this.onUpdate = c;
+        if(!this.subscribers.contains(c)) {
+            this.subscribers.addLast(c);
+        }
+    }
+
+    public void unsubscribe(Callback c){
+        if(this.subscribers.contains(c)) {
+            this.subscribers.remove(c);
+        }
     }
 
     public String getName(){

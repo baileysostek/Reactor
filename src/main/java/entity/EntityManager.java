@@ -195,7 +195,7 @@ public class EntityManager {
         if(toAdd.size() > 0 || toRemove.size() > 0) {
             lock.lock();
             try {
-                for (Entity e : toAdd) {
+                for (Entity e : new LinkedList<>(toAdd)) {
                     this.entities.add(e);
                     e.onAdd();
                     this.typedEntities.get(e.getType()).add(e);
@@ -204,7 +204,7 @@ public class EntityManager {
                     }
                 }
                 toAdd.clear();
-                for (Entity e : toRemove) {
+                for (Entity e : new LinkedList<>(toRemove)) {
                     this.entities.remove(e);
                     this.typedEntities.get(e.getType()).remove(e);
                 }
@@ -237,13 +237,14 @@ public class EntityManager {
     }
 
     private void parentRemoveHelper(Entity parent){
+        //Remove parent
         this.toRemove.add(parent);
         if(this.links.containsKey(parent)){
             LinkedList<Entity> links = this.links.get(parent);
             for(Entity child : links){
                 parentRemoveHelper(child);
             }
-            this.links.remove(links);
+            this.links.remove(parent);
         }
     }
 
@@ -252,6 +253,13 @@ public class EntityManager {
             this.links.put(parent, new LinkedList<Entity>());
         }
         this.links.get(parent).push(child);
+    }
+
+    public LinkedList<Entity> getEntitiesChildren(Entity parent){
+        if(this.links.containsKey(parent)){
+            return this.links.get(parent);
+        }
+        return new LinkedList<>();
     }
 
     public int getSize(){

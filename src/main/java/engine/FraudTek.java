@@ -11,11 +11,13 @@ import entity.Entity;
 import entity.EntityManager;
 import entity.EntityUtils;
 import graphics.renderer.*;
+import graphics.sprite.Colors;
 import graphics.sprite.SpriteBinder;
 import input.MousePicker;
 import logging.LogManager;
 import models.Model;
 import models.ModelManager;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import physics.PhysicsEngine;
@@ -273,6 +275,7 @@ public class FraudTek {
             Renderer.getInstance().drawLine(new Vector3f(0, -size, 0), new Vector3f(0, size, 0), new Vector3f(0, 1, 0));
             Renderer.getInstance().drawLine(new Vector3f(0, 0, -size), new Vector3f(0, 0, size), new Vector3f(0, 0, 1));
 
+            //Draw Grid
             size = 50;
             for(int i = -size; i <= size; i++){
                 if(i == 0){
@@ -285,6 +288,12 @@ public class FraudTek {
                 Renderer.getInstance().drawLine(new Vector3f(-size, 0, i), new Vector3f(size, 0, i), color);
                 Renderer.getInstance().drawLine(new Vector3f(i, 0, -size), new Vector3f(i, 0, size), color);
             }
+
+            //Draw a Ring
+//            Renderer.getInstance().drawRing(new Vector3f(0), new Vector2f(1), 45, new Vector3f(1, 1, 0));
+
+            Renderer.getInstance().drawArrow(new Vector3f(0, 6, 0), new Vector3f(CameraManager.getInstance().getActiveCamera().getLookingDirection()), new Vector3f(0.5f, 0.5f, 1.25f), 13, new Vector3f(1, 1, 1));
+
         }
 
         SceneManager.getInstance().render();
@@ -344,7 +353,7 @@ public class FraudTek {
 //        test.getTokensInFile();
 //        ScriptingEngine.getInstance().run(test, "fibonacci");
 
-        String modelName = "sphere_smooth";
+//        String modelName = "Garden";
 ////
 //        JsonObject action = new JsonObject();
 //        action.addProperty("action", "convert");

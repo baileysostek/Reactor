@@ -3,7 +3,8 @@
   "Version": "#version 400",
   "Vertex":{
     "Attributes": {
-      "position": "vec3"
+      "position": "vec3",
+      "color": "vec3"
     },
     "Uniforms": {
       "projectionMatrix":"mat4",
@@ -14,7 +15,6 @@
   },
   "Fragment":{
     "Uniforms": {
-      "color": "vec3"
     }
   }
 }

@@ -1,6 +1,6 @@
 # Blender v2.78 (sub 0) OBJ File: 'Garden.obj'
 # www.blender.org
-mtllib garden.mtl
+mtllib Garden.mtl
 o Garden_mesh
 v -12.091736 0.498054 11.980708
 v -11.080133 0.498054 11.980708
