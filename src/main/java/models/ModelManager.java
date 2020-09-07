@@ -263,32 +263,33 @@ public class ModelManager {
             vNormals = new float[facesList.size() * 3];
             vTextures = new float[facesList.size() * 2];
 
-            int percent = 0;
 
-            for (int i = 0; i < facesList.size(); i++) {
-                float thisPercent = ((float) i / (float) facesList.size()) * 100.0f;
-                int thisPercentI = (int) Math.ceil(thisPercent);
-                if (percent != thisPercentI) {
-                    System.out.print("\rBuilding Model:" + percent + "%");
-                }
-                percent = thisPercentI;
-
-                vPositions[(i * 3) + 0] = facesList.get(i).x();
-                vPositions[(i * 3) + 1] = facesList.get(i).y();
-                vPositions[(i * 3) + 2] = facesList.get(i).z();
-
-                vTextures[(i * 2) + 0] = facesList_texture.get(i).x();
-                vTextures[(i * 2) + 1] = facesList_texture.get(i).y();
-//            vTextures[(i * 2) + 0] = (float)Math.random();
-//            vTextures[(i * 2) + 1] = (float)Math.random();
-
-                vNormals[(i * 3) + 0] = facesList_normal.get(i).x();
-                vNormals[(i * 3) + 1] = facesList_normal.get(i).y();
-                vNormals[(i * 3) + 2] = facesList_normal.get(i).z();
+            System.out.println("Building Model:");
+            int index = 0;
+            for(Vector3f face : facesList){
+                vPositions[(index * 3) + 0] = face.x();
+                vPositions[(index * 3) + 1] = face.y();
+                vPositions[(index * 3) + 2] = face.z();
+                index++;
             }
+
+            index = 0;
+            for(Vector2f texture : facesList_texture) {
+                vTextures[(index * 2) + 0] = texture.x();
+                vTextures[(index * 2) + 1] = 1 - (texture.y() * -1);
+                index++;
+            }
+
+            index = 0;
+            for(Vector3f normal : facesList_normal) {
+                vNormals[(index * 3) + 0] = normal.x();
+                vNormals[(index * 3) + 1] = normal.y();
+                vNormals[(index * 3) + 2] = normal.z();
+                index++;
+            }
+
             //Done
-            System.out.print("\r" + "100%");
-            System.out.println();
+            System.out.println("Built");
 
             Handshake modelHandshake = new Handshake();
             modelHandshake.addAttributeList("vPosition", vPositions, EnumGLDatatype.VEC3);

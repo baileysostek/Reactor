@@ -117,9 +117,9 @@ public class EntityEditor extends UIComponet {
                     LinkedList<Entity> hits = EntityManager.getInstance().getHitEntities(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()));
                     if (hits.size() > 0) {
                         if (this.entity != hits.getFirst()) {
-                            for (Entity e : hits) {
-                                System.out.println(e.serialize());
-                            }
+//                            for (Entity e : hits) {
+//                                System.out.println(e.serialize());
+//                            }
                             this.entity = hits.getFirst();
                         }
 

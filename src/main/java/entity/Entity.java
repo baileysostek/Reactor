@@ -11,6 +11,7 @@ import models.Model;
 import models.ModelManager;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import serialization.Serializable;
 import serialization.SerializationHelper;
@@ -71,6 +72,7 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.addAttribute(new Attribute<Boolean> ("autoScale", true));
         this.addAttribute(new Attribute<String>  ("name"     , "Undefined"));
         this.addAttribute(new Attribute<String>  ("type"     , ""));
+        this.addAttribute(new Attribute<Vector2f>("t_scale"  , new Vector2f(1)));
     }
 
     //Type
