@@ -152,45 +152,6 @@ public class EntityManager {
         return hits;
     }
 
-    public Entity generateEntityOfType(EnumEntityType type, JsonObject saveData){
-        int floorX = 0;
-        int floorY = 0;
-
-        if(saveData.has("x")){
-            floorX = saveData.get("x").getAsInt();
-        }
-
-        if(saveData.has("y")){
-            floorY = saveData.get("y").getAsInt();
-        }
-
-        switch (type){
-//            case MOLE:{
-//                return new Mole(floorX, floorY);
-//            }
-//            case AVOCADO:{
-//                return new Avocado(floorX, floorY);
-//            }
-//            case ONION:{
-//                return new Onion();
-//            }
-//            case STONE:{
-//                return new Stone();
-//            }
-//            case ICE:{
-//                return new Ice(floorX, floorY);
-//            }
-//            case WATER:{
-//                return new Water();
-//            }
-            default:{
-                System.out.println("Undefined case for type:" + type);
-//                System.exit(1);
-            }
-        }
-        return null;
-    }
-
     private void sync() {
         if(toAdd.size() > 0 || toRemove.size() > 0) {
             lock.lock();
@@ -239,6 +200,9 @@ public class EntityManager {
     private void parentRemoveHelper(Entity parent){
         //Remove parent
         this.toRemove.add(parent);
+        if(parent.getParent() != null){
+            getEntitiesChildren(parent.getParent()).remove(parent);
+        }
         if(this.links.containsKey(parent)){
             LinkedList<Entity> links = this.links.get(parent);
             for(Entity child : links){

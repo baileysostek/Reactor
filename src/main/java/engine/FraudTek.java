@@ -91,13 +91,13 @@ public class FraudTek {
     }
 
     public static void initialize() {
-        //Welcome to FraudTek!
-        System.out.println( "  ______                   _ _______   _    \n" +
-                            " |  ____|                 | |__   __| | |   \n" +
-                            " | |__ _ __ __ _ _   _  __| |  | | ___| | __\n" +
-                            " |  __| '__/ _` | | | |/ _` |  | |/ _ \\ |/ /\n" +
-                            " | |  | | | (_| | |_| | (_| |  | |  __/   < \n" +
-                            " |_|  |_|  \\__,_|\\__,_|\\__,_|  |_|\\___|_|\\_\\"
+        //Welcome to Reactor!
+        System.out.println( "_________                       __\n" +
+                            "\\______   \\ ____ _____    _____/  |_  ___________ \n" +
+                            " |       _// __ \\\\__  \\ _/ ___\\   __\\/  _ \\_  __ \\\n" +
+                            " |    |   \\  ___/ / __ \\\\  \\___|  | (  <_> )  | \\/\n" +
+                            " |____|_  /\\___  >____  /\\___  >__|  \\____/|__|   \n" +
+                            "        \\/     \\/     \\/     \\/                   "
         );
 
 
@@ -291,7 +291,7 @@ public class FraudTek {
             }
 
             //Draw a Ring
-            Renderer.getInstance().drawRing(new Vector3f(0), new Vector2f(1), 6, new Vector3f(1, 1, 0));
+//            Renderer.getInstance().drawRing(new Vector3f(0), new Vector2f(1), 6, new Vector3f(1, 1, 0));
 
 //            Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
 //            if(pos != null) {
@@ -358,7 +358,7 @@ public class FraudTek {
 //        ScriptingEngine.getInstance().run(test, "fibonacci");
 
 //        String modelName = "Garden";
-////
+//////
 //        JsonObject action = new JsonObject();
 //        action.addProperty("action", "convert");
 //        action.addProperty("model", modelName+".obj");

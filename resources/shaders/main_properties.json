@@ -12,7 +12,9 @@
       "transformation":"mat4",
       "perspective":"mat4",
       "view":"mat4",
-      "inverseCamera": "vec3"
+      "inverseCamera": "vec3",
+      "t_offset":"vec2",
+      "t_scale": "vec2"
     },
     "Varying": {
 
@@ -20,7 +22,8 @@
   },
   "Fragment":{
     "Uniforms": {
-      "textureID": "sampler2D"
+      "textureID": "sampler2D",
+      "sunAngle": "vec3"
     }
   }
 }
