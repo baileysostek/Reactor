@@ -19,7 +19,8 @@ public class ImmediateDrawTriangle {
     }
 
 
-    public void drawTriangle(Vector3f p1, Vector3f p2, Vector3f p3, Vector3f color) {
+    public DrawIndex drawTriangle(Vector3f p1, Vector3f p2, Vector3f p3, Vector3f color) {
+        int start_size = positions.size();
         positions.addLast(p1.x());
         positions.addLast(p1.y());
         positions.addLast(p1.z());
@@ -30,6 +31,7 @@ public class ImmediateDrawTriangle {
         positions.addLast(p3.y());
         positions.addLast(p3.z());
 
+        int start_color = colors.size();
         colors.addLast(color.x());
         colors.addLast(color.y());
         colors.addLast(color.z());
@@ -39,6 +41,8 @@ public class ImmediateDrawTriangle {
         colors.addLast(color.x());
         colors.addLast(color.y());
         colors.addLast(color.z());
+
+        return new DrawIndex(start_size, 9, start_color,  9);
     }
 
     public void render(){
@@ -82,5 +86,13 @@ public class ImmediateDrawTriangle {
 
         //Overall GL config
         GL20.glEnable(GL20.GL_CULL_FACE);
+    }
+
+    public void recolor(int start, int length, Vector3f color){
+        for(int i = 0; i < length / 3; i++){
+            colors.set(((i * 3) + 0) + start, color.x);
+            colors.set(((i * 3) + 1) + start, color.y);
+            colors.set(((i * 3) + 2) + start, color.z);
+        }
     }
 }

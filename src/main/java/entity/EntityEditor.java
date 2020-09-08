@@ -1,11 +1,13 @@
 package entity;
 
+import camera.Camera;
 import camera.CameraManager;
 import editor.Editor;
 import editor.components.UIComponet;
 import entity.component.Attribute;
 import entity.component.Component;
 import entity.component.Event;
+import graphics.renderer.DirectDrawData;
 import graphics.renderer.Renderer;
 import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
@@ -22,9 +24,10 @@ import util.Callback;
 
 import java.awt.*;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 
-import static entity.EditorTool.NONE;
+import static entity.EditorTool.*;
 
 public class EntityEditor extends UIComponet {
     private Callback mouseCallback;
@@ -33,6 +36,9 @@ public class EntityEditor extends UIComponet {
 
     //The entity we are interacting with
     private Entity entity;
+    private HashMap<Entity, EntityMetaData> selectedEntities = new HashMap<>();
+    private Vector3f delta = new Vector3f(0);
+    private float distanceToCam = 0;
 
     //Tools
     private EditorTool selectedTool = NONE;
@@ -83,56 +89,194 @@ public class EntityEditor extends UIComponet {
     }
 
     public void setTarget(Entity target){
+        this.clearSelected();
         this.entity = target;
+        this.selectedEntities.put(this.entity, new EntityMetaData());
     }
 
     private void raycastToWorld() {
         if(pressed){
-            //Raycast to plane
-            Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
-            if(pos != null) {
-                if (!this.selectedTool.equals(NONE)) {
-                    switch (selectedTool) {
-                        case MOVE_XYZ:
-                            break;
-                        case MOVE_X: {
-                            break;
+            //We need to do a check to see if we hit any of our direct draw volumes, like arrows.
+            //If we have an entity in the world selected, we probably have an AABB as well.
+            if(this.entity != null){
+                if(this.selectedTool.equals(NONE)) {
+                    //Reset our delta
+                    delta = new Vector3f(0);
+                    distanceToCam = 0;
+
+                    //Get meta-data for selected entity and see if the entity
+                    EntityMetaData metaData = this.selectedEntities.get(this.entity);
+
+                    //Store our hits in this vector.
+                    Vector3f hits = new Vector3f(0);
+
+                    if(metaData.ddd_x != null) {
+                        Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_x.getAABB());
+                        if (pos != null) {
+                            delta = new Vector3f(entity.getPosition()).sub(pos);
+                            hits.x = 1;
                         }
-                        case MOVE_Y: {
-                            break;
-                        }
-                        case MOVE_Z:
-                            break;
-                        case ROTATE_X:
-                            break;
-                        case ROTATE_Y:
-                            break;
-                        case ROTATE_Z:
-                            break;
-                        case SCALE_XYZ:
-                            break;
                     }
-                } else {
-                    //We hit nothing so lets do the next action.
-                    LinkedList<Entity> hits = EntityManager.getInstance().getHitEntities(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()));
-                    if (hits.size() > 0) {
-                        if (this.entity != hits.getFirst()) {
-//                            for (Entity e : hits) {
-//                                System.out.println(e.serialize());
-//                            }
-                            this.entity = hits.getFirst();
+                    if(metaData.ddd_y != null) {
+                        Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_y.getAABB());
+                        if (pos != null) {
+                            delta = new Vector3f(entity.getPosition()).sub(pos);
+                            hits.y = 1;
+                        }
+                    }
+                    if(metaData.ddd_z != null) {
+                        Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_z.getAABB());
+                        if (pos != null) {
+                            delta = new Vector3f(entity.getPosition()).sub(pos);
+                            //TODO this may be needed for other casts, its only used in XYZ pos now, so just do the check once in here. May need to be added to the X and Y checks later if other Tools use distanceToCam var.
+                            distanceToCam = new Vector3f(entity.getPosition()).distance(CameraManager.getInstance().getActiveCamera().getPosition());
+                            hits.z = 1;
+                        }
+                    }
+
+                    //Figure out what tool to use
+                    loop:
+                    {
+                        //Single direction movements
+                        if (hits.equals(1, 0, 0)) {
+                            selectedTool = MOVE_X;
+                            break loop;
+                        }
+                        if (hits.equals(0, 1, 0)) {
+                            selectedTool = MOVE_Y;
+                            break loop;
+                        }
+                        if (hits.equals(0, 0, 1)) {
+                            selectedTool = MOVE_Z;
+                            break loop;
                         }
 
-                    } else {
-                        clearSelected();
+                        //CrossProduct planes
+                        if (hits.equals(1, 1, 0)) {
+                            selectedTool = MOVE_XY;
+                            break loop;
+                        }
+                        if (hits.equals(0, 1, 1)) {
+                            selectedTool = MOVE_YZ;
+                            break loop;
+                        }
+                        if (hits.equals(1, 0, 1)) {
+                            selectedTool = MOVE_ZX;
+                            break loop;
+                        }
+
+                        //XYZ
+                        if (hits.equals(1, 1, 1)) {
+                            selectedTool = MOVE_XYZ;
+                            break loop;
+                        }
+
                     }
                 }
             }
+            if (!this.selectedTool.equals(NONE)) {
+                switch (selectedTool) {
+                    case MOVE_XYZ:
+                        entity.setPosition(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).mul(-1).add(new Vector3f(MousePicker.getInstance().getRay()).mul(distanceToCam)));
+                        break;
+                    case MOVE_X: {
+                        //Raycast to plane
+                        Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 1, 0));
+                        if(pos != null) {
+                            entity.getPosition().x = pos.x + delta.x;
+                        }
+                        break;
+                    }
+                    case MOVE_Y: {
+                        Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(CameraManager.getInstance().getActiveCamera().getLookingDirection()).mul(-1));
+                        if(pos != null) {
+                            entity.getPosition().y = pos.y + delta.y;
+                        }
+                        break;
+                    }
+                    case MOVE_Z: {
+                        //Raycast to plane
+                        Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 1, 0));
+                        if (pos != null) {
+                            entity.getPosition().z = pos.z;
+                        }
+                        break;
+                    }
+
+                    //Cross Product movement dirs
+                    case MOVE_XY: {
+                        //Raycast to plane
+                        Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 0, 1));
+                        if(pos != null) {
+                            entity.getPosition().x = pos.x + delta.x;
+                            entity.getPosition().y = pos.y + delta.y;
+                        }
+                        break;
+                    }
+
+                    case MOVE_YZ: {
+                        //Raycast to plane
+                        Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(1, 0, 0));
+                        if(pos != null) {
+                            entity.getPosition().y = pos.y + delta.y;
+                            entity.getPosition().z = pos.z;
+                        }
+                        break;
+                    }
+
+                    case MOVE_ZX: {
+                        //Raycast to plane
+                        Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 1, 0));
+                        if(pos != null) {
+                            entity.getPosition().x = pos.x + delta.x;
+                            entity.getPosition().z = pos.z;
+                        }
+                        break;
+                    }
+
+
+                    case ROTATE_X:
+                        break;
+                    case ROTATE_Y:
+                        break;
+                    case ROTATE_Z:
+                        break;
+                    case SCALE_XYZ:
+                        break;
+                    default:{
+                        System.out.println("Tool:["+selectedTool+"] is not supported.");
+                        break;
+                    }
+                }
+            } else {
+                //We hit nothing so lets do the next action.
+                LinkedList<Entity> hits = EntityManager.getInstance().getHitEntities(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()));
+                if (hits.size() > 0) {
+                    if (this.entity != hits.getFirst()) {
+//                            for (Entity e : hits) {
+//                                System.out.println(e.serialize());
+//                            }
+                        this.setTarget(hits.getFirst());
+                    }
+
+                } else {
+                    clearSelected();
+                }
+            }
+
         }
 
     }
 
     public void clearSelected(){
+        //Deregister from our list of entities which may have arrows on the screen.
+        if(this.selectedEntities.containsKey(this.entity)) {
+            this.selectedEntities.remove(this.entity);
+        }
+        //Reset our distance and delta
+        delta = new Vector3f(0);
+        distanceToCam = 0;
+        //Clear entity
         this.entity = null;
     }
 
@@ -163,10 +307,51 @@ public class EntityEditor extends UIComponet {
         if(this.entity != null) {
             //Direct draw AABB
             Renderer.getInstance().drawAABB(entity);
+
+            //TODO only draw Axis arrows if in Translate, New modes for rotate and scale.
             //Direct Draw Axis arrows
-            Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(1, 0, 0).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
-            Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 1, 0).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
-            Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 0, 1).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
+            DirectDrawData ddd_x = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(1, 0, 0).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
+            //If no tool selected, render if hits
+            if(selectedTool.equals(NONE)) {
+                //render if hits
+                if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_x.getAABB()) != null) {
+                    //render in yellow
+                    Renderer.getInstance().redrawTriangleColor(ddd_x, new Vector3f(1, 1, 0));
+                }
+            }else{
+                //We are using a tool, if its a valid tool, set our color to yellow.
+                if(selectedTool.equals(MOVE_X) || selectedTool.equals(MOVE_XY) || selectedTool.equals(MOVE_ZX) || selectedTool.equals(MOVE_XYZ)) {
+                    Renderer.getInstance().redrawTriangleColor(ddd_x, new Vector3f(1, 1, 0));
+                }
+            }
+            DirectDrawData ddd_y = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 1, 0).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
+            if(selectedTool.equals(NONE)) {
+                if(MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_y.getAABB()) != null){
+                    Renderer.getInstance().redrawTriangleColor(ddd_y, new Vector3f(1, 1, 0));
+                }
+            }else{
+                //We are using a tool, if its a valid tool, set our color to yellow.
+                if(selectedTool.equals(MOVE_Y) || selectedTool.equals(MOVE_XY) || selectedTool.equals(MOVE_YZ) || selectedTool.equals(MOVE_XYZ)) {
+                    Renderer.getInstance().redrawTriangleColor(ddd_y, new Vector3f(1, 1, 0));
+                }
+            }
+
+            DirectDrawData ddd_z = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 0, 1).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
+            if(selectedTool.equals(NONE)) {
+               if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_z.getAABB()) != null) {
+                    Renderer.getInstance().redrawTriangleColor(ddd_z, new Vector3f(1, 1, 0));
+                }
+            }else{
+                //We are using a tool, if its a valid tool, set our color to yellow.
+                if(selectedTool.equals(MOVE_Z) || selectedTool.equals(MOVE_ZX) || selectedTool.equals(MOVE_YZ) || selectedTool.equals(MOVE_XYZ)) {
+                    Renderer.getInstance().redrawTriangleColor(ddd_z, new Vector3f(1, 1, 0));
+                }
+            }
+
+            //Set our direct draw volumes
+            this.selectedEntities.get(this.entity).ddd_x = ddd_x;
+            this.selectedEntities.get(this.entity).ddd_y = ddd_y;
+            this.selectedEntities.get(this.entity).ddd_z = ddd_z;
         }
     }
 
@@ -188,7 +373,7 @@ public class EntityEditor extends UIComponet {
                 }
             }
             //List all attributes that go into this entity
-            int nodeFlags_attributes = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
+            int nodeFlags_attributes = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.DefaultOpen;
 
             //Here we loop through all attributes that an entity has. Each attribute should have an ENUM describing what type of Attribute this is, default, constant, locked, hidden
             if(ImGui.collapsingHeader("Attributes", nodeFlags_attributes)) {
@@ -196,7 +381,7 @@ public class EntityEditor extends UIComponet {
             }
 
             //List all components, then all triggers, then all events
-            int nodeFlags_components = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
+            int nodeFlags_components = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.DefaultOpen;
             if(ImGui.collapsingHeader("Components", nodeFlags_components)){
                 for (Component component : this.entity.getComponents()) {
                     int nodeFlags_component = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
@@ -234,9 +419,17 @@ enum EditorTool{
     NONE,
     //Move
     MOVE_XYZ,
+
+    //Move Single
     MOVE_X,
     MOVE_Y,
     MOVE_Z,
+
+    //MoveDouble
+    MOVE_XY,
+    MOVE_YZ,
+    MOVE_ZX,
+
     //Rotation
     ROTATE_X,
     ROTATE_Y,
@@ -344,5 +537,15 @@ class AttributeRenderer{
                 ImGui.inputText(attribute.getName(), new ImString(attribute.getData() + ""));
             }
         }
+    }
+}
+
+class EntityMetaData{
+    DirectDrawData ddd_x;
+    DirectDrawData ddd_y;
+    DirectDrawData ddd_z;
+
+    EntityMetaData(){
+
     }
 }

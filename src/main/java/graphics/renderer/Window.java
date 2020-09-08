@@ -64,6 +64,11 @@ public class Window {
         return this;
     }
 
+    public Window maximize(){
+        glfwMaximizeWindow(window_p);
+        return this;
+    }
+
     public Window setResize(boolean resize){
         this.resize = resize;
         if(resize) {
