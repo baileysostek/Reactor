@@ -133,6 +133,13 @@ public class EntityManager {
             }
         }
 
+        Collections.sort(hits, new Comparator<Entity>() {
+            @Override
+            public int compare(Entity o1, Entity o2) {
+                return -1 * (int) (o1.getPosition().distance(pos) - o2.getPosition().distance(pos));
+            }
+        });
+
         return hits;
     }
 
