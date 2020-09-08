@@ -31,7 +31,7 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     private Entity parent = null;
 
-    private EnumEntityType type = EnumEntityType.UNKNOWN;
+//    private EnumEntityType type = EnumEntityType.UNKNOWN;
 
 
     //Attributes are the raw pieces of data that make up an entity;
@@ -69,19 +69,19 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.addAttribute(new Attribute<Vector3f>("scale"    , new Vector3f(1f)));
         this.addAttribute(new Attribute<Integer> ("textureID", SpriteBinder.getInstance().getFileNotFoundID()));
         this.addAttribute(new Attribute<Integer> ("zIndex"   , 0));
-        this.addAttribute(new Attribute<Boolean> ("autoScale", true));
+        this.addAttribute(new Attribute<Boolean> ("autoScale", false));
         this.addAttribute(new Attribute<String>  ("name"     , "Undefined"));
-        this.addAttribute(new Attribute<String>  ("type"     , ""));
+        this.addAttribute(new Attribute<String>  ("type"     , this.toString()));
         this.addAttribute(new Attribute<Vector2f>("t_scale"  , new Vector2f(1)));
     }
 
     //Type
-    public final EnumEntityType getType() {
-        return this.type;
-    }
+//    public final EnumEntityType getType() {
+//        return this.type;
+//    }
 
     public final Entity setType(EnumEntityType type) {
-        this.type = type;
+//        this.type = type;
         return this;
     }
 
@@ -346,7 +346,7 @@ public class Entity implements Transformable, Serializable<Entity> {
     //To String
     @Override
     public String toString(){
-        return this.getType().toString();
+        return this.getClass().getSimpleName();
     }
 
     //Going from an entity to json

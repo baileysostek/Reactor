@@ -143,7 +143,7 @@ public class FraudTek {
                 //Set the size to take up the screen.
                 long primaryMonitorPointer = glfwGetPrimaryMonitor();
                 WIDTH   = glfwGetVideoMode(primaryMonitorPointer).width();
-                HEIGHT  = glfwGetVideoMode(primaryMonitorPointer).height();
+                HEIGHT  = glfwGetVideoMode(primaryMonitorPointer).height()-64;
 
                 //Creating our window.
                 System.out.print("Creating Window:["+WIDTH+" x "+HEIGHT+"] Title:"+TITLE+" Vsync:"+VSYNC);
@@ -295,7 +295,11 @@ public class FraudTek {
 
 //            Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
 //            if(pos != null) {
-//                Renderer.getInstance().drawArrow(new Vector3f(5, 5, 5), new Vector3f(pos), new Vector3f(0.5f, 0.5f, 1.25f), 13, new Vector3f(1, 1, 1));
+//                DirectDrawData ddd = Renderer.getInstance().drawArrow(new Vector3f(5, 5, 5), new Vector3f(pos), new Vector3f(0.5f, 0.5f, 1.25f), 13, new Vector3f(1, 1, 1));
+//                Renderer.getInstance().drawAABB(ddd.getAABB());
+//                if(MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd.getAABB()) != null){
+//                    Renderer.getInstance().redrawTriangleColor(ddd, new Vector3f(1, 0, 0));
+//                }
 //            }
 
         }

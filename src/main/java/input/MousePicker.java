@@ -7,6 +7,7 @@ import engine.FraudTek;
 import entity.Entity;
 import graphics.renderer.Renderer;
 import imgui.ImGui;
+import models.AABB;
 import org.joml.*;
 import math.Maths;
 import org.lwjgl.BufferUtils;
@@ -237,8 +238,17 @@ public class MousePicker extends Engine {
         if(scale >= 0){
             return new Vector3f(dir).mul(scale).add(pos);
         }else{
-            return null;
+            scale = Intersectionf.intersectRayPlane(pos, dir, planeOrigin, planeNormal.mul(-1), 0.02f);
+            if(scale >= 0){
+                return new Vector3f(dir).mul(scale).add(pos);
+            }else{
+                return null;
+            }
         }
+    }
+
+    public static Vector3f rayHitsAABB(Vector3f pos, Vector3f dir, AABB aabb) {
+        return rayHitsAABB(pos, dir, aabb.getMIN(), aabb.getMAX());
     }
 
     public static Vector3f rayHitsAABB(Vector3f pos, Vector3f dir, Vector3f aabbMin, Vector3f aabbMax){

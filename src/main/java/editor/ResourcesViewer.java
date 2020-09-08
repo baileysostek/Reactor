@@ -161,7 +161,9 @@ public class ResourcesViewer extends UIComponet {
 
         //World Outliner, list of all entities in the world
         ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight());
-        renderFileObject(resources);
+        for(FileObject resource : resources.getChildren()){
+            renderFileObject(resource);
+        }
         ImGui.endChild();
     }
 

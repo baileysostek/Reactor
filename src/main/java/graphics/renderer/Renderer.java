@@ -5,6 +5,7 @@ import engine.Engine;
 import entity.Entity;
 import entity.EntityManager;
 import math.MatrixUtils;
+import models.AABB;
 import org.joml.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
@@ -175,13 +176,19 @@ public class Renderer extends Engine {
         }
     }
 
-    //TODO currently this is an immediate draw, it would be more efficient to create a buffer that is written into as the Vector draw calls come in, then do one single draw.
+    public void drawAABB(AABB aabb) {
+        this.drawAABB(aabb.getMIN(), aabb.getMAX());
+    }
 
     public void drawAABB(Entity entity) {
         org.joml.Vector3f[] aabb = entity.getAABB();
         org.joml.Vector3f min = aabb[0];
         org.joml.Vector3f max = aabb[1];
 
+        this.drawAABB(min, max);
+    }
+
+    public void drawAABB(Vector3f min, Vector3f max) {
         //6 draw calls...
         this.drawLine(min, new Vector3f(max.x, min.y, min.z) , new Vector3f(1));
         this.drawLine(min, new Vector3f(min.x, max.y, min.z) , new Vector3f(1));
@@ -229,7 +236,12 @@ public class Renderer extends Engine {
         }
     }
 
-    public void drawCone(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
+    public DirectDrawData drawCone(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
+        //Direct draw info
+        DirectDrawData out = new DirectDrawData();
+        AABB aabb = new AABB();
+
+
         float angle_spacing = 360.0f / (float)points;
 
         Vector3f usableRay = new Vector3f(ray).mul(Math.max(scale.x, 1), Math.max(scale.y, 1), Math.max(scale.x, 1));
@@ -238,6 +250,8 @@ public class Renderer extends Engine {
         Vector3f firstPoint = null;
 
         Vector3f tip = new Vector3f(usableRay).mul(1, 1, 1).add(origin);
+        aabb.recalculateFromPoint(tip);
+
         Vector3f up = new Vector3f(0, (float) Math.cos(usableRay.z * Math.PI), (float) Math.cos(usableRay.y * Math.PI));
 
         Vector3f xAxis = new Vector3f(up).cross(usableRay).normalize();
@@ -256,9 +270,10 @@ public class Renderer extends Engine {
             float y = (float) (Math.sin(angle));
 
             Vector3f thisPoint = new Vector3f(x * scale.x, y * scale.y, 0).mul(rotationMatrix).add(origin);
+            aabb.recalculateFromPoint(thisPoint);
 
             if(lastPoint != null) {
-                drawTriangle.drawTriangle(lastPoint, thisPoint, tip, color);
+                out.addDrawData(drawTriangle.drawTriangle(lastPoint, thisPoint, tip, color));
             }else{
                 firstPoint = thisPoint;
             }
@@ -267,22 +282,27 @@ public class Renderer extends Engine {
         }
 
         if(lastPoint != null && firstPoint != null){
-            drawTriangle.drawTriangle(lastPoint, firstPoint, tip, color);
+            out.addDrawData(drawTriangle.drawTriangle(lastPoint, firstPoint, tip, color));
         }
+
+        out.setAABB(aabb);
+
+        return out;
     }
 
-    public void drawCylinder(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
+    public DirectDrawData drawCylinder(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
+        DirectDrawData out = new DirectDrawData();
+        AABB aabb = new AABB();
+
         float angle_spacing = 360.0f / (float)points;
 
         Vector3f usableRay = new Vector3f(ray);
-
 
         Vector3f lastPoint = null;
         Vector3f lastThatPoint = null;
         Vector3f firstPoint = null;
         Vector3f firstThatPoint = null;
 
-        Vector3f tip = new Vector3f(usableRay).mul(1, 1, 1).add(origin);
         Vector3f up = new Vector3f(0, (float) Math.cos(usableRay.z * Math.PI), (float) Math.cos(usableRay.y * Math.PI));
 
         Vector3f xAxis = new Vector3f(up).cross(usableRay).normalize();
@@ -301,11 +321,13 @@ public class Renderer extends Engine {
             float y = (float) (Math.sin(angle));
 
             Vector3f thisPoint = new Vector3f(x * scale.x, y * scale.y, 0).mul(rotationMatrix).add(origin);
+            aabb.recalculateFromPoint(thisPoint);
             Vector3f thatPoint = new Vector3f(x * scale.x, y * scale.y, 0).mul(rotationMatrix).add(origin).add(usableRay);
+            aabb.recalculateFromPoint(thatPoint);
 
             if(lastPoint != null) {
-                drawTriangle.drawTriangle(lastPoint, thisPoint, thatPoint, color);
-                drawTriangle.drawTriangle(lastPoint, lastThatPoint, thatPoint, color);
+                out.addDrawData(drawTriangle.drawTriangle(lastPoint, thisPoint, thatPoint, color));
+                out.addDrawData(drawTriangle.drawTriangle(lastPoint, lastThatPoint, thatPoint, color));
             }else{
                 firstPoint = thisPoint;
                 firstThatPoint = thatPoint;
@@ -316,15 +338,23 @@ public class Renderer extends Engine {
         }
 
         if(lastPoint != null && firstPoint != null){
-            drawTriangle.drawTriangle(lastPoint, firstPoint, lastThatPoint, color);
-            drawTriangle.drawTriangle(firstPoint, lastThatPoint, firstThatPoint, color);
+            out.addDrawData(drawTriangle.drawTriangle(lastPoint, firstPoint, lastThatPoint, color));
+            out.addDrawData(drawTriangle.drawTriangle(firstPoint, lastThatPoint, firstThatPoint, color));
         }
+
+        out.setAABB(aabb);
+
+        return out;
     }
 
-    public void drawArrow(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
+    public DirectDrawData drawArrow(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
         float ratio = scale.z / ray.distance(origin);
-        this.drawCylinder(origin, new Vector3f(ray).sub(origin).mul(1f - ratio), new Vector3f(scale).mul(0.5f, 0.5f, 1), points, color);
-        this.drawCone(new Vector3f(ray).mul(1f - ratio).add(new Vector3f(origin).mul(ratio)), new Vector3f(ray).sub(origin).mul(ratio), scale, points, color);
+
+        DirectDrawData ddd_cylinder  = this.drawCylinder(origin, new Vector3f(ray).sub(origin).mul(1f - ratio), new Vector3f(scale).mul(0.5f, 0.5f, 1), points, color);
+        DirectDrawData ddd_arrowhead = this.drawCone(new Vector3f(ray).mul(1f - ratio).add(new Vector3f(origin).mul(ratio)), new Vector3f(ray).sub(origin).mul(ratio), scale, points, color);
+
+        return ddd_cylinder.merge(ddd_arrowhead);
+
     }
 
     public void drawLine(Vector3f from, Vector3f to, Vector3f color) {
@@ -334,6 +364,14 @@ public class Renderer extends Engine {
     public void drawLine(Vector3f from, Vector3f to, Vector4f color) {
         drawerLine.drawLine(from, to, new Vector3f(color.x, color.y, color.z));
     }
+
+    //Color overrides
+    public void redrawTriangleColor(DirectDrawData directDrawData, Vector3f color) {
+        for(DrawIndex index : directDrawData.getDrawIndices()){
+            drawTriangle.recolor(index.colorStart, index.colorLength, color);
+        }
+    }
+
 
     public void postpare(){
         //Render our Skybox

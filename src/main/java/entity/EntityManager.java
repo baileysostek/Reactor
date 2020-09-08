@@ -19,7 +19,7 @@ public class EntityManager {
     private LinkedList<Entity> entities = new LinkedList<Entity>();
     private LinkedList<Entity> toAdd    = new LinkedList<Entity>();
     private LinkedList<Entity> toRemove = new LinkedList<Entity>();
-    private HashMap<EnumEntityType, LinkedList<Entity>> typedEntities = new HashMap<EnumEntityType, LinkedList<Entity>>();
+    private HashMap<Class, LinkedList<Entity>> typedEntities = new HashMap<Class, LinkedList<Entity>>();
     private HashMap<EnumEntityType, LinkedList<Entity>> sceneEntities = new HashMap<EnumEntityType, LinkedList<Entity>>();
 
     //On remove see if a registered parent was removed, if it was, remove all children.
@@ -31,10 +31,6 @@ public class EntityManager {
     //Singleton design pattern
     private EntityManager(){
         lock = new ReentrantLock();
-
-        for(EnumEntityType type : EnumEntityType.values()){
-            typedEntities.put(type, new LinkedList<Entity>());
-        }
     }
 
     public void addEntity(Entity entity){
@@ -58,12 +54,12 @@ public class EntityManager {
         return this.entities;
     }
 
-    public synchronized LinkedList<Entity> getEntitiesOfType(EnumEntityType type, EnumEntityType ... types){
+    public synchronized LinkedList<Entity> getEntitiesOfType(Class type, Class ... types){
         if(types.length == 0) {
             return this.typedEntities.get(type);
         }else{
             LinkedList<Entity> entities = new LinkedList<>(this.typedEntities.get(type));
-            for(EnumEntityType additionalType : types){
+            for(Class additionalType : types){
                 entities.addAll(this.typedEntities.get(additionalType));
             }
             return entities;
@@ -111,7 +107,7 @@ public class EntityManager {
         return entityManager;
     }
 
-    public LinkedList<Entity> getHitEntities(Vector3f pos, Vector3f dir, EnumEntityType ... types){
+    public LinkedList<Entity> getHitEntities(Vector3f pos, Vector3f dir, Class ... types){
 
         LinkedList<Entity> check = new LinkedList<Entity>();
         LinkedList<Entity> hits  = new LinkedList<Entity>();
@@ -121,7 +117,7 @@ public class EntityManager {
         if(types.length == 0){
             check.addAll(this.entities);
         }else{
-            for(EnumEntityType type : types){
+            for(Class type : types){
                 check.addAll(getEntitiesOfType(type));
             }
         }
@@ -166,7 +162,11 @@ public class EntityManager {
                 for (Entity e : new LinkedList<>(toAdd)) {
                     this.entities.add(e);
                     e.onAdd();
-                    this.typedEntities.get(e.getType()).add(e);
+                    //Check if this class list exists.
+                    if(this.typedEntities.get(e.getClass()) == null){
+                        this.typedEntities.put(e.getClass(), new LinkedList<>());
+                    }
+                    this.typedEntities.get(e.getClass()).add(e);
                     if(e.hasAttribute("zIndex")) {
                         this.resort();
                     }
@@ -174,7 +174,7 @@ public class EntityManager {
                 toAdd.clear();
                 for (Entity e : new LinkedList<>(toRemove)) {
                     this.entities.remove(e);
-                    this.typedEntities.get(e.getType()).remove(e);
+                    this.typedEntities.get(e.getClass()).remove(e);
                 }
                 toRemove.clear();
                 sortEntities();
