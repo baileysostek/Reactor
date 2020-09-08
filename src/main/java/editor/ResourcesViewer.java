@@ -7,6 +7,7 @@ import entity.Entity;
 import entity.EntityManager;
 import entity.component.Attribute;
 import graphics.renderer.Renderer;
+import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
 import imgui.enums.ImGuiTreeNodeFlags;
@@ -82,24 +83,34 @@ public class ResourcesViewer extends UIComponet {
                                         newEntity.setPosition(pos);
                                         newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
                                         newEntity.addAttribute(new Attribute<String>("name", filename));
+                                        newEntity.addAttribute(new Attribute<Boolean>("autoScale", false));
                                         EntityManager.getInstance().addEntity(newEntity);
                                         break;
                                     }else{
                                         Entity newEntity = new Entity(draggedFile.getRelativePath());
+                                        newEntity.addAttribute(new Attribute<Boolean>("autoScale", false));
                                         newEntity.setPosition(pos);
                                         EntityManager.getInstance().addEntity(newEntity);
                                         break;
                                     }
                                 }
                                 case (".png"): {
-                                    Entity newEntity = new Entity();
+                                    LinkedList<Entity> hits = EntityManager.getInstance().getHitEntities(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()));
                                     String filename = draggedFile.getRelativePath().replace("/textures/", "");
-                                    newEntity.setModel(ModelManager.getInstance().loadModel("quad.tek"));
-                                    newEntity.setTexture(SpriteBinder.getInstance().load(filename));
-                                    newEntity.setPosition(pos);
-                                    newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
-                                    newEntity.addAttribute(new Attribute<String>("name", filename));
-                                    EntityManager.getInstance().addEntity(newEntity);
+                                    Sprite newSprite = SpriteBinder.getInstance().load(filename);
+                                    if (hits.size() > 0) {
+                                        //We hit an entity(s) get the closest entity to the camera.
+                                        hits.getFirst().setTexture(newSprite);
+                                    } else {
+                                        //We hit nothing
+                                        Entity newEntity = new Entity();
+                                        newEntity.setModel(ModelManager.getInstance().loadModel("quad.tek"));
+                                        newEntity.setTexture(newSprite);
+                                        newEntity.setPosition(pos);
+                                        newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
+                                        newEntity.addAttribute(new Attribute<String>("name", filename));
+                                        EntityManager.getInstance().addEntity(newEntity);
+                                    }
                                     break;
                                 }
                                 case (".obj"): {
