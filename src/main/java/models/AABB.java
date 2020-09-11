@@ -1,8 +1,12 @@
 package models;
 
+import com.google.gson.JsonObject;
+import entity.component.Event;
 import org.joml.Vector3f;
+import serialization.Serializable;
+import serialization.SerializationHelper;
 
-public class AABB {
+public class AABB implements Serializable<AABB> {
     private Vector3f min = new Vector3f(Integer.MAX_VALUE);
     private Vector3f max = new Vector3f(-Integer.MAX_VALUE);
 
@@ -51,5 +55,50 @@ public class AABB {
 
     public Vector3f getMAX(){
         return max;
+    }
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject out = new JsonObject();
+        min:{
+            JsonObject helperObject = new JsonObject();
+            helperObject.addProperty("class", min.getClass().getName());
+            helperObject.add("value", SerializationHelper.getGson().toJsonTree(min));
+            out.add("min", helperObject);
+        }
+        max:{
+            JsonObject helperObject = new JsonObject();
+            helperObject.addProperty("class", max.getClass().getName());
+            helperObject.add("value", SerializationHelper.getGson().toJsonTree(max));
+            out.add("max", helperObject);
+        }
+        return out;
+    }
+
+    @Override
+    public AABB deserialize(JsonObject data) {
+        if(data.has("min")) {
+            JsonObject helper = data.get("min").getAsJsonObject();
+            //Try resolve the class that was encoded
+            Class<?> classType = null;
+            try {
+                classType = Class.forName(helper.get("class").getAsString());
+                min = (Vector3f) SerializationHelper.getGson().fromJson(helper.get("value"), classType);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        if(data.has("max")) {
+            JsonObject helper = data.get("max").getAsJsonObject();
+            //Try resolve the class that was encoded
+            Class<?> classType = null;
+            try {
+                classType = Class.forName(helper.get("class").getAsString());
+                max = (Vector3f) SerializationHelper.getGson().fromJson(helper.get("value"), classType);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return this;
     }
 }

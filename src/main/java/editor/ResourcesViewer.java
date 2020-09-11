@@ -124,6 +124,17 @@ public class ResourcesViewer extends UIComponet {
                                     EntityManager.getInstance().addEntity(newEntity);
                                     break;
                                 }
+                                case (".gltf"): {
+                                    String filename = draggedFile.getRelativePath().replace("/models/", "");
+                                    Entity newEntity = new Entity();
+                                    newEntity.setModel(ModelManager.getInstance().loadModel(filename));
+//                                    newEntity.setTexture(SpriteBinder.getInstance().load(draggedFile.getRelativePath().replace("/textures/", "")));
+                                    newEntity.setPosition(pos);
+                                    newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
+                                    newEntity.addAttribute(new Attribute<String>("name", filename));
+                                    EntityManager.getInstance().addEntity(newEntity);
+                                    break;
+                                }
                             }
                         }
                     }

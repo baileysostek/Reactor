@@ -57,7 +57,7 @@ public class Keyboard extends Engine {
     public static final int SPACE     = KeyEvent.VK_SPACE;
 
     public static final int CONTROL   = KeyEvent.VK_CONTROL;
-
+    public static final int ALT_LEFT  = GLFW.GLFW_KEY_LEFT_ALT;
 
     private Keyboard(){
         super();

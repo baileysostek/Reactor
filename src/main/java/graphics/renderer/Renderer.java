@@ -110,7 +110,7 @@ public class Renderer extends Engine {
             frameBuffer.bindFrameBuffer();
         }
 
-        GL20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        GL20.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
         ShaderManager.getInstance().useShader(shaderID);
         GL20.glEnable(GL20.GL_DEPTH_TEST);
         GL20.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);

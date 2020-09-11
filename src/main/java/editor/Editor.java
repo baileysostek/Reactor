@@ -71,6 +71,10 @@ public class Editor {
     //Store variables for later
     private Camera gameCamera = null;
 
+    //If this is the first time the window is rendering, we can set the window sizing information
+    private final int COLUMN_WIDTHS = 256;
+    private boolean firstDraw = true;
+
     private Editor(){
         //Create imgui context
         ImGui.createContext();
@@ -315,6 +319,17 @@ public class Editor {
 
         ImGui.columns(3);
 
+
+        //Set column initial widths
+        if(firstDraw) {
+            //Set column sizes
+            ImGui.setColumnWidth(0, COLUMN_WIDTHS);
+            ImGui.setColumnWidth(1, Renderer.getWIDTH() - (COLUMN_WIDTHS * 2));
+            ImGui.setColumnWidth(2, COLUMN_WIDTHS);
+            //Turn off first draw.
+            firstDraw = false;
+        }
+
         //Column 1
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 0, 2);
         ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), ImGui.getWindowHeight()/2);
@@ -372,6 +387,7 @@ public class Editor {
         ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), ImGui.getWindowHeight());
         //Render our UIComponets
         renderComponentSet(EnumEditorLocation.RIGHT);
+        //Render out debug stuff
         ImGui.endChildFrame();
         ImGui.popStyleVar();
         ImGui.columns();
@@ -382,7 +398,6 @@ public class Editor {
         ImGui.popStyleVar();
         ImGui.popStyleVar();
 
-        ImGui.showDemoWindow();
 
         //End
         ImGui.end();
