@@ -12,7 +12,7 @@ public class Model implements Serializable<Model> {
     private int numIndicies = 0;
     private int id;
 
-    private Vector3f[] aabb = new Vector3f[]{new Vector3f(-1), new Vector3f(1)};
+    private AABB aabb = new AABB();
 
     //VAO
     private Handshake handshake;
@@ -27,7 +27,7 @@ public class Model implements Serializable<Model> {
         this.id = id;
         this.handshake = handshake;
         this.numIndicies = numIndicies;
-        this.aabb = AABB;
+        aabb = new AABB(AABB[0], AABB[1]);
     }
 
     public Handshake getHandshake(){
@@ -43,7 +43,7 @@ public class Model implements Serializable<Model> {
     }
 
     public Vector3f[] getAABB(){
-        return new Vector3f[]{new Vector3f(this.aabb[0]), new Vector3f(this.aabb[1])};
+        return new Vector3f[]{new Vector3f(this.aabb.getMIN()), new Vector3f(this.aabb.getMAX())};
     }
 
     @Override
@@ -51,6 +51,7 @@ public class Model implements Serializable<Model> {
         JsonObject saveData = new JsonObject();
         saveData.add("handshake", handshake.serialize());
         saveData.addProperty("indices", this.numIndicies);
+        saveData.add("aabb", aabb.serialize());
         return saveData;
     }
 
@@ -58,6 +59,9 @@ public class Model implements Serializable<Model> {
     public Model deserialize(JsonObject data) {
         this.numIndicies = data.get("indices").getAsInt();
         this.handshake = new Handshake().deserialize(data.get("handshake").getAsJsonObject());
+        if(data.has("aabb")) {
+            this.aabb = new AABB().deserialize(data.get("aabb").getAsJsonObject());
+        }
         return this;
     }
 

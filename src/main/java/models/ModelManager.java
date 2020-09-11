@@ -1,14 +1,21 @@
 package models;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import de.javagl.jgltf.model.GltfModel;
+import de.javagl.jgltf.model.io.GltfModelReader;
 import graphics.renderer.GLTarget;
 import graphics.renderer.ShaderManager;
 import graphics.renderer.EnumGLDatatype;
 import graphics.renderer.Handshake;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.lwjgl.assimp.AIScene;
+import org.lwjgl.assimp.Assimp;
 import util.StringUtils;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -24,6 +31,8 @@ public class ModelManager {
     private JsonParser parser = new JsonParser();
 
     private final Model DEFAULT_MODEL;
+
+    private final GltfModelReader gltfModelReader = new GltfModelReader();
 
     private ModelManager(){
         DEFAULT_MODEL = loadModel("sphere_smooth.tek");
@@ -41,6 +50,8 @@ public class ModelManager {
             System.err.println("Tried to load model: " + modelName + " however no file extension is specified. This information is needed to correctly parse the file.");
         }
 
+        String resourceName = StringUtils.getRelativePath() + "models/" + modelName;
+
         String data = StringUtils.load("models/" + modelName);
         String[] lines = data.split("\n");
         String fileExtension = modelName.split("\\.")[1];
@@ -52,12 +63,22 @@ public class ModelManager {
             case "obj": {
                 Model model = parseOBJ(this.getNextID(), lines);
                 cachedModels.put(modelName, model);
+
                 return model;
             }
             case "tek": {
                 Model model = new Model(this.getNextID()).deserialize(parser.parse(data).getAsJsonObject());
                 cachedModels.put(modelName, model);
                 return model;
+            }
+            case "gltf":{
+                Path inputFile = Paths.get(StringUtils.getRelativePath()+"models/", modelName);
+                try {
+                    GltfModel gltfModel = gltfModelReader.read(inputFile.toUri());
+                    System.out.println(gltfModel);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             default:
                 System.err.println("No model parsing function defined for file extension type: " + fileExtension);
@@ -213,7 +234,35 @@ public class ModelManager {
                     //vertex
                     line = line.replace("f ", "");
                     String[] components = line.split(" ");
+                    int vertexIndex = 0;
+
+                    //First Face Buffer
+                    Vector3f firstFace = new Vector3f(0);
+                    Vector3f firstNormal = new Vector3f(0);
+                    Vector2f firstTexture = new Vector2f(0);
+
+                    //Last Face Buffer
+                    Vector3f lastFace = new Vector3f(0);
+                    Vector3f lastNormal = new Vector3f(0);
+                    Vector2f lastTexture = new Vector2f(0);
+
                     for (String component : components) {
+
+                        //If this index is >= 3 this face is a poly-face and we need to insert from chace
+                        if(vertexIndex >= 3){
+                            //Add the first point
+                            facesList.addLast(firstFace);
+                            facesList_normal.addLast(firstNormal);
+                            facesList_texture.addLast(firstTexture);
+
+                            //Add the last point
+                            facesList.addLast(lastFace);
+                            facesList_normal.addLast(lastNormal);
+                            facesList_texture.addLast(lastTexture);
+
+                            //Now add the new point.
+                        }
+
                         String[] componentParts = component.split("/");
                         if (componentParts.length == 3) {
                             int index = Integer.parseInt(componentParts[0].trim()); //Index   //Always
@@ -222,17 +271,25 @@ public class ModelManager {
                                 textureIndex = Integer.parseInt(componentParts[1].trim()); //texture //Sometimes
                             }
                             int normalVector = Integer.parseInt(componentParts[2].trim()); //Normal  //Always
-                            facesList.addLast(vertecies[index - 1]);
-                            facesList_normal.addLast(normals[normalVector - 1]);
+                            //Calculate this face
+                            lastFace = vertecies[index - 1];
+                            lastNormal = normals[normalVector - 1];
+
+                            facesList.addLast(lastFace);
+                            facesList_normal.addLast(lastNormal);
 
                             //Textures
                             if ((textureIndex - 1) < textures.length) {
-                                facesList_texture.addLast(textures[textureIndex - 1]);
+                                lastTexture = textures[textureIndex - 1];
+                                facesList_texture.addLast(lastTexture);
                             } else {
                                 //We dont have a texture but we do have material channels
-                                facesList_texture.addLast(materialLocations.get(faceMaterial));
+                                lastTexture = materialLocations.get(faceMaterial);
+                                facesList_texture.addLast(lastTexture);
                                 System.out.println("Using override texture index:" + materialLocations.get(faceMaterial));
                             }
+
+
                         } else if (componentParts.length == 2) {
                             component = component.replaceAll("/", "//");
                             componentParts = component.split("/");
@@ -242,18 +299,33 @@ public class ModelManager {
                                 textureIndex = Integer.parseInt(componentParts[1].trim()); //texture //Sometimes
                             }
                             int normalVector = Integer.parseInt(componentParts[2].trim()); //Normal  //Always
-                            facesList.addLast(vertecies[index - 1]);
-                            facesList_normal.addLast(normals[normalVector - 1]);
+
+                            lastFace = vertecies[index - 1];
+                            lastNormal = normals[normalVector - 1];
+
+                            facesList.addLast(lastFace);
+                            facesList_normal.addLast(lastNormal);
 
                             //Textures
                             if ((textureIndex - 1) < textures.length) {
-                                facesList_texture.addLast(textures[textureIndex - 1]);
+                                lastTexture = textures[textureIndex - 1];
+                                facesList_texture.addLast(lastTexture);
                             } else {
                                 //We dont have a texture but we do have material channels
-                                facesList_texture.addLast(materialLocations.get(faceMaterial));
+                                lastTexture = materialLocations.get(faceMaterial);
+                                facesList_texture.addLast(lastTexture);
                                 System.out.println("Using override texture index:" + materialLocations.get(faceMaterial));
                             }
                         }
+
+                        //Buffer the last results
+                        if(vertexIndex == 0){
+                            firstFace = lastFace;
+                            firstNormal = lastNormal;
+                            firstTexture = lastTexture;
+                        }
+
+                        vertexIndex++;
                     }
                 }
             }

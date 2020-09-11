@@ -16,6 +16,7 @@ import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import input.MousePicker;
 import logging.LogManager;
+import models.AABB;
 import models.Model;
 import models.ModelManager;
 import org.joml.Vector2f;
@@ -270,11 +271,16 @@ public class FraudTek {
         Renderer.getInstance().render();
 
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
-            //Draw Origin
+            //Draw Axis
             int size = 4096;
             Renderer.getInstance().drawLine(new Vector3f(-size, 0, 0), new Vector3f(size, 0, 0), new Vector3f(1, 0, 0));
             Renderer.getInstance().drawLine(new Vector3f(0, -size, 0), new Vector3f(0, size, 0), new Vector3f(0, 1, 0));
             Renderer.getInstance().drawLine(new Vector3f(0, 0, -size), new Vector3f(0, 0, size), new Vector3f(0, 0, 1));
+
+            //Draw arrows point in +Axis direction.
+            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(1, 0, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
+            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(0, 1, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
+            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(0, 0, 1), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
 
             //Draw Grid
             size = 50;
