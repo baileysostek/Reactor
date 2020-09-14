@@ -1,3 +1,4 @@
+![Reactor Logo](https://github.com/baileysostek/Reactor/blob/master/resources/textures/cadmium_logo_pixel.png)
 # Reactor
 Reactor is the CadmiumGames - GameEngine
 
