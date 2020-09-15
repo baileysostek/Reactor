@@ -28,7 +28,7 @@ void main(void){
 //    vec2 normal = gl_FragCoord.xy / gl_FragCoord.w;
 //    out_Color = vec4((sin(gl_FragCoord.x / 10.0) + 1.0) / 2.0, (sin(gl_FragCoord.y / 10.0) + 1.0) / 2.0, 1.0, 1.0);
 
-//    gl_FragColor = vec4(dotProduct(passNormal, sunAngle) * vec3(passCoords, 0), 1);
+    gl_FragColor = vec4(dotProduct(passNormal, sunAngle * -1) * vec3(1), 1);
 
 
 //    gl_FragColor = vec4(passCoords, 0, 1);
@@ -42,6 +42,8 @@ void main(void){
 
 //    textureColor.xyz = textureColor.xyz * dotProduct(passNormal, sunAngle);
 
-    gl_FragColor = textureColor;
+
+
+//    gl_FragColor = textureColor;
 
 }

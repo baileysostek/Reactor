@@ -345,7 +345,7 @@ public class FraudTek {
                 //All actions this object can perform
                 switch (action.get("action").getAsString()) {
                     case ("convert"): {
-                        Model model = ModelManager.getInstance().loadModel(action.get("model").getAsString());
+                        Model model = ModelManager.getInstance().loadModel(action.get("model").getAsString()).getFirst();
                         JsonObject saveData = model.serialize();
                         System.out.println("Writing file to:" + "/models/" + action.get("model").getAsString().replace(".obj", ".tek"));
                         StringUtils.write(saveData.toString(), "/models/" + action.get("model").getAsString().replace(".obj", ".tek"));

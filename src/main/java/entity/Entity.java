@@ -5,14 +5,14 @@ import com.google.gson.JsonObject;
 import entity.component.Attribute;
 import entity.component.Component;
 import entity.interfaces.Transformable;
+import graphics.renderer.Renderer;
+import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
+import models.AABB;
 import models.Model;
 import models.ModelManager;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
-import org.joml.Vector2f;
-import org.joml.Vector3f;
+import org.joml.*;
 import serialization.Serializable;
 import serialization.SerializationHelper;
 import util.Callback;
@@ -173,8 +173,36 @@ public class Entity implements Transformable, Serializable<Entity> {
     }
 
     @Override
+    public void setPosition(float x, float y, float z) {
+        this.attributes.get("position").setData(new Vector3f(x, y, z));
+    }
+
+    @Override
     public final Vector3f getPosition(){
+        Vector3f out = new Vector3f();
+        this.getTransform().getTranslation(out);
+        return out;
+    }
+
+    @Override
+    public final Vector3f getPositionSelf(){
         return (Vector3f) this.attributes.get("position").getData();
+    }
+
+    @Override
+    public Vector3f translate(float x, float y, float z) {
+        Vector3f pos = (Vector3f) this.attributes.get("position").getData();
+        pos.x += x;
+        pos.y += y;
+        pos.z += z;
+        return pos;
+    }
+
+    @Override
+    public Vector3f translate(Vector3f offset) {
+        Vector3f pos = (Vector3f) this.attributes.get("position").getData();
+        pos.add(offset);
+        return pos;
     }
 
     @Override
@@ -243,17 +271,24 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     public final Vector3f[] getAABB(){
         //Get the model transform
+        //2 index Vec3 array, [min, max]
 
-        //Raw unNormaized and unTranslated AABB
-        Vector3f[] out = this.model.getAABB();
 
-        out[0].mulDirection(this.getTransform());
-        out[1].mulDirection(this.getTransform());
+        //If we have a model use that AABB, otherwise use a normalized AABB
+        if(this.getModel() != null) {
+            AABB tmp = new AABB();
+            for (Vector3f point : this.getModel().getAABB().getVerteces()) {
+                Vector3f tmpPoint = new Vector3f(point);
+                tmpPoint.mulDirection(this.getTransform());
+                tmpPoint.add(this.getPosition());
+                tmp.recalculateFromPoint(tmpPoint);
+            }
 
-        out[0].add(this.getPosition());
-        out[1].add(this.getPosition());
-
-        return out;
+            return new Vector3f[]{tmp.getMIN(), tmp.getMAX()};
+        }else{
+            AABB defaultShape = new AABB(1);
+            return new Vector3f[]{defaultShape.getMIN().add(this.getPosition()), defaultShape.getMAX().add(this.getPosition())};
+        }
     }
 
     //Override me
@@ -397,6 +432,14 @@ public class Entity implements Transformable, Serializable<Entity> {
             }
         }
 
+        //Add our children
+        LinkedList<Entity> childrenEntities =  EntityManager.getInstance().getEntitiesChildren(this);
+        JsonArray children = new JsonArray(childrenEntities.size());
+        for(Entity child : childrenEntities){
+            children.add(child.serialize());
+        }
+        out.add("children", children);
+
         return out;
     }
 
@@ -451,6 +494,17 @@ public class Entity implements Transformable, Serializable<Entity> {
             this.setTexture(sprite.getTextureID());
         }
 
+        //If we have any children
+        if(data.has("children")) {
+            JsonArray components = data.get("children").getAsJsonArray();
+            for(int i = 0; i < components.size(); i++){
+                JsonObject childData = components.get(i).getAsJsonObject();
+                Entity child = new Entity().deserialize(childData);
+                child.setParent(this);
+                EntityManager.getInstance().addEntity(child);
+            }
+        }
+
         return this;
     }
 
@@ -460,5 +514,9 @@ public class Entity implements Transformable, Serializable<Entity> {
             name = (String) this.getAttribute("name").getData();
         }
         return name;
+    }
+
+    public boolean hasParent() {
+        return this.parent != null;
     }
 }

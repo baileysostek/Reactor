@@ -10,16 +10,21 @@ public class AABB implements Serializable<AABB> {
     private Vector3f min = new Vector3f(Integer.MAX_VALUE);
     private Vector3f max = new Vector3f(-Integer.MAX_VALUE);
 
+    //8 Vertex Points
+    private Vector3f[] vertecies = new Vector3f[8];
+
     public AABB(){}
 
     public AABB(int size){
         min = new Vector3f(-Math.abs(size));
         max = new Vector3f( Math.abs(size));
+        recalculate();
     }
 
     public AABB(Vector3f min, Vector3f max){
         this.min = min;
         this.max = max;
+        recalculate();
     }
 
     //Takes in a new point and resizes AABB to abide by this new point possibly being bigger.
@@ -47,6 +52,7 @@ public class AABB implements Serializable<AABB> {
         if(max.z < point.z){
             max.z = point.z;
         }
+        recalculate();
     }
 
     public Vector3f getMIN(){
@@ -55,6 +61,23 @@ public class AABB implements Serializable<AABB> {
 
     public Vector3f getMAX(){
         return max;
+    }
+
+    private void recalculate(){
+        //Bottom
+        this.vertecies[0] = new Vector3f(min.x, min.y, min.z);//-, -
+        this.vertecies[1] = new Vector3f(max.x, min.y, min.z);//+, -
+        this.vertecies[2] = new Vector3f(min.x, min.y, max.z);//-, +
+        this.vertecies[3] = new Vector3f(max.x, min.y, max.z);//+, +
+        //TOP
+        this.vertecies[4] = new Vector3f(min.x, max.y, min.z);//-, -
+        this.vertecies[5] = new Vector3f(max.x, max.y, min.z);//+, -
+        this.vertecies[6] = new Vector3f(min.x, max.y, max.z);//-, +
+        this.vertecies[7] = new Vector3f(max.x, max.y, max.z);//+, +
+    }
+
+    public Vector3f[] getVerteces(){
+        return this.vertecies;
     }
 
     @Override
@@ -99,6 +122,7 @@ public class AABB implements Serializable<AABB> {
                 e.printStackTrace();
             }
         }
+        recalculate();
         return this;
     }
 }

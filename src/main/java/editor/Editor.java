@@ -227,6 +227,8 @@ public class Editor {
 
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
             CameraManager.getInstance().setActiveCamera(new Camera3D());
+            CameraManager.getInstance().getActiveCamera().setRotation(new Vector3f(45, -45, 0));
+            CameraManager.getInstance().getActiveCamera().setPosition(new Vector3f(8, 10, 8));
             MousePicker.getInstance().unlockMouse();
         }
 

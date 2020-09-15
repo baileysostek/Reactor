@@ -4,6 +4,7 @@ import camera.CameraManager;
 import engine.Engine;
 import entity.Entity;
 import entity.EntityManager;
+import input.MousePicker;
 import math.MatrixUtils;
 import models.AABB;
 import org.joml.*;
@@ -122,6 +123,8 @@ public class Renderer extends Engine {
 
         GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
 
+        ShaderManager.getInstance().loadUniformIntoActiveShader("sunAngle", CameraManager.getInstance().getActiveCamera().getLookingDirection());
+
         float[] out = new float[3];
 
         out[0] = CameraManager.getInstance().getActiveCamera().getLookingDirection().x() * -1.0f;
@@ -144,35 +147,36 @@ public class Renderer extends Engine {
         int loads = 0;
         EntityManager.getInstance().resort();
         for(Entity entity : EntityManager.getInstance().getEntities()){
+            if(entity.getModel() != null) {
+                if (entity.getModel().getID() != lastID) {
+                    ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
+                    loads++;
+                }
 
-            if(entity.getModel().getID() != lastID) {
-                ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
-                loads++;
+                if (lastTexture != entity.getTextureID()) {
+                    GL20.glBindTexture(GL20.GL_TEXTURE_2D, entity.getTextureID());
+                    GL20.glUniform1i(GL20.glGetUniformLocation(shaderID, "textureID"), GL20.GL_TEXTURE0);
+                    lastTexture = entity.getTextureID();
+                }
+
+                if (entity.hasAttribute("t_scale")) {
+                    ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", entity.getAttribute("t_scale").getData());
+                } else {
+                    ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", new org.joml.Vector2f(1.0f));
+                }
+
+                if (entity.hasAttribute("t_offset")) {
+                    ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", entity.getAttribute("t_offset").getData());
+                } else {
+                    ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", new org.joml.Vector2f(0.0f));
+                }
+
+                //Mess with uniforms
+                GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "transformation"), false, entity.getTransform().get(new float[16]));
+                GL20.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
+
+                lastID = entity.getModel().getID();
             }
-
-            if(lastTexture != entity.getTextureID()) {
-                GL20.glBindTexture(GL20.GL_TEXTURE_2D, entity.getTextureID());
-                GL20.glUniform1i(GL20.glGetUniformLocation(shaderID, "textureID"), GL20.GL_TEXTURE0);
-                lastTexture = entity.getTextureID();
-            }
-
-            if(entity.hasAttribute("t_scale")){
-                ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", entity.getAttribute("t_scale").getData());
-            }else{
-                ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", new org.joml.Vector2f(1.0f));
-            }
-
-            if(entity.hasAttribute("t_offset")){
-                ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", entity.getAttribute("t_offset").getData());
-            }else{
-                ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", new org.joml.Vector2f(0.0f));
-            }
-
-            //Mess with uniforms
-            GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "transformation"), false, entity.getTransform().get(new float[16]));
-            GL20.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
-
-            lastID = entity.getModel().getID();
         }
     }
 

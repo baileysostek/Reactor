@@ -104,7 +104,7 @@ public class LevelEditor extends UIComponet {
                     Entity tile = new Entity();
 
                     //Set props
-                    tile.setModel(ModelManager.getInstance().loadModel("quad.tek"));
+                    tile.setModel(ModelManager.getInstance().loadModel("quad.tek").getFirst());
                     tile.setTexture(selectedTexture);
                     tile.setPosition(new Vector3f(worldPos).add(new Vector3f(0, 0.01f * Im_layer.get(), 0)));
 
@@ -132,7 +132,7 @@ public class LevelEditor extends UIComponet {
                         tile = new Entity();
 
                         //Set props
-                        tile.setModel(ModelManager.getInstance().loadModel("quad.tek"));
+                        tile.setModel(ModelManager.getInstance().loadModel("quad.tek").getFirst());
                         tile.setTexture(selectedTexture);
                         tile.setPosition(new Vector3f(worldPos).add(new Vector3f(0, 0.01f * Im_layer.get(), 0)));
 

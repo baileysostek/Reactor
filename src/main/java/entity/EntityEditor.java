@@ -111,6 +111,10 @@ public class EntityEditor extends UIComponet {
 
                     if(Keyboard.getInstance().isKeyPressed(Keyboard.ALT_LEFT)){
                         Entity entity = new Entity(this.entity.serialize());
+                        //Check if the moved entity was a child
+                        if(this.entity.hasParent()){
+                            entity.setParent(this.entity.getParent());
+                        }
                         EntityManager.getInstance().addEntity(entity);
                     }
 
@@ -197,14 +201,14 @@ public class EntityEditor extends UIComponet {
                         //Raycast to plane
                         Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 1, 0));
                         if(pos != null) {
-                            entity.getPosition().x = pos.x + delta.x;
+                            entity.setPosition(pos.x + delta.x , entity.getPositionSelf().y() , entity.getPositionSelf().z());
                         }
                         break;
                     }
                     case MOVE_Y: {
                         Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(CameraManager.getInstance().getActiveCamera().getLookingDirection()).mul(-1));
                         if(pos != null) {
-                            entity.getPosition().y = pos.y + delta.y;
+                            entity.setPosition(entity.getPositionSelf().x() , pos.y + delta.y , entity.getPositionSelf().z());
                         }
                         break;
                     }
@@ -212,7 +216,7 @@ public class EntityEditor extends UIComponet {
                         //Raycast to plane
                         Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 1, 0));
                         if (pos != null) {
-                            entity.getPosition().z = pos.z;
+                            entity.setPosition(entity.getPositionSelf().x() , entity.getPositionSelf().y() , pos.z);
                         }
                         break;
                     }
@@ -222,8 +226,7 @@ public class EntityEditor extends UIComponet {
                         //Raycast to plane
                         Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 0, 1));
                         if(pos != null) {
-                            entity.getPosition().x = pos.x + delta.x;
-                            entity.getPosition().y = pos.y + delta.y;
+                            entity.setPosition(pos.x + delta.x , pos.y + delta.y , entity.getPositionSelf().z());
                         }
                         break;
                     }
@@ -232,8 +235,7 @@ public class EntityEditor extends UIComponet {
                         //Raycast to plane
                         Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(1, 0, 0));
                         if(pos != null) {
-                            entity.getPosition().y = pos.y + delta.y;
-                            entity.getPosition().z = pos.z;
+                            entity.setPosition(entity.getPositionSelf().x() , pos.y + delta.y , pos.z);
                         }
                         break;
                     }
@@ -242,8 +244,7 @@ public class EntityEditor extends UIComponet {
                         //Raycast to plane
                         Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 1, 0));
                         if(pos != null) {
-                            entity.getPosition().x = pos.x + delta.x;
-                            entity.getPosition().z = pos.z;
+                            entity.setPosition(pos.x + delta.x , entity.getPositionSelf().y() , pos.z);
                         }
                         break;
                     }

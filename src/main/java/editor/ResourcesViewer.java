@@ -12,6 +12,7 @@ import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
 import imgui.enums.ImGuiTreeNodeFlags;
 import input.MousePicker;
+import models.Model;
 import models.ModelManager;
 import org.joml.Vector3f;
 import org.lwjgl.PointerBuffer;
@@ -79,7 +80,7 @@ public class ResourcesViewer extends UIComponet {
                                     if(draggedFile.getRelativePath().contains("/models/")) {
                                         String filename = draggedFile.getRelativePath().replace("/models/", "");
                                         Entity newEntity = new Entity();
-                                        newEntity.setModel(ModelManager.getInstance().loadModel(filename));
+                                        newEntity.setModel(ModelManager.getInstance().loadModel(filename).getFirst());
                                         newEntity.setPosition(pos);
                                         newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
                                         newEntity.addAttribute(new Attribute<String>("name", filename));
@@ -104,7 +105,7 @@ public class ResourcesViewer extends UIComponet {
                                     } else {
                                         //We hit nothing
                                         Entity newEntity = new Entity();
-                                        newEntity.setModel(ModelManager.getInstance().loadModel("quad.tek"));
+                                        newEntity.setModel(ModelManager.getInstance().loadModel("quad.tek").getFirst());
                                         newEntity.setTexture(newSprite);
                                         newEntity.setPosition(pos);
                                         newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
@@ -113,21 +114,20 @@ public class ResourcesViewer extends UIComponet {
                                     }
                                     break;
                                 }
-                                case (".obj"): {
+                                default: {
                                     String filename = draggedFile.getRelativePath().replace("/models/", "");
                                     Entity newEntity = new Entity();
-                                    newEntity.setModel(ModelManager.getInstance().loadModel(filename));
-//                                    newEntity.setTexture(SpriteBinder.getInstance().load(draggedFile.getRelativePath().replace("/textures/", "")));
-                                    newEntity.setPosition(pos);
-                                    newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
-                                    newEntity.addAttribute(new Attribute<String>("name", filename));
-                                    EntityManager.getInstance().addEntity(newEntity);
-                                    break;
-                                }
-                                case (".gltf"): {
-                                    String filename = draggedFile.getRelativePath().replace("/models/", "");
-                                    Entity newEntity = new Entity();
-                                    newEntity.setModel(ModelManager.getInstance().loadModel(filename));
+                                    LinkedList<Model> models = ModelManager.getInstance().loadModel(filename);
+                                    if(models.size() >= 2) {
+                                        for (Model model : models) {
+                                            Entity child = new Entity();
+                                            child.setParent(newEntity);
+                                            child.setModel(model);
+                                            EntityManager.getInstance().addEntity(child);
+                                        }
+                                    }else{
+                                        newEntity.setModel(models.getFirst());
+                                    }
 //                                    newEntity.setTexture(SpriteBinder.getInstance().load(draggedFile.getRelativePath().replace("/textures/", "")));
                                     newEntity.setPosition(pos);
                                     newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
