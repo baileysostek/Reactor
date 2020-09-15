@@ -34,6 +34,12 @@ public class EntityManager {
     }
 
     public void addEntity(Entity entity){
+        //Disallow adding a null entity.
+        if(entity == null){
+            return;
+        }
+
+        //if not null, lock the array and add an entity, then unlock.
         lock.lock();
         try {
             //Add the entity
@@ -71,13 +77,14 @@ public class EntityManager {
         Collections.sort(entities, new Comparator<Entity>() {
             @Override
             public int compare(Entity e1, Entity e2) {
+                //If we are comparing a model.
                 if(e1.getModel() != null && e2.getModel() != null){
                     return e1.getModel().getID() - e2.getModel().getID();
                 }else{
-                    if(e1.getModel() != null){
+                    if(e2.getModel() != null){
                         return 0 - e2.getModel().getID();
                     }
-                    if(e2.getModel() != null){
+                    if(e1.getModel() != null){
                         return 0 - e1.getModel().getID();
                     }
                 }
@@ -211,7 +218,7 @@ public class EntityManager {
             getEntitiesChildren(parent.getParent()).remove(parent);
         }
         if(this.links.containsKey(parent)){
-            LinkedList<Entity> links = this.links.get(parent);
+            LinkedList<Entity> links = new LinkedList<>(this.links.get(parent));
             for(Entity child : links){
                 parentRemoveHelper(child);
             }

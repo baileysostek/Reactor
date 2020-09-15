@@ -42,8 +42,8 @@ public class Model implements Serializable<Model> {
         return this.numIndicies;
     }
 
-    public Vector3f[] getAABB(){
-        return new Vector3f[]{new Vector3f(this.aabb.getMIN()), new Vector3f(this.aabb.getMAX())};
+    public AABB getAABB(){
+        return this.aabb;
     }
 
     @Override

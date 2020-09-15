@@ -54,6 +54,7 @@ public abstract class Camera {
 
     public void setPosition(Vector3f position) {
         this.position = position;
+        this.position.mul(-1);
     }
 
     public Quaternionf getRotation() {

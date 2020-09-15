@@ -35,7 +35,6 @@ repositories {
 
 dependencies {
     compile 'net.java.dev.jna:jna:4.2.1'
-    compile group: 'de.javagl', name: 'jgltf-model', version: '2.0.0'
     implementation "org.lwjgl:lwjgl:$lwjglVersion"
     implementation "org.lwjgl:lwjgl-assimp:$lwjglVersion"
     implementation "org.lwjgl:lwjgl-glfw:$lwjglVersion"
