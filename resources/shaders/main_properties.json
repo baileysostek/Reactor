@@ -14,7 +14,8 @@
       "view":"mat4",
       "inverseCamera": "vec3",
       "t_offset":"vec2",
-      "t_scale": "vec2"
+      "t_scale": "vec2",
+      "lightSpaceMatrix": "mat4"
     },
     "Varying": {
 
@@ -23,6 +24,7 @@
   "Fragment":{
     "Uniforms": {
       "textureID": "sampler2D",
+      "shadowMap": "sampler2D",
       "sunAngle": "vec3"
     }
   }

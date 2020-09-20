@@ -11,39 +11,48 @@ precision highp sampler2D;
 // Inputs
 in vec3 passNormal;
 in vec3 passCamPos;
-in vec3 cameraDir;
 in vec2 passCoords;
+in vec4 passPosLightSpace;
 
 uniform sampler2D texureID;
+uniform sampler2D shadowMap;
+
 uniform vec3 sunAngle;
+
+layout( location = 0 ) out vec4 gl_FragColor;
 
 
 float dotProduct(vec3 posI, vec3 posJ){
     return (posI.x * posJ.x) + (posI.y * posJ.y) + (posI.z * posJ.z);
 }
 
-layout( location = 0 ) out vec4 gl_FragColor;
+float ShadowCalculation()
+{
+    vec3 pos = passPosLightSpace.xyz * 0.5 + 0.5;
+    if(pos.z > 1.0){
+        pos.z = 1.0;
+    }
+    float depth = texture(shadowMap, pos.xy).r;
+    float bias = 0.05f;
+
+    return (depth + bias) < pos.z ? 1.0 : 0.0;
+}
 
 void main(void){
-//    vec2 normal = gl_FragCoord.xy / gl_FragCoord.w;
-//    out_Color = vec4((sin(gl_FragCoord.x / 10.0) + 1.0) / 2.0, (sin(gl_FragCoord.y / 10.0) + 1.0) / 2.0, 1.0, 1.0);
 
-    gl_FragColor = vec4(dotProduct(passNormal, sunAngle * -1) * vec3(1), 1);
-
-
-//    gl_FragColor = vec4(passCoords, 0, 1);
-
-
-    vec4 textureColor = texture(texureID, passCoords);
-
-    if(textureColor.a < 0.5){
+    vec4 albedo = texture(texureID, passCoords);
+    if(albedo.a < 0.5){
         discard;
     }
 
-//    textureColor.xyz = textureColor.xyz * dotProduct(passNormal, sunAngle);
+    // ambient
+    vec3 ambient = 0.15 * albedo.xyz;
 
+    float diffuse = clamp(dotProduct(passNormal, sunAngle * -1), 0, 1);
+    float shadow = ShadowCalculation();
 
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse)) * albedo.xyz;
 
-//    gl_FragColor = textureColor;
+    gl_FragColor = vec4(lighting, 1);
 
 }

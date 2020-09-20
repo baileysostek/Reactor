@@ -251,6 +251,11 @@ public class ShaderManager {
                 GL20.glUniform3fv(location, data);
                 break;
             }
+            case MAT4: {
+                float[] matrix = (float[])uniform;
+                GL20.glUniformMatrix4fv(location, false, matrix);
+                break;
+            }
             case SAMPLER2D : {
                 int index = Integer.parseInt(uniform+"");
 //                data[0] = index;

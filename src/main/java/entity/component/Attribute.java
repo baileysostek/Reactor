@@ -10,9 +10,23 @@ public class Attribute<T> {
     private T attribute;
     private LinkedList<Callback> subscribers = new LinkedList<Callback>();
 
+    //Rendering helpers
+    private boolean locked  = false;
+    private boolean visible = true;
+
     public Attribute(String name, T data){
         this.name = name;
         this.attribute = data;
+    }
+
+    public Attribute setLocked(boolean locked){
+        this.locked = locked;
+        return this;
+    }
+
+    public Attribute setVisible(boolean visible){
+        this.visible = visible;
+        return this;
     }
 
     public void setData(T newData){

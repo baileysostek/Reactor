@@ -5,8 +5,6 @@ import com.google.gson.JsonObject;
 import entity.component.Attribute;
 import entity.component.Component;
 import entity.interfaces.Transformable;
-import graphics.renderer.Renderer;
-import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import models.AABB;
@@ -64,15 +62,16 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     private final void addDefaultAttributes(){
         //Every entity has some default attributes
-        this.addAttribute(new Attribute<Vector3f>("position" , new Vector3f(0f)));
-        this.addAttribute(new Attribute<Vector3f>("rotation" , new Vector3f(0f)));
-        this.addAttribute(new Attribute<Vector3f>("scale"    , new Vector3f(1f)));
-        this.addAttribute(new Attribute<Integer> ("textureID", SpriteBinder.getInstance().getFileNotFoundID()));
-        this.addAttribute(new Attribute<Integer> ("zIndex"   , 0));
-        this.addAttribute(new Attribute<Boolean> ("autoScale", false));
-        this.addAttribute(new Attribute<String>  ("name"     , "Undefined"));
-        this.addAttribute(new Attribute<String>  ("type"     , this.toString()));
-        this.addAttribute(new Attribute<Vector2f>("t_scale"  , new Vector2f(1)));
+        this.addAttribute(new Attribute<Vector3f>("position"     , new Vector3f(0f)));
+        this.addAttribute(new Attribute<Vector3f>("rotation"     , new Vector3f(0f)));
+        this.addAttribute(new Attribute<Vector3f>("scale"        , new Vector3f(1f)));
+        this.addAttribute(new Attribute<Integer> ("textureID"    , SpriteBinder.getInstance().getFileNotFoundID()));
+        this.addAttribute(new Attribute<Integer> ("zIndex"       , 0));
+        this.addAttribute(new Attribute<Boolean> ("autoScale"    , false));
+        this.addAttribute(new Attribute<String>  ("name"         , "Undefined"));
+        this.addAttribute(new Attribute<String>  ("type"         , this.toString()));
+        this.addAttribute(new Attribute<Vector2f>("t_scale"      , new Vector2f(1)));
+        this.addAttribute(new Attribute<Boolean>("updateInEditor", false));
     }
 
     //Type
@@ -379,6 +378,11 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.parent = parent;
     }
 
+    //Rendering hooks
+    public void renderInEditor(boolean selected){
+        return;
+    }
+
     //To String
     @Override
     public String toString(){
@@ -514,6 +518,13 @@ public class Entity implements Transformable, Serializable<Entity> {
         if (this.hasAttribute("name")) {
             name = (String) this.getAttribute("name").getData();
         }
+
+        if(name.equals("Undefined")){
+            if (this.hasAttribute("type")) {
+                name = (String) this.getAttribute("type").getData();
+            }
+        }
+
         return name;
     }
 
