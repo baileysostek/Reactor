@@ -58,6 +58,8 @@ public class Keyboard extends Engine {
 
     public static final int CONTROL   = KeyEvent.VK_CONTROL;
     public static final int ALT_LEFT  = GLFW.GLFW_KEY_LEFT_ALT;
+    public static final int SHIFT_LEFT = GLFW.GLFW_KEY_LEFT_SHIFT;
+    public static final int SHIFT_RIGHT = GLFW.GLFW_KEY_RIGHT;
 
     private Keyboard(){
         super();

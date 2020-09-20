@@ -123,7 +123,7 @@ public class Renderer extends Engine {
 
         GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
 
-        ShaderManager.getInstance().loadUniformIntoActiveShader("sunAngle", CameraManager.getInstance().getActiveCamera().getLookingDirection());
+//        ShaderManager.getInstance().loadUniformIntoActiveShader("sunAngle", new Vector3f(CameraManager.getInstance().getActiveCamera().getLookingDirection()));
 
         float[] out = new float[3];
 

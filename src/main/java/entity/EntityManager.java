@@ -74,23 +74,23 @@ public class EntityManager {
 
     //Once per insert
     private void sortEntities() {
-        Collections.sort(entities, new Comparator<Entity>() {
-            @Override
-            public int compare(Entity e1, Entity e2) {
-                //If we are comparing a model.
-                if(e1.getModel() != null && e2.getModel() != null){
-                    return e1.getModel().getID() - e2.getModel().getID();
-                }else{
-                    if(e2.getModel() != null){
-                        return 0 - e2.getModel().getID();
-                    }
-                    if(e1.getModel() != null){
-                        return 0 - e1.getModel().getID();
-                    }
-                }
-                return 0;
-            }
-        });
+//        Collections.sort(entities, new Comparator<Entity>() {
+//            @Override
+//            public int compare(Entity e1, Entity e2) {
+//                //If we are comparing a model.
+//                if(e1.getModel() != null && e2.getModel() != null){
+//                    return e1.getModel().getID() - e2.getModel().getID();
+//                }else{
+//                    if(e2.getModel() != null){
+//                        return 0 - e2.getModel().getID();
+//                    }
+//                    if(e1.getModel() != null){
+//                        return 0 - e1.getModel().getID();
+//                    }
+//                }
+//                return 0;
+//            }
+//        });
     }
 
     //Update all entities

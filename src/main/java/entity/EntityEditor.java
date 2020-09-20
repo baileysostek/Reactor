@@ -98,6 +98,10 @@ public class EntityEditor extends UIComponet {
         this.selectedEntities.put(this.entity, new EntityMetaData());
     }
 
+    private void addTarget(Entity first) {
+        this.selectedEntities.put(first, new EntityMetaData());
+    }
+
     private void raycastToWorld() {
         if(pressed){
             //We need to do a check to see if we hit any of our direct draw volumes, like arrows.
@@ -127,14 +131,14 @@ public class EntityEditor extends UIComponet {
                     if(metaData.ddd_x != null) {
                         Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_x.getAABB());
                         if (pos != null) {
-                            delta = new Vector3f(entity.getPosition()).sub(pos);
+                            delta = new Vector3f(entity.getPositionSelf()).sub(pos);
                             hits.x = 1;
                         }
                     }
                     if(metaData.ddd_y != null) {
                         Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_y.getAABB());
                         if (pos != null) {
-                            delta = new Vector3f(entity.getPosition()).sub(pos);
+                            delta = new Vector3f(entity.getPositionSelf()).sub(pos);
                             hits.y = 1;
                         }
                     }
@@ -269,9 +273,12 @@ public class EntityEditor extends UIComponet {
                 if (hits.size() > 0) {
                     if (this.entity != hits.getFirst()) {
                         hasReleased = false;
-                        this.setTarget(hits.getFirst());
+                        if(Keyboard.getInstance().isKeyPressed(Keyboard.SHIFT_LEFT, Keyboard.SHIFT_RIGHT)) {
+                            this.addTarget(hits.getFirst());
+                        }else{
+                            this.setTarget(hits.getFirst());
+                        }
                     }
-
                 } else {
                     clearSelected();
                 }
@@ -283,8 +290,8 @@ public class EntityEditor extends UIComponet {
 
     public void clearSelected(){
         //Deregister from our list of entities which may have arrows on the screen.
-        if(this.selectedEntities.containsKey(this.entity)) {
-            this.selectedEntities.remove(this.entity);
+        for(Entity e : new LinkedList<>(this.selectedEntities.keySet())){
+            this.selectedEntities.remove(e);
         }
         //Reset our distance and delta
         delta = new Vector3f(0);
@@ -319,7 +326,9 @@ public class EntityEditor extends UIComponet {
     public void preUIRender(){
         if(this.entity != null) {
             //Direct draw AABB
-            Renderer.getInstance().drawAABB(entity);
+            for(Entity e: selectedEntities.keySet()){
+                Renderer.getInstance().drawAABB(e);
+            }
 
             Vector3f YELLOW = new Vector3f(1, 1, 0);
             Vector3f MAGENTA = new Vector3f(1, 0, 1);
