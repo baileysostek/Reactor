@@ -13,7 +13,9 @@ public class AABB implements Serializable<AABB> {
     //8 Vertex Points
     private Vector3f[] vertecies = new Vector3f[8];
 
-    public AABB(){}
+    public AABB(){
+        recalculate();
+    }
 
     public AABB(int size){
         min = new Vector3f(-Math.abs(size));

@@ -67,18 +67,23 @@ public class ModelManager {
             }
             default: {
                 //We import a scene based on our model file.
-                AIPropertyStore store = Assimp.aiCreatePropertyStore();
-                Assimp.aiSetImportPropertyFloat(store, Assimp.AI_CONFIG_PP_GSN_MAX_SMOOTHING_ANGLE, 90);
 
-                AIScene aiScene = Assimp.aiImportFile(resourceName,
-//                                Assimp.aiProcess_JoinIdenticalVertices
+                AIPropertyStore store = Assimp.aiCreatePropertyStore();
+                Assimp.aiSetImportPropertyFloat(store, Assimp.AI_CONFIG_IMPORT_ASE_RECONSTRUCT_NORMALS, 0);
+                Assimp.aiSetImportPropertyFloat(store, Assimp.AI_CONFIG_IMPORT_IFC_SMOOTHING_ANGLE, 0);
+
+                AIScene aiScene = Assimp.aiImportFileExWithProperties(resourceName,
+//                                Assimp.aiProcess_JoinIdenticalVertices |
                          Assimp.aiProcess_Triangulate |
-                                Assimp.aiProcess_GenSmoothNormals|
-                                Assimp.aiProcess_FlipUVs |
-                                Assimp.aiProcess_CalcTangentSpace |
-                                Assimp.aiProcess_LimitBoneWeights |
-                                 Assimp.aiProcess_FixInfacingNormals |
-                                 Assimp.aiProcess_GenBoundingBoxes
+//                                Assimp.aiProcess_GenSmoothNormals|
+                                Assimp.aiProcess_FlipUVs
+//                                Assimp.aiProcess_CalcTangentSpace |
+//                                Assimp.aiProcess_LimitBoneWeights |
+//                                 Assimp.aiProcess_FixInfacingNormals |
+//                                 Assimp.aiProcess_GenBoundingBoxes,
+                                 ,
+                        null,
+                        store
                 );
 
                 if (aiScene == null) {
@@ -139,7 +144,7 @@ public class ModelManager {
             for(int i = 0; i < mesh.mNumVertices(); i++){
                 //Get ref to vector
                 AIVector3D position = mesh.mVertices().get(i);
-                AIVector3D normal   = mesh.mVertices().get(i);
+                AIVector3D normal   = mesh.mNormals().get(i);
                 AIVector3D texture = null;
                 if(mesh.mTextureCoords(0) != null) {
                     texture = mesh.mTextureCoords(0).get(i);

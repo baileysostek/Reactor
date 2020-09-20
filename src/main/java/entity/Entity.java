@@ -279,6 +279,7 @@ public class Entity implements Transformable, Serializable<Entity> {
             AABB tmp = new AABB();
             for (Vector3f point : this.getModel().getAABB().getVerteces()) {
                 Vector3f tmpPoint = new Vector3f(point);
+                tmpPoint.mul(new Vector3f(this.getScale()));
                 tmpPoint.mulDirection(this.getTransform());
                 tmpPoint.add(this.getPosition());
                 tmp.recalculateFromPoint(tmpPoint);
@@ -286,7 +287,7 @@ public class Entity implements Transformable, Serializable<Entity> {
 
             return new Vector3f[]{tmp.getMIN(), tmp.getMAX()};
         }else{
-            AABB defaultShape = new AABB(1);
+            AABB defaultShape = new AABB(new Vector3f(-1).mul(this.getScale()), new Vector3f(1).mul(this.getScale()));
             return new Vector3f[]{defaultShape.getMIN().add(this.getPosition()), defaultShape.getMAX().add(this.getPosition())};
         }
     }
