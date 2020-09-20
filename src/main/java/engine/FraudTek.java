@@ -15,6 +15,8 @@ import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import input.MousePicker;
+import lighting.DirectionalLight;
+import lighting.LightingManager;
 import logging.LogManager;
 import models.AABB;
 import models.Model;
@@ -55,6 +57,8 @@ public class FraudTek {
 
     //Local Static variables
     private static int     FRAMES = 0;
+
+    public static DirectionalLight sun;
 
     //Interface Methods
     public static void setWindowSize(int width, int height){
@@ -173,6 +177,7 @@ public class FraudTek {
                 SceneManager.initialize();
                 SoundEngine.initialize();
                 PhysicsEngine.initialize();
+                LightingManager.initialize();
 
                 //Add our initialized instances to our ScriptingManager
                 ScriptingEngine.initialize();
@@ -184,6 +189,8 @@ public class FraudTek {
 
 
                 Renderer.getInstance();
+
+                sun = new DirectionalLight();
             }
         }
     }
@@ -248,6 +255,7 @@ public class FraudTek {
         CameraManager.getInstance().update(delta);
         MousePicker.getInstance().tick(delta);
         SceneManager.getInstance().update(delta);
+        LightingManager.getInstance().update(delta);
         EntityManager.getInstance().update(delta);
 
 //        Vector3f pos = MousePicker.rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
@@ -267,6 +275,9 @@ public class FraudTek {
     }
 
     private static void render(){
+        //Render Shadow maps
+//        LightingManager.getInstance().render();
+
         //Render World.
         Renderer.getInstance().render();
 
@@ -402,8 +413,10 @@ public class FraudTek {
 //        Entity test2 = new Entity().setModel(ModelManager.getInstance().loadModel(modelName+".tek")).setPosition(new Vector3f( 4, 4, -2));
 //        EntityManager.getInstance().addEntity(test);
 //
-//        Entity drag = new Entity();
-//        drag.setModel(ModelManager.getInstance().loadModel("quad.tek"));
+        Entity drag = new Entity();
+        drag.setModel(ModelManager.getInstance().loadModel("Garden.obj").getFirst());
+        drag.setTexture(SpriteBinder.getInstance().load("Garden_BaseColor.png"));
+        EntityManager.getInstance().addEntity(drag);
 //        drag.setPosition(new Vector3f(1.1f, 1.2f, 1.3f));
 //        Interactable interactable = new Interactable();
 //        drag.addComponent(interactable);
@@ -445,6 +458,8 @@ public class FraudTek {
 //        Editor.getInstance().addComponent(new Image(test.getTextureID()));
 
 //        Editor.getInstance().addComponent(new EntityEditor());
+
+        EntityManager.getInstance().addEntity(sun);
 
 
 

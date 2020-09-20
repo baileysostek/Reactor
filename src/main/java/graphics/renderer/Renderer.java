@@ -2,6 +2,7 @@ package graphics.renderer;
 
 import camera.CameraManager;
 import engine.Engine;
+import engine.FraudTek;
 import entity.Entity;
 import entity.EntityManager;
 import input.MousePicker;
@@ -35,7 +36,6 @@ public class Renderer extends Engine {
     private static int RENDER_TYPE = GL11.GL_TRIANGLES;
 
     private int shaderID = 0;
-    private int lineShaderID = 0;
 
     private FBO frameBuffer;
 
@@ -59,7 +59,6 @@ public class Renderer extends Engine {
         }
 
         shaderID = ShaderManager.getInstance().loadShader("main");
-        lineShaderID = ShaderManager.getInstance().loadShader("vector");
         ShaderManager.getInstance().useShader(shaderID);
 
         WIDTH = width;
@@ -123,7 +122,8 @@ public class Renderer extends Engine {
 
         GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
 
-//        ShaderManager.getInstance().loadUniformIntoActiveShader("sunAngle", new Vector3f(CameraManager.getInstance().getActiveCamera().getLookingDirection()));
+        ShaderManager.getInstance().loadUniformIntoActiveShader("sunAngle", new Vector3f(0).sub(FraudTek.sun.getPosition()).normalize());
+        ShaderManager.getInstance().loadUniformIntoActiveShader("lightSpaceMatrix", FraudTek.sun.getLightspaceTransform());
 
         float[] out = new float[3];
 
@@ -132,10 +132,6 @@ public class Renderer extends Engine {
         out[2] = CameraManager.getInstance().getActiveCamera().getLookingDirection().z() * -1.0f;
 
         GL20.glUniform3fv(GL20.glGetUniformLocation(shaderID, "inverseCamera"), out);
-
-        GL20.glActiveTexture(GL20.GL_TEXTURE0);
-
-
 
         //Render calls from the loaded scene.
 //        GL20.glUniform3fv(GL20.glGetUniformLocation(shaderID, "sunAngle"), new float[]{1, 0, 0});
@@ -154,10 +150,14 @@ public class Renderer extends Engine {
                 }
 
                 if (lastTexture != entity.getTextureID()) {
+                    GL20.glActiveTexture(GL20.GL_TEXTURE0);
                     GL20.glBindTexture(GL20.GL_TEXTURE_2D, entity.getTextureID());
-                    GL20.glUniform1i(GL20.glGetUniformLocation(shaderID, "textureID"), GL20.GL_TEXTURE0);
+                    GL20.glUniform1i(GL20.glGetUniformLocation(shaderID, "textureID"), 0);
                     lastTexture = entity.getTextureID();
                 }
+                GL20.glActiveTexture(GL20.GL_TEXTURE0 + 2);
+                GL20.glBindTexture(GL20.GL_TEXTURE_2D, FraudTek.sun.getDepthBuffer().getDepthTexture());
+                GL20.glUniform1i(GL20.glGetUniformLocation(shaderID, "shadowMap"), 2);
 
                 if (entity.hasAttribute("t_scale")) {
                     ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", entity.getAttribute("t_scale").getData());

@@ -327,6 +327,7 @@ public class EntityEditor extends UIComponet {
         if(this.entity != null) {
             //Direct draw AABB
             for(Entity e: selectedEntities.keySet()){
+                e.renderInEditor(true);
                 Renderer.getInstance().drawAABB(e);
             }
 

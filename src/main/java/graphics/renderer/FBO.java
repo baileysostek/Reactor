@@ -7,6 +7,7 @@ import org.lwjgl.opengl.*;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_BORDER_COLOR;
 
 /**
  * Created by Bailey on 11/17/2017.
@@ -107,8 +108,9 @@ public class FBO {
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, this.WIDTH, this.HEIGHT, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, buffer);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL32.GL_CLAMP_TO_BORDER);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL32.GL_CLAMP_TO_BORDER);
+        GL32.glTexParameterfv(GL11.GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, new float[]{1.0f, 1.0f, 1.0f, 1.0f});
         GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture, 0);
 
         return depthTexture;
@@ -133,5 +135,11 @@ public class FBO {
     }
 
 
+    public int getWIDTH() {
+        return WIDTH;
+    }
 
+    public int getHEIGHT() {
+        return HEIGHT;
+    }
 }

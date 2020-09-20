@@ -1,0 +1,19 @@
+{
+  "Name":"vector",
+  "Version": "#version 400",
+  "Vertex":{
+    "Attributes": {
+      "vPosition": "vec4"
+    },
+    "Uniforms": {
+      "lightSpaceMatrix":"mat4",
+      "model":"mat4"
+    },
+    "Varying": {
+    }
+  },
+  "Fragment":{
+    "Uniforms": {
+    }
+  }
+}

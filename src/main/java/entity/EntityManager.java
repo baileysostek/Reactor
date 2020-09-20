@@ -100,6 +100,14 @@ public class EntityManager {
             for (Entity e : entities) {
                 e.selfUpdate(delta);
             }
+        }else{
+            for (Entity e : entities) {
+                if(e.hasAttribute("updateInEditor")) {
+                    if((boolean)e.getAttribute("updateInEditor").getData()) {
+                        e.selfUpdate(delta);
+                    }
+                }
+            }
         }
     }
 

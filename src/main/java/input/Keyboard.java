@@ -49,6 +49,18 @@ public class Keyboard extends Engine {
     public static final int Y = KeyEvent.VK_Y;
     public static final int Z = KeyEvent.VK_Z;
 
+    //Numbers
+    public static final int ONE     = GLFW.GLFW_KEY_1;
+    public static final int TWO     = GLFW.GLFW_KEY_2;
+    public static final int THREE   = GLFW.GLFW_KEY_3;
+    public static final int FOUR    = GLFW.GLFW_KEY_4;
+    public static final int FIVE    = GLFW.GLFW_KEY_5;
+    public static final int SIX     = GLFW.GLFW_KEY_6;
+    public static final int SEVIN   = GLFW.GLFW_KEY_7;
+    public static final int EIGHT   = GLFW.GLFW_KEY_8;
+    public static final int NINE    = GLFW.GLFW_KEY_9;
+    public static final int ZERO    = GLFW.GLFW_KEY_0;
+
 
     //SPECIALTY
     public static final int ESCAPE    = 0x100;
