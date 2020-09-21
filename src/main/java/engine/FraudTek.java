@@ -52,7 +52,7 @@ public class FraudTek {
     //Global Variables
     private static int     WIDTH  = 900;
     private static int     HEIGHT = 900;
-    private static String  TITLE  = "FraudTek V1.0";
+    private static String  TITLE  = "Reactor V1.0";
     private static boolean VSYNC  = false;
 
     //Local Static variables
@@ -196,6 +196,7 @@ public class FraudTek {
                 drag.setTexture(SpriteBinder.getInstance().load("Garden_BaseColor.png"));
                 EntityManager.getInstance().addEntity(drag);
                 EntityManager.getInstance().addEntity(sun);
+                EntityManager.getInstance().addEntity(new DirectionalLight());
             }
         }
     }

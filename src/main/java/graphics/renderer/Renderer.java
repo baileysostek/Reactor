@@ -12,6 +12,7 @@ import org.joml.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL32;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
 
@@ -384,6 +385,7 @@ public class Renderer extends Engine {
         //Render our lines!
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             drawerLine.render();
+//            GL32.glClear(GL32.GL_DEPTH_BUFFER_BIT);
             drawTriangle.render();
             frameBuffer.unbindFrameBuffer();
         }

@@ -16,7 +16,9 @@ public class Light extends Entity {
 
     @Override
     public void onAdd() {
-        this.getAttribute("updateInEditor").setData(true);
+        if(this.hasAttribute("updateInEditor")) {
+            this.getAttribute("updateInEditor").setData(true);
+        }
         super.onAdd();
     }
 }
