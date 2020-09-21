@@ -1,11 +1,11 @@
 package lighting;
 
+import entity.component.Attribute;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
-import input.Keyboard;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import util.Callback;
+import org.joml.Vector3fc;
 
 public class DirectionalLight extends Light {
 
@@ -15,28 +15,13 @@ public class DirectionalLight extends Light {
     public DirectionalLight(){
         depthBuffer = new FBO();
         setTexture(depthBuffer.getDepthTexture());
-
-
-        Keyboard.getInstance().addPressCallback(Keyboard.ONE, new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                setTexture(depthBuffer.getDepthTexture());
-                return null;
-            }
-        });
-        Keyboard.getInstance().addPressCallback(Keyboard.TWO, new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                setTexture(depthBuffer.getTextureID());
-                return null;
-            }
-        });
+        addAttribute(new Attribute<Vector3f>("targetPoint", new Vector3f(0)));
     }
 
     @Override
     public void update(double delta){
         LightingManager.getInstance().drawFromMyPerspective(this);
-        viewMatrix = new Matrix4f().lookAt(new Vector3f(this.getPosition()), new Vector3f(0), new Vector3f(0, 1, 0));
+        viewMatrix = new Matrix4f().lookAt(new Vector3f(this.getPosition()), new Vector3f((Vector3f) this.getAttribute("targetPoint").getData()), new Vector3f(0, 1, 0));
     }
 
     @Override

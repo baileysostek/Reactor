@@ -164,6 +164,12 @@ public class Entity implements Transformable, Serializable<Entity> {
         return this.attributeList;
     }
 
+    //NOTE this will clear all attributes, even the default and locked ones, use carefully
+    protected final void clearAttributes(){
+        this.attributes.clear();
+        this.attributeList.clear();
+    }
+
     //Transformation
     @Override
     public final Entity setPosition(Vector3f vector3f) {

@@ -8,11 +8,16 @@ public class Attribute<T> {
 
     private String name;
     private T attribute;
-    private LinkedList<Callback> subscribers = new LinkedList<Callback>();
+    private LinkedList<Callback> subscribers = new LinkedList<Callback>(){};
 
     //Rendering helpers
     private boolean locked  = false;
     private boolean visible = true;
+
+    public Attribute(Attribute att){
+        this.name = att.getName();
+        this.attribute = (T) att.attribute;
+    }
 
     public Attribute(String name, T data){
         this.name = name;
@@ -32,7 +37,16 @@ public class Attribute<T> {
     public void setData(T newData){
         if(attribute != newData) {
             this.attribute = newData;
+            if(newData == null){
+                System.out.println("Problem");
+            }
+            if(subscribers == null){
+                System.out.println("Problem");
+            }
             for (Callback callback : subscribers) {
+                if(callback == null){
+                    System.out.println("Problem");
+                }
                 callback.callback(this);
             }
         }

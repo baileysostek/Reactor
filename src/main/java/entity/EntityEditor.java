@@ -20,6 +20,7 @@ import input.MousePicker;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
+import serialization.SerializationHelper;
 import util.Callback;
 
 import java.awt.*;
@@ -114,7 +115,28 @@ public class EntityEditor extends UIComponet {
                     distanceToCam = 0;
 
                     if(Keyboard.getInstance().isKeyPressed(Keyboard.ALT_LEFT)){
-                        Entity entity = new Entity(this.entity.serialize());
+                        Entity entity;
+                        //Deserialize the entity
+                        if(this.entity.getClass().equals(Entity.class)) {
+                            //Regula old entity
+                            entity = new Entity().deserialize(this.entity.serialize());
+                        }else{
+                            //Fancy entity from another class or namespace :)
+                            try {
+                                Class<?> classType = Class.forName(this.entity.getClass().getName());
+                                //This has broken attributes, set from parent
+                                entity = ((Entity) SerializationHelper.getGson().fromJson(this.entity.serialize(), classType));
+                                entity.clearAttributes();
+                                for (Attribute attribute : this.entity.getAttributes()) {
+                                    entity.addAttribute(new Attribute(attribute));
+                                }
+                            } catch (ClassNotFoundException e) {
+                                //TODO play sound that that entity is unknown, maybe show message dialogue too.
+                                e.printStackTrace();
+                                return;
+                            }
+                        }
+
                         //Check if the moved entity was a child
                         if(this.entity.hasParent()){
                             entity.setParent(this.entity.getParent());
