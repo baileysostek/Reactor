@@ -13,6 +13,7 @@ public class Attribute<T> {
     //Rendering helpers
     private boolean locked  = false;
     private boolean visible = true;
+    private EnumAttributeType type = EnumAttributeType.NONE;
 
     public Attribute(Attribute att){
         this.name = att.getName();
@@ -74,5 +75,18 @@ public class Attribute<T> {
 
     public String getName(){
         return this.name;
+    }
+
+    public boolean isVisible() {
+        return this.visible;
+    }
+
+    public EnumAttributeType getType() {
+        return type;
+    }
+
+    public Attribute setType(EnumAttributeType type) {
+        this.type = type;
+        return this;
     }
 }

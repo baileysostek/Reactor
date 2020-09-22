@@ -1,19 +1,19 @@
 package entity;
 
-import camera.Camera;
 import camera.CameraManager;
 import editor.Editor;
 import editor.components.UIComponet;
 import entity.component.Attribute;
 import entity.component.Component;
+import entity.component.EnumAttributeType;
 import entity.component.Event;
 import graphics.renderer.DirectDrawData;
 import graphics.renderer.Renderer;
-import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import imgui.*;
 import imgui.enums.ImGuiCol;
+import imgui.enums.ImGuiColorEditFlags;
 import imgui.enums.ImGuiTreeNodeFlags;
 import input.Keyboard;
 import input.MousePicker;
@@ -23,7 +23,6 @@ import org.lwjgl.glfw.GLFW;
 import serialization.SerializationHelper;
 import util.Callback;
 
-import java.awt.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -497,34 +496,48 @@ class AttributeRenderer{
     protected static void renderAttributes(Collection<Attribute> attributes){
         //Loop through each attribute in the list.
         for (Attribute attribute : attributes) {
+            if(!attribute.isVisible()){
+                continue;
+            }
             //Try find a type
             loop:{
                 if (attribute.getData() instanceof Vector3f) {
                     Vector3f data = (Vector3f) attribute.getData();
-                    ImFloat x = new ImFloat(data.x);
-                    ImFloat y = new ImFloat(data.y);
-                    ImFloat z = new ImFloat(data.z);
-                    ImGui.columns(3);
-                    ImGui.pushID(Editor.getInstance().getNextID());
-                    ImGui.pushStyleColor(ImGuiCol.Border, 1, 0, 0, 1);
-                    ImGui.inputFloat("X", x, 1, 10);
-                    ImGui.popStyleColor();
-                    ImGui.popID();
-                    ImGui.nextColumn();
-                    ImGui.pushID(Editor.getInstance().getNextID());
-                    ImGui.pushStyleColor(ImGuiCol.Border, 0, 1, 0, 1);
-                    ImGui.inputFloat("Y", y, 1, 10);
-                    ImGui.popStyleColor();
-                    ImGui.popID();
-                    ImGui.nextColumn();
-                    ImGui.pushID(Editor.getInstance().getNextID());
-                    ImGui.pushStyleColor(ImGuiCol.Border, 0, 0, 1, 1);
-                    ImGui.inputFloat("Z", z, 1, 10);
-                    ImGui.popStyleColor();
-                    ImGui.popID();
-                    ImGui.columns();
 
-                    attribute.setData(new Vector3f(x.get(), y.get(), z.get()));
+                    if(attribute.getType().equals(EnumAttributeType.COLOR)){
+                        float[] color = new float[]{data.x, data.y, data.z};
+                        ImGui.pushID(Editor.getInstance().getNextID());
+                        ImGui.colorPicker3(attribute.getName(), color, ImGuiColorEditFlags.PickerHueWheel | ImGuiColorEditFlags.NoAlpha);
+                        attribute.setData(new Vector3f(color[0], color[1], color[2]));
+                        ImGui.popID();
+                    }else {
+                        ImFloat x = new ImFloat(data.x);
+                        ImFloat y = new ImFloat(data.y);
+                        ImFloat z = new ImFloat(data.z);
+
+                        ImGui.columns(3);
+                        ImGui.pushID(Editor.getInstance().getNextID());
+                        ImGui.pushStyleColor(ImGuiCol.Border, 1, 0, 0, 1);
+                        ImGui.inputFloat("X", x, 1, 10);
+                        ImGui.popStyleColor();
+                        ImGui.popID();
+                        ImGui.nextColumn();
+                        ImGui.pushID(Editor.getInstance().getNextID());
+                        ImGui.pushStyleColor(ImGuiCol.Border, 0, 1, 0, 1);
+                        ImGui.inputFloat("Y", y, 1, 10);
+                        ImGui.popStyleColor();
+                        ImGui.popID();
+                        ImGui.nextColumn();
+                        ImGui.pushID(Editor.getInstance().getNextID());
+                        ImGui.pushStyleColor(ImGuiCol.Border, 0, 0, 1, 1);
+                        ImGui.inputFloat("Z", z, 1, 10);
+                        ImGui.popStyleColor();
+                        ImGui.popID();
+                        ImGui.columns();
+
+                        attribute.setData(new Vector3f(x.get(), y.get(), z.get()));
+                    }
+
 
                     break loop;
                 }
