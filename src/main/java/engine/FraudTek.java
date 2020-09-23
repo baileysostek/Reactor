@@ -17,6 +17,7 @@ import graphics.sprite.SpriteBinder;
 import input.MousePicker;
 import lighting.DirectionalLight;
 import lighting.LightingManager;
+import lighting.PointLight;
 import logging.LogManager;
 import models.AABB;
 import models.Model;
@@ -197,6 +198,7 @@ public class FraudTek {
                 EntityManager.getInstance().addEntity(drag);
                 EntityManager.getInstance().addEntity(sun);
                 EntityManager.getInstance().addEntity(new DirectionalLight());
+                EntityManager.getInstance().addEntity(new PointLight());
             }
         }
     }

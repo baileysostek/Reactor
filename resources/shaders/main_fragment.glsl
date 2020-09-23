@@ -33,7 +33,7 @@ float ShadowCalculation()
         pos.z = 1.0;
     }
     float depth = texture(shadowMap, pos.xy).r;
-    float bias = 0.05f;
+    float bias = 0.005f;
 
     return (depth + bias) < pos.z ? 1.0 : 0.0;
 }

@@ -3,11 +3,9 @@ package lighting;
 import entity.Entity;
 import entity.component.Attribute;
 import entity.component.EnumAttributeType;
-import graphics.renderer.Renderer;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-public class Light extends Entity {
+public abstract class Light extends Entity {
 
     public Light(){
         //Default is white light.
