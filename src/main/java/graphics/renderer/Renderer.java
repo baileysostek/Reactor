@@ -215,8 +215,22 @@ public class Renderer extends Engine {
 
     }
 
-    public void drawRing(Vector3f origin, Vector2f radius, int points, Vector3f color) {
+    public void drawRing(Vector3f origin, Vector2f radius, Vector3f normal, int points, Vector3f color) {
         float angle_spacing = 360.0f / (float)points;
+
+        Vector3f usableRay = new Vector3f(normal);
+
+        Vector3f up = new Vector3f(0, (float) Math.cos(usableRay.z * Math.PI), (float) Math.cos(usableRay.y * Math.PI));
+
+        Vector3f xAxis = new Vector3f(up).cross(usableRay).normalize();
+        Vector3f yAxis = new Vector3f(usableRay).cross(xAxis).normalize();
+
+        Matrix3f rotationMatrix = new Matrix3f().set(new float[]{
+            xAxis.x, xAxis.y, xAxis.z,
+            yAxis.x, yAxis.y, yAxis.z,
+            usableRay.x, usableRay.y, usableRay.z,
+        });
+
         Vector3f lastPoint = null;
         Vector3f firstPoint = null;
         for(int i = 0; i < points; i++){
@@ -225,7 +239,9 @@ public class Renderer extends Engine {
             float x = (float) (Math.cos(angle));
             float y = (float) (Math.sin(angle));
 
-            Vector3f thisPoint = new Vector3f(origin).add(x * radius.x, y * radius.y, 0);
+            Vector3f thisPoint = new Vector3f(x * radius.x, y * radius.y, 0);
+            thisPoint = thisPoint.mul(rotationMatrix);
+            thisPoint.add(origin);
 
             if(lastPoint != null) {
                 drawLine(lastPoint, thisPoint, color);

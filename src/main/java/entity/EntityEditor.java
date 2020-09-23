@@ -588,6 +588,17 @@ class AttributeRenderer{
                     break loop;
                 }
 
+                if (attribute.getData() instanceof Float) {
+                    float data = (float) attribute.getData();
+                    ImFloat value = new ImFloat(data);
+
+                    ImGui.inputFloat(attribute.getName(), value);
+
+                    attribute.setData(value.get());
+
+                    break loop;
+                }
+
                 if (attribute.getData() instanceof String) {
                     String data = (String) attribute.getData();
                     ImString value = new ImString(data);
