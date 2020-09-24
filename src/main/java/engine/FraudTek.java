@@ -23,6 +23,7 @@ import models.AABB;
 import models.Model;
 import models.ModelManager;
 import org.joml.Vector2f;
+import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import physics.PhysicsEngine;
@@ -316,7 +317,6 @@ public class FraudTek {
             }
 
             //Draw a Ring
-//            Renderer.getInstance().drawRing(new Vector3f(0), new Vector2f(1), 6, new Vector3f(1, 1, 0));
 
 //            Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
 //            if(pos != null) {
