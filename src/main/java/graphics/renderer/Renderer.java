@@ -5,14 +5,12 @@ import engine.Engine;
 import engine.FraudTek;
 import entity.Entity;
 import entity.EntityManager;
-import input.MousePicker;
 import math.MatrixUtils;
 import models.AABB;
 import org.joml.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL32;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
 
@@ -257,6 +255,117 @@ public class Renderer extends Engine {
         }
     }
 
+    public void drawRing(Vector3f origin, Vector3f scale, Vector3f normal, Vector2i resolution, float arc, Vector3f color) {
+        float angle_spacing = arc / (float)resolution.x;
+
+        Vector3f usableRay = new Vector3f(normal);
+
+        Vector3f up = new Vector3f(0, (float) Math.cos(usableRay.z * Math.PI), (float) Math.cos(usableRay.y * Math.PI));
+
+        Vector3f xAxis = new Vector3f(up).cross(usableRay).normalize();
+        Vector3f yAxis = new Vector3f(usableRay).cross(xAxis).normalize();
+
+        Matrix3f rotationMatrix = new Matrix3f().set(new float[]{
+            xAxis.x, xAxis.y, xAxis.z,
+            yAxis.x, yAxis.y, yAxis.z,
+            usableRay.x, usableRay.y, usableRay.z,
+        });
+
+        Vector3f tangent = new Vector3f((float) (Math.cos(0)) * scale.x, (float) (Math.sin(0)) * scale.y, 0).mul(rotationMatrix).normalize();
+        Vector3f biTangent = new Vector3f(tangent).cross(new Vector3f(normal));
+
+        Vector3f lastPoint = null;
+        Vector3f[] lastRing = new Vector3f[resolution.y];
+        Vector3f firstPoint = null;
+        Vector3f[] firstRing = new Vector3f[resolution.y];
+        for(int i = 0; i < resolution.x; i++){
+            float angle = (float) Math.toRadians((i * angle_spacing));
+
+            float x = (float) (Math.cos(angle));
+            float y = (float) (Math.sin(angle));
+
+            Vector3f thisPoint = new Vector3f(x * scale.x, y * scale.y, 0);
+            thisPoint = thisPoint.mul(rotationMatrix);
+            thisPoint.add(origin);
+
+            Vector3f[] thisRing = calculateRingPoints(thisPoint, new Vector2f(scale.z), new Vector3f(biTangent).rotate(new Quaternionf().fromAxisAngleDeg(normal, i * angle_spacing)), resolution.y, new Vector3f(0, 0, 1));
+
+            if(lastPoint == null) {
+                firstRing = thisRing;
+                firstPoint = thisPoint;
+            }else{
+                //We can tessellate between the last ring and this ring.
+                for(int j = 0; j < resolution.y; j++){
+                    int negativeIndex = j - 1;
+                    if(negativeIndex < 0){
+                        negativeIndex = resolution.y -1;
+                    }
+                    Vector3f p1 = thisRing[negativeIndex];
+                    Vector3f p2 = thisRing[j];
+                    Vector3f p3 = lastRing[negativeIndex];
+                    Vector3f p4 = lastRing[j];
+
+                    drawTriangle.drawTriangle(p1, p2, p3, color);
+                    drawTriangle.drawTriangle(p3, p2, p4, color);
+
+                }
+            }
+
+            lastPoint = thisPoint;
+            lastRing = thisRing;
+        }
+
+        if(lastPoint != null && firstPoint != null){
+            //We can tessellate between the last ring and this ring.
+            for(int j = 0; j < resolution.y; j++){
+                int negativeIndex = j - 1;
+                if(negativeIndex < 0){
+                    negativeIndex = resolution.y -1;
+                }
+                Vector3f p1 = firstRing[negativeIndex];
+                Vector3f p2 = firstRing[j];
+                Vector3f p3 = lastRing[negativeIndex];
+                Vector3f p4 = lastRing[j];
+
+                drawTriangle.drawTriangle(p1, p2, p3, color);
+                drawTriangle.drawTriangle(p3, p2, p4, color);
+            }
+        }
+    }
+
+    private Vector3f[] calculateRingPoints(Vector3f origin, Vector2f radius, Vector3f normal, int points, Vector3f color) {
+        Vector3f[] out = new Vector3f[points];
+        float angle_spacing = 360.0f / (float)points;
+
+        Vector3f usableRay = new Vector3f(normal);
+
+        Vector3f up = new Vector3f(0, (float) Math.cos(usableRay.z * Math.PI), (float) Math.cos(usableRay.y * Math.PI));
+
+        Vector3f xAxis = new Vector3f(up).cross(usableRay).normalize();
+        Vector3f yAxis = new Vector3f(usableRay).cross(xAxis).normalize();
+
+        Matrix3f rotationMatrix = new Matrix3f().set(new float[]{
+                xAxis.x, xAxis.y, xAxis.z,
+                yAxis.x, yAxis.y, yAxis.z,
+                usableRay.x, usableRay.y, usableRay.z,
+        });
+
+        for(int i = 0; i < points; i++){
+            float angle = (float) Math.toRadians((i * angle_spacing));
+
+            float x = (float) (Math.cos(angle));
+            float y = (float) (Math.sin(angle));
+
+            Vector3f thisPoint = new Vector3f(x * radius.x, y * radius.y, 0);
+            thisPoint = thisPoint.mul(rotationMatrix);
+            thisPoint.add(origin);
+
+            out[i] = thisPoint;
+        }
+
+        return out;
+    }
+
     public DirectDrawData drawCone(Vector3f origin, Vector3f ray, Vector3f scale, int points, Vector3f color) {
         //Direct draw info
         DirectDrawData out = new DirectDrawData();
@@ -330,9 +439,9 @@ public class Renderer extends Engine {
         Vector3f yAxis = new Vector3f(usableRay).cross(xAxis).normalize();
 
         Matrix3f rotationMatrix = new Matrix3f().set(new float[]{
-                xAxis.x, xAxis.y, xAxis.z,
-                yAxis.x, yAxis.y, yAxis.z,
-                usableRay.x, usableRay.y, usableRay.z,
+            xAxis.x, xAxis.y, xAxis.z,
+            yAxis.x, yAxis.y, yAxis.z,
+            usableRay.x, usableRay.y, usableRay.z,
         });
 
         for(int i = 0; i < points; i++){

@@ -18,6 +18,7 @@ import imgui.enums.ImGuiTreeNodeFlags;
 import input.Keyboard;
 import input.MousePicker;
 import org.joml.Vector2f;
+import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import serialization.SerializationHelper;
@@ -41,6 +42,7 @@ public class EntityEditor extends UIComponet {
     private float distanceToCam = 0;
 
     //Tools
+    private EditorMode toolType = EditorMode.NONE;
     private EditorTool selectedTool = NONE;
 
     //Debouncer boolean used to prevent entity modification right when clicking on an entity.
@@ -82,14 +84,36 @@ public class EntityEditor extends UIComponet {
         Keyboard.getInstance().addPressCallback(Keyboard.DELETE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-            System.out.println("Callback");
-            if(entity != null){
-                EntityManager.getInstance().removeEntity(entity);
-                clearSelected();
+                System.out.println("Callback");
+                if(entity != null){
+                    EntityManager.getInstance().removeEntity(entity);
+                    clearSelected();
+                }
+                return null;
             }
-            return null;
-        }
-    });
+        });
+
+        Keyboard.getInstance().addPressCallback(Keyboard.R, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                toolType = EditorMode.ROTATE;
+                return null;
+            }
+        });
+        Keyboard.getInstance().addPressCallback(Keyboard.S, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                toolType = EditorMode.SCALE;
+                return null;
+            }
+        });
+        Keyboard.getInstance().addPressCallback(Keyboard.W, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                toolType = EditorMode.TRANSLATE;
+                return null;
+            }
+        });
     }
 
     public void setTarget(Entity target){
@@ -360,50 +384,62 @@ public class EntityEditor extends UIComponet {
                 drawColor = MAGENTA;
             }
 
+            if(toolType.equals(EditorMode.ROTATE)) {
+                Vector3f size = new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]);
+                float biggestDimension = Math.max(Math.max(size.x, size.y), size.z) / 2f;
+
+                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(1, 0, 0), new Vector2i(32, 9), 360f, new Vector3f(1, 0, 0));
+                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(0, 1, 0), new Vector2i(32, 9), 360f, new Vector3f(0, 1, 0));
+                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(0, 0, 1), new Vector2i(32, 9), 360f, new Vector3f(0, 0, 1));
+            }
+
             //TODO only draw Axis arrows if in Translate, New modes for rotate and scale.
-            //Direct Draw Axis arrows
-            DirectDrawData ddd_x = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(1, 0, 0).mul(Math.max(entity.getScale().x / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
-            //If no tool selected, render if hits
-            if(selectedTool.equals(NONE)) {
-                //render if hits
-                if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_x.getAABB()) != null) {
-                    //render in yellow
-                    Renderer.getInstance().redrawTriangleColor(ddd_x,drawColor);
-                }
-            }else{
-                //We are using a tool, if its a valid tool, set our color to yellow.
-                if(selectedTool.equals(MOVE_X) || selectedTool.equals(MOVE_XY) || selectedTool.equals(MOVE_ZX) || selectedTool.equals(MOVE_XYZ)) {
-                    Renderer.getInstance().redrawTriangleColor(ddd_x,drawColor);
-                }
-            }
-            DirectDrawData ddd_y = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 1, 0).mul(Math.max(entity.getScale().y / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
-            if(selectedTool.equals(NONE)) {
-                if(MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_y.getAABB()) != null){
-                    Renderer.getInstance().redrawTriangleColor(ddd_y,drawColor);
-                }
-            }else{
-                //We are using a tool, if its a valid tool, set our color to yellow.
-                if(selectedTool.equals(MOVE_Y) || selectedTool.equals(MOVE_XY) || selectedTool.equals(MOVE_YZ) || selectedTool.equals(MOVE_XYZ)) {
-                    Renderer.getInstance().redrawTriangleColor(ddd_y,drawColor);
-                }
-            }
 
-            DirectDrawData ddd_z = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 0, 1).mul(Math.max(entity.getScale().z / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
-            if(selectedTool.equals(NONE)) {
-               if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_z.getAABB()) != null) {
-                    Renderer.getInstance().redrawTriangleColor(ddd_z,drawColor);
+            if(toolType.equals(EditorMode.TRANSLATE)) {
+                //Direct Draw Axis arrows
+                DirectDrawData ddd_x = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(1, 0, 0).mul(Math.max(entity.getScale().x / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
+                //If no tool selected, render if hits
+                if (selectedTool.equals(NONE)) {
+                    //render if hits
+                    if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_x.getAABB()) != null) {
+                        //render in yellow
+                        Renderer.getInstance().redrawTriangleColor(ddd_x, drawColor);
+                    }
+                } else {
+                    //We are using a tool, if its a valid tool, set our color to yellow.
+                    if (selectedTool.equals(MOVE_X) || selectedTool.equals(MOVE_XY) || selectedTool.equals(MOVE_ZX) || selectedTool.equals(MOVE_XYZ)) {
+                        Renderer.getInstance().redrawTriangleColor(ddd_x, drawColor);
+                    }
                 }
-            }else{
-                //We are using a tool, if its a valid tool, set our color to yellow.
-                if(selectedTool.equals(MOVE_Z) || selectedTool.equals(MOVE_ZX) || selectedTool.equals(MOVE_YZ) || selectedTool.equals(MOVE_XYZ)) {
-                    Renderer.getInstance().redrawTriangleColor(ddd_z,drawColor);
+                DirectDrawData ddd_y = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 1, 0).mul(Math.max(entity.getScale().y / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
+                if (selectedTool.equals(NONE)) {
+                    if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_y.getAABB()) != null) {
+                        Renderer.getInstance().redrawTriangleColor(ddd_y, drawColor);
+                    }
+                } else {
+                    //We are using a tool, if its a valid tool, set our color to yellow.
+                    if (selectedTool.equals(MOVE_Y) || selectedTool.equals(MOVE_XY) || selectedTool.equals(MOVE_YZ) || selectedTool.equals(MOVE_XYZ)) {
+                        Renderer.getInstance().redrawTriangleColor(ddd_y, drawColor);
+                    }
                 }
-            }
 
-            //Set our direct draw volumes
-            this.selectedEntities.get(this.entity).ddd_x = ddd_x;
-            this.selectedEntities.get(this.entity).ddd_y = ddd_y;
-            this.selectedEntities.get(this.entity).ddd_z = ddd_z;
+                DirectDrawData ddd_z = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 0, 1).mul(Math.max(entity.getScale().z / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
+                if (selectedTool.equals(NONE)) {
+                    if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_z.getAABB()) != null) {
+                        Renderer.getInstance().redrawTriangleColor(ddd_z, drawColor);
+                    }
+                } else {
+                    //We are using a tool, if its a valid tool, set our color to yellow.
+                    if (selectedTool.equals(MOVE_Z) || selectedTool.equals(MOVE_ZX) || selectedTool.equals(MOVE_YZ) || selectedTool.equals(MOVE_XYZ)) {
+                        Renderer.getInstance().redrawTriangleColor(ddd_z, drawColor);
+                    }
+                }
+
+                //Set our direct draw volumes
+                this.selectedEntities.get(this.entity).ddd_x = ddd_x;
+                this.selectedEntities.get(this.entity).ddd_y = ddd_y;
+                this.selectedEntities.get(this.entity).ddd_z = ddd_z;
+            }
         }
     }
 
@@ -488,6 +524,16 @@ enum EditorTool{
     ROTATE_Z,
     //Scale
     SCALE_XYZ
+
+}
+
+enum EditorMode{
+    //None
+    NONE,
+
+    TRANSLATE,
+    ROTATE,
+    SCALE
 
 }
 
