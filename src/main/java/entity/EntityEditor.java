@@ -430,8 +430,10 @@ public class EntityEditor extends UIComponet {
             //TODO only draw Axis arrows if in Translate, New modes for rotate and scale.
 
             if(toolType.equals(EditorMode.TRANSLATE)) {
+                float scale = new Vector3f(entity.getPosition()).distance(CameraManager.getInstance().getActiveCamera().getPosition()) / 16f;
+
                 //Direct Draw Axis arrows
-                DirectDrawData ddd_x = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(1, 0, 0).mul(Math.max(entity.getScale().x / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
+                DirectDrawData ddd_x = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(scale, 0, 0).mul(Math.max(entity.getScale().x / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f * scale), 13, new Vector3f(1, 0, 0));
                 //If no tool selected, render if hits
                 if (selectedTool.equals(NONE)) {
                     //render if hits
@@ -445,7 +447,7 @@ public class EntityEditor extends UIComponet {
                         Renderer.getInstance().redrawTriangleColor(ddd_x, drawColor);
                     }
                 }
-                DirectDrawData ddd_y = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 1, 0).mul(Math.max(entity.getScale().y / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
+                DirectDrawData ddd_y = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, scale, 0).mul(Math.max(entity.getScale().y / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f * scale), 13, new Vector3f(0, 1, 0));
                 if (selectedTool.equals(NONE)) {
                     if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_y.getAABB()) != null) {
                         Renderer.getInstance().redrawTriangleColor(ddd_y, drawColor);
@@ -457,7 +459,7 @@ public class EntityEditor extends UIComponet {
                     }
                 }
 
-                DirectDrawData ddd_z = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 0, 1).mul(Math.max(entity.getScale().z / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
+                DirectDrawData ddd_z = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 0, scale).mul(Math.max(entity.getScale().z / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f * scale), 13, new Vector3f(0, 0, 1));
                 if (selectedTool.equals(NONE)) {
                     if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_z.getAABB()) != null) {
                         Renderer.getInstance().redrawTriangleColor(ddd_z, drawColor);
@@ -580,7 +582,7 @@ class AttributeRenderer{
                     if(attribute.getType().equals(EnumAttributeType.COLOR)){
                         float[] color = new float[]{data.x, data.y, data.z};
                         ImGui.pushID(Editor.getInstance().getNextID());
-                        ImGui.colorPicker3(attribute.getName(), color, ImGuiColorEditFlags.PickerHueWheel | ImGuiColorEditFlags.NoAlpha);
+                        ImGui.colorPicker3(attribute.getName(), color, ImGuiColorEditFlags.PickerHueWheel | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoSidePreview | ImGuiColorEditFlags.NoSmallPreview | ImGuiColorEditFlags.NoTooltip | ImGuiColorEditFlags.NoLabel);
                         attribute.setData(new Vector3f(color[0], color[1], color[2]));
                         ImGui.popID();
                     }else {
@@ -627,7 +629,9 @@ class AttributeRenderer{
                     if(attribute.getType().equals(EnumAttributeType.COLOR)){
                         float[] color = new float[]{data.x, data.y, data.z};
                         ImGui.pushID(Editor.getInstance().getNextID());
-                        ImGui.colorPicker3(attribute.getName(), color, ImGuiColorEditFlags.PickerHueWheel | ImGuiColorEditFlags.NoAlpha);
+                        ImGui.pushItemWidth(ImGui.getColumnWidth());
+                        ImGui.colorPicker3(attribute.getName(), color, ImGuiColorEditFlags.PickerHueWheel | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoSidePreview | ImGuiColorEditFlags.NoSmallPreview | ImGuiColorEditFlags.NoTooltip | ImGuiColorEditFlags.NoLabel);
+                        ImGui.popItemWidth();
                         attribute.setData(new Vector3f(color[0], color[1], color[2]));
                         ImGui.popID();
                     }else {

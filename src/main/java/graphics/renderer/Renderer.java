@@ -123,6 +123,7 @@ public class Renderer extends Engine {
         GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
 
         ShaderManager.getInstance().loadUniformIntoActiveShader("sunAngle", new Vector3f(0).sub(FraudTek.sun.getPosition()).normalize());
+        ShaderManager.getInstance().loadUniformIntoActiveShader("sunColor", FraudTek.sun.getColor());
         ShaderManager.getInstance().loadUniformIntoActiveShader("lightSpaceMatrix", FraudTek.sun.getLightspaceTransform());
 
         float[] out = new float[3];
