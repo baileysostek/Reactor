@@ -5,6 +5,7 @@ import entity.Entity;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL20;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class ImmediateDrawTriangle {
@@ -12,7 +13,7 @@ public class ImmediateDrawTriangle {
 
     //Represents the items in world.
     private LinkedList<Float> positions = new LinkedList<>();
-    private LinkedList<Float> colors    = new LinkedList<>();
+    private HashMap<Integer, Float> colors    = new HashMap<Integer, Float>();
 
     protected ImmediateDrawTriangle(){
         lineShaderID = ShaderManager.getInstance().loadShader("vector");
@@ -32,15 +33,15 @@ public class ImmediateDrawTriangle {
         positions.addLast(p3.z());
 
         int start_color = colors.size();
-        colors.addLast(color.x());
-        colors.addLast(color.y());
-        colors.addLast(color.z());
-        colors.addLast(color.x());
-        colors.addLast(color.y());
-        colors.addLast(color.z());
-        colors.addLast(color.x());
-        colors.addLast(color.y());
-        colors.addLast(color.z());
+        colors.put(colors.size(), color.x());
+        colors.put(colors.size(), color.y());
+        colors.put(colors.size(), color.z());
+        colors.put(colors.size(), color.x());
+        colors.put(colors.size(), color.y());
+        colors.put(colors.size(), color.z());
+        colors.put(colors.size(), color.x());
+        colors.put(colors.size(), color.y());
+        colors.put(colors.size(), color.z());
 
         return new DrawIndex(start_size, 9, start_color,  9);
     }
@@ -64,7 +65,7 @@ public class ImmediateDrawTriangle {
 
         float[] colorsF = new float[colors.size()];
         index = 0;
-        for(float c : colors){
+        for(float c : colors.values()){
             colorsF[index] = c;
             index++;
         }
@@ -90,9 +91,9 @@ public class ImmediateDrawTriangle {
 
     public void recolor(int start, int length, Vector3f color){
         for(int i = 0; i < length / 3; i++){
-            colors.set(((i * 3) + 0) + start, color.x);
-            colors.set(((i * 3) + 1) + start, color.y);
-            colors.set(((i * 3) + 2) + start, color.z);
+            colors.put(((i * 3) + 0) + start, color.x);
+            colors.put(((i * 3) + 1) + start, color.y);
+            colors.put(((i * 3) + 2) + start, color.z);
         }
     }
 }
