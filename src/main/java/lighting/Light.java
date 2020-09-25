@@ -13,6 +13,10 @@ public abstract class Light extends Entity {
         addAttribute(new Attribute("frustum", new Vector3f(10, 1, 7.5f)));
     }
 
+    public Vector3f getColor(){
+        return (Vector3f) this.getAttribute("color").getData();
+    }
+
     @Override
     public void onAdd() {
         if(this.hasAttribute("updateInEditor")) {
