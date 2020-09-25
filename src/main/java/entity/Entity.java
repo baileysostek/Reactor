@@ -251,7 +251,8 @@ public class Entity implements Transformable, Serializable<Entity> {
         Quaternionf qPitch   = new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), rotation.x);
         Quaternionf qRoll    = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), rotation.y);
         Quaternionf qYaw     = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), rotation.z);
-        Quaternionf orientation = (qPitch.mul(qRoll.mul(qYaw))).normalize();
+
+        Quaternionf orientation = ((qPitch.mul(qYaw)).mul(qRoll)).normalize();
 
         transform.translate((Vector3f) this.attributes.get("position").getData(), transform);
         transform.rotate(orientation);
