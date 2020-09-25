@@ -15,6 +15,7 @@ import platform.EnumDevelopment;
 import platform.PlatformManager;
 
 import java.lang.Math;
+import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -255,7 +256,10 @@ public class Renderer extends Engine {
         }
     }
 
-    public void drawRing(Vector3f origin, Vector3f scale, Vector3f normal, Vector2i resolution, float arc, Vector3f color) {
+    public DirectDrawData drawRing(Vector3f origin, Vector3f scale, Vector3f normal, Vector2i resolution, float arc, Vector3f color) {
+        DirectDrawData out = new DirectDrawData();
+        AABB aabb = new AABB();
+
         float angle_spacing = arc / (float)resolution.x;
 
         Vector3f usableRay = new Vector3f(normal);
@@ -305,8 +309,13 @@ public class Renderer extends Engine {
                     Vector3f p3 = lastRing[negativeIndex];
                     Vector3f p4 = lastRing[j];
 
-                    drawTriangle.drawTriangle(p1, p2, p3, color);
-                    drawTriangle.drawTriangle(p3, p2, p4, color);
+                    aabb.recalculateFromPoint(p1);
+                    aabb.recalculateFromPoint(p2);
+                    aabb.recalculateFromPoint(p3);
+                    aabb.recalculateFromPoint(p4);
+
+                    out.addDrawData(drawTriangle.drawTriangle(p1, p2, p3, color));
+                    out.addDrawData(drawTriangle.drawTriangle(p3, p2, p4, color));
 
                 }
             }
@@ -327,10 +336,19 @@ public class Renderer extends Engine {
                 Vector3f p3 = lastRing[negativeIndex];
                 Vector3f p4 = lastRing[j];
 
-                drawTriangle.drawTriangle(p1, p2, p3, color);
-                drawTriangle.drawTriangle(p3, p2, p4, color);
+                aabb.recalculateFromPoint(p1);
+                aabb.recalculateFromPoint(p2);
+                aabb.recalculateFromPoint(p3);
+                aabb.recalculateFromPoint(p4);
+
+                out.addDrawData(drawTriangle.drawTriangle(p1, p2, p3, color));
+                out.addDrawData(drawTriangle.drawTriangle(p3, p2, p4, color));
             }
         }
+
+        out.setAABB(aabb);
+
+        return out;
     }
 
     private Vector3f[] calculateRingPoints(Vector3f origin, Vector2f radius, Vector3f normal, int points, Vector3f color) {
@@ -497,7 +515,8 @@ public class Renderer extends Engine {
 
     //Color overrides
     public void redrawTriangleColor(DirectDrawData directDrawData, Vector3f color) {
-        for(DrawIndex index : directDrawData.getDrawIndices()){
+        DrawIndex[] indices = directDrawData.getDrawIndices().toArray(new DrawIndex[]{});
+        for(DrawIndex index : indices){
             drawTriangle.recolor(index.colorStart, index.colorLength, color);
         }
     }

@@ -100,18 +100,18 @@ public class Entity implements Transformable, Serializable<Entity> {
         attribute.subscribe(new Callback() {
             @Override
             public Object callback(Object... objects) {
-            //Cast passed attribute
-            Attribute attribute = (Attribute) objects[0];
-            //Update all components
-            syncAttributes(attribute, new LinkedList<Component>());
-            //IF this is an attribute with a classification that we sort based on we need to resort the entities.
-            //TODO have attribute classificaitons
-            if (attribute.getName().equals("zIndex")) {
-                EntityManager.getInstance().resort();
-            }
+                //Cast passed attribute
+                Attribute attribute = (Attribute) objects[0];
+                //Update all components
+                syncAttributes(attribute, new LinkedList<Component>());
+                //IF this is an attribute with a classification that we sort based on we need to resort the entities.
+                //TODO have attribute classificaitons
+                if (attribute.getName().equals("zIndex")) {
+                    EntityManager.getInstance().resort();
+                }
 
-            //No need to return anything.
-            return null;
+                //No need to return anything.
+                return null;
             }
         });
 
@@ -212,8 +212,8 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     @Override
     public final Entity setRotation(Vector3f rot) {
-         this.attributes.get("rotation").setData(rot);
-         return this;
+        this.attributes.get("rotation").setData(rot);
+        return this;
     }
 
     @Override

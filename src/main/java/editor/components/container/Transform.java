@@ -17,7 +17,7 @@ public class Transform extends UIComponet {
 
     public Transform(){
         position_a   = new Axis();
-        rotation_a   = new Axis().setRange(-1, 1);
+//        rotation_a   = new Axis().setRange(-1, 1);
         scale_a      = new Axis();
     }
 
@@ -25,7 +25,7 @@ public class Transform extends UIComponet {
         transformable = t;
 
         position_a   = new Axis(t.getPosition()).setRange(-10f, 10f);
-        rotation_a   = new Axis(t.getRotation()).setRange((float)(-2f * Math.PI), (float)(2f * Math.PI));
+//        rotation_a   = new Axis(t.getRotation()).setRange((float)(-2f * Math.PI), (float)(2f * Math.PI));
         scale_a      = new Axis(t.getScale());
     }
 
@@ -36,7 +36,7 @@ public class Transform extends UIComponet {
 
         //Add grandchildren
         pos_header.addChild(position_a);
-        rot_header.addChild(rotation_a);
+//        rot_header.addChild(rotation_a);
         scale_header.addChild(scale_a);
 
         //Add to us
