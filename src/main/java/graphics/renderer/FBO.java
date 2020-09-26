@@ -6,8 +6,8 @@ import org.lwjgl.opengl.*;
 
 import java.nio.ByteBuffer;
 
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_BORDER_COLOR;
+import static org.lwjgl.opengl.GL46.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL46.GL_TEXTURE_BORDER_COLOR;
 
 /**
  * Created by Bailey on 11/17/2017.
@@ -26,9 +26,9 @@ public class FBO {
         this.HEIGHT = Renderer.getInstance().getHEIGHT();
         //Check that FBO's are enabled on this system
         if(GL.getCapabilities().GL_EXT_framebuffer_object){
-            id = GL30.glGenFramebuffers();
-            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, id);
-            GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
+            id = GL46.glGenFramebuffers();
+            GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, id);
+            GL46.glDrawBuffer(GL46.GL_COLOR_ATTACHMENT0);
 
             textureID = SpriteBinder.getInstance().genTexture();
             depthTexture = SpriteBinder.getInstance().genTexture();
@@ -44,9 +44,9 @@ public class FBO {
         this.HEIGHT = height;
         //Check that FBO's are enabled on this system
         if(GL.getCapabilities().GL_EXT_framebuffer_object){
-            id = GL30.glGenFramebuffers();
-            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, id);
-            GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
+            id = GL46.glGenFramebuffers();
+            GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, id);
+            GL46.glDrawBuffer(GL46.GL_COLOR_ATTACHMENT0);
 
             textureID = SpriteBinder.getInstance().genTexture();
             depthTexture = SpriteBinder.getInstance().genTexture();
@@ -58,15 +58,15 @@ public class FBO {
     }
 
     public void bindFrameBuffer(){
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, id);
-        GL11.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, 0);
+        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, id);
+        GL46.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        GL46.glClear(GL46.GL_COLOR_BUFFER_BIT | GL46.GL_DEPTH_BUFFER_BIT);
     }
 
     public void unbindFrameBuffer(){
-        GL11.glFlush();
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+        GL46.glFlush();
+        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
     }
 
     public final void resize(int width, int height){
@@ -77,7 +77,7 @@ public class FBO {
     }
 
     private int createTextureAttachment(){
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureID);
         ByteBuffer buffer = ByteBuffer.allocateDirect((this.WIDTH * this.HEIGHT) * 4);
         for (int i = 0; i < (this.WIDTH * this.HEIGHT); i++) {
             buffer.put((byte) 0x00);
@@ -86,17 +86,17 @@ public class FBO {
             buffer.put((byte) 0x00);
         }
         buffer.flip();
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, this.WIDTH, this.HEIGHT, 0, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, buffer);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-        GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, textureID, 0);
+        GL46.glTexImage2D(GL46.GL_TEXTURE_2D, 0, GL46.GL_RGB, this.WIDTH, this.HEIGHT, 0, GL46.GL_RGB, GL46.GL_UNSIGNED_BYTE, buffer);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_LINEAR);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_LINEAR);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_WRAP_S, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_WRAP_T, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glFramebufferTexture(GL46.GL_FRAMEBUFFER, GL46.GL_COLOR_ATTACHMENT0, textureID, 0);
         return textureID;
     }
 
     private int createDepthBufferAttachment(){
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, depthTexture);
         ByteBuffer buffer = ByteBuffer.allocateDirect((this.WIDTH * this.HEIGHT) * 4);
         for (int i = 0; i < (this.WIDTH * this.HEIGHT); i++) {
             buffer.put((byte) 0x00);
@@ -105,21 +105,21 @@ public class FBO {
             buffer.put((byte) 0x00);
         }
         buffer.flip();
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, this.WIDTH, this.HEIGHT, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, buffer);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL32.GL_CLAMP_TO_BORDER);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL32.GL_CLAMP_TO_BORDER);
-        GL32.glTexParameterfv(GL11.GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, new float[]{1.0f, 1.0f, 1.0f, 1.0f});
-        GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture, 0);
+        GL46.glTexImage2D(GL46.GL_TEXTURE_2D, 0, GL46.GL_DEPTH_COMPONENT32, this.WIDTH, this.HEIGHT, 0, GL46.GL_DEPTH_COMPONENT, GL46.GL_FLOAT, buffer);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_NEAREST);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_NEAREST);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_WRAP_S, GL46.GL_CLAMP_TO_BORDER);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_WRAP_T, GL46.GL_CLAMP_TO_BORDER);
+        GL46.glTexParameterfv(GL46.GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, new float[]{1.0f, 1.0f, 1.0f, 1.0f});
+        GL46.glFramebufferTexture(GL46.GL_FRAMEBUFFER, GL46.GL_DEPTH_ATTACHMENT, depthTexture, 0);
 
         return depthTexture;
     }
 
 
     public void cleanUp(){
-        GL30.glDeleteFramebuffers(id);
-        GL30.glDeleteRenderbuffers(depthBuffer);
+        GL46.glDeleteFramebuffers(id);
+        GL46.glDeleteRenderbuffers(depthBuffer);
     }
 
     public int getFBOID(){

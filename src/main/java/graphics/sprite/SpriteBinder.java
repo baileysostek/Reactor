@@ -1,9 +1,7 @@
 package graphics.sprite;
 
 import engine.Engine;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL46;
 import util.StringUtils;
 
 import javax.imageio.ImageIO;
@@ -50,7 +48,7 @@ public class SpriteBinder extends Engine {
 
                 int[] pixels = bufferedImage.getRGB(0, 0, width, height, null, 0, width);
 
-                int textureID = GL20.glGenTextures();
+                int textureID = GL46.glGenTextures();
                 Sprite sprite = new Sprite(textureID, pixels, width, height);
                 sprites.put(textureID, sprite);
                 spriteNames.put(image, textureID);
@@ -128,7 +126,7 @@ public class SpriteBinder extends Engine {
                         continue;
                     }
 
-                    int textureID = GL20.glGenTextures();
+                    int textureID = GL46.glGenTextures();
 
                     //Load sprite
                     Sprite sprite = new Sprite(textureID, pixels, s_width, s_height);
@@ -150,8 +148,8 @@ public class SpriteBinder extends Engine {
     public int loadCubeMap(String location){
         int textureID = this.genTexture();
 
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, textureID);
+        GL46.glActiveTexture(GL46.GL_TEXTURE0);
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, textureID);
 
         String[] names = new String[]{"RIGHT", "LEFT", "TOP", "BOTTOM", "BACK", "FRONT"};
 
@@ -168,11 +166,11 @@ public class SpriteBinder extends Engine {
             }
             buffer.flip();
 
-            GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL11.GL_RGBA, sprite.getWidth(), sprite.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+            GL46.glTexImage2D(GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL46.GL_RGBA, sprite.getWidth(), sprite.getHeight(), 0, GL46.GL_RGBA, GL46.GL_UNSIGNED_BYTE, buffer);
         }
 
-        GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_LINEAR);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_LINEAR);
 
         extraIDS.addLast(textureID);
 
@@ -194,7 +192,7 @@ public class SpriteBinder extends Engine {
         }
 
         for(int i : extraIDS){
-            GL20.glDeleteTextures(i);
+            GL46.glDeleteTextures(i);
         }
     }
 
@@ -210,11 +208,11 @@ public class SpriteBinder extends Engine {
                 this.spriteNames.remove(name);
             }
         }
-        GL20.glDeleteTextures(sprite.getTextureID());
+        GL46.glDeleteTextures(sprite.getTextureID());
     }
 
     public int genTexture() {
-        int id = GL20.glGenTextures();
+        int id = GL46.glGenTextures();
         return id;
     }
 

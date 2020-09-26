@@ -32,8 +32,8 @@ public class DepthBuffer {
     private void init(){
         //Check that FBO's are enabled on this system
         if(GL.getCapabilities().GL_EXT_framebuffer_object){
-            id = GL32.glGenFramebuffers();
-            GL32.glBindFramebuffer(GL32.GL_FRAMEBUFFER, id);
+            id = GL46.glGenFramebuffers();
+            GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, id);
 
             depthTexture = SpriteBinder.getInstance().genTexture();
 
@@ -43,11 +43,11 @@ public class DepthBuffer {
     }
 
     public void bindFrameBuffer(){
-        GL32.glBindFramebuffer(GL32.GL_FRAMEBUFFER, id);
+        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, id);
     }
 
     public void unbindFrameBuffer(){
-        GL32.glBindFramebuffer(GL32.GL_FRAMEBUFFER, 0);
+        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
     }
 
     public final void resize(int width, int height){
@@ -57,22 +57,22 @@ public class DepthBuffer {
     }
 
     private int createDepthBufferAttachment(){
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT16, WIDTH, HEIGHT, 0,
-                GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-        GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture, 0);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, depthTexture);
+        GL46.glTexImage2D(GL46.GL_TEXTURE_2D, 0, GL46.GL_DEPTH_COMPONENT16, WIDTH, HEIGHT, 0,
+                GL46.GL_DEPTH_COMPONENT, GL46.GL_FLOAT, (ByteBuffer) null);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_NEAREST);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_NEAREST);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_WRAP_S, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_WRAP_T, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glFramebufferTexture(GL46.GL_FRAMEBUFFER, GL46.GL_DEPTH_ATTACHMENT, depthTexture, 0);
 
         return depthTexture;
     }
 
 
     public void cleanUp(){
-        GL30.glDeleteFramebuffers(id);
-        GL30.glDeleteRenderbuffers(depthBuffer);
+        GL46.glDeleteFramebuffers(id);
+        GL46.glDeleteRenderbuffers(depthBuffer);
     }
 
     public int getFBOID(){

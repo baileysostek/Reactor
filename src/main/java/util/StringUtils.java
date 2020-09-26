@@ -30,19 +30,24 @@ public class StringUtils {
             }
             reader.close();
             fileCache.put(filePath, fileData.toString());
+            return fileData.toString();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return fileData.toString();
+        return null;
     }
 
     public static JsonObject loadJson(String fileName){
         System.out.println("Loading JSON:"+PATH + fileName);
         String data = load(fileName);
-        return parser.parse(data).getAsJsonObject();
+        if(data != null) {
+            return parser.parse(data).getAsJsonObject();
+        }else{
+            return null;
+        }
     }
 
     public static JsonObject parseJson(String jsonData){

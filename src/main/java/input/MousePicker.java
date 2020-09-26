@@ -9,7 +9,6 @@ import graphics.renderer.Renderer;
 import imgui.ImGui;
 import models.AABB;
 import org.joml.*;
-import math.Maths;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import util.Callback;

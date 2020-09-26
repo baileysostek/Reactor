@@ -3,7 +3,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL46;
 import util.StringUtils;
 
 import java.nio.FloatBuffer;
@@ -49,42 +49,42 @@ public class ShaderManager {
         int[] compileBuffer = new int[]{ 0 };
 
         //Now that we have a source, we  need to compile the shaders into GPU code
-        int vertexShader   = GL20.glCreateShader(GL20.GL_VERTEX_SHADER);
-        GL20.glShaderSource(vertexShader, vertex);
-        GL20.glCompileShader(vertexShader);
-        GL20.glGetShaderiv(vertexShader, GL20.GL_COMPILE_STATUS, compileBuffer);
-        if (compileBuffer[0] == GL20.GL_FALSE) {
-            GL20.glGetShaderiv(vertexShader, GL20.GL_INFO_LOG_LENGTH, compileBuffer);
+        int vertexShader   = GL46.glCreateShader(GL46.GL_VERTEX_SHADER);
+        GL46.glShaderSource(vertexShader, vertex);
+        GL46.glCompileShader(vertexShader);
+        GL46.glGetShaderiv(vertexShader, GL46.GL_COMPILE_STATUS, compileBuffer);
+        if (compileBuffer[0] == GL46.GL_FALSE) {
+            GL46.glGetShaderiv(vertexShader, GL46.GL_INFO_LOG_LENGTH, compileBuffer);
             //Check that log exists
             if (compileBuffer[0] > 0) {
                 //Cleanup our broken shader
-                GL20.glDeleteShader(vertexShader);
-                System.out.println("Vertex Status:" + GL20.glGetShaderInfoLog(vertexShader));
+                GL46.glDeleteShader(vertexShader);
+                System.out.println("Vertex Status:" + GL46.glGetShaderInfoLog(vertexShader));
                 return -1;
             }
         }else{
-            if(compileBuffer[0] == GL20.GL_TRUE){
+            if(compileBuffer[0] == GL46.GL_TRUE){
                 System.out.println("Vertex Shader compiled Successfully.");
             }else{
                 System.out.println("Vertex Shader compiled in an unknown state. This may cause strange behavior.");
             }
         }
 
-        int fragmentShader = GL20.glCreateShader(GL20.GL_FRAGMENT_SHADER);
-        GL20.glShaderSource(fragmentShader, fragment);
-        GL20.glCompileShader(fragmentShader);
-        GL20.glGetShaderiv(fragmentShader, GL20.GL_COMPILE_STATUS, compileBuffer);
-        if (compileBuffer[0] == GL20.GL_FALSE) {
-            GL20.glGetShaderiv(fragmentShader, GL20.GL_INFO_LOG_LENGTH, compileBuffer);
+        int fragmentShader = GL46.glCreateShader(GL46.GL_FRAGMENT_SHADER);
+        GL46.glShaderSource(fragmentShader, fragment);
+        GL46.glCompileShader(fragmentShader);
+        GL46.glGetShaderiv(fragmentShader, GL46.GL_COMPILE_STATUS, compileBuffer);
+        if (compileBuffer[0] == GL46.GL_FALSE) {
+            GL46.glGetShaderiv(fragmentShader, GL46.GL_INFO_LOG_LENGTH, compileBuffer);
             //Check that log exists
             if (compileBuffer[0] > 0) {
                 //Cleanup our broken shader
-                GL20.glDeleteShader(vertexShader);
-                System.out.println("Fragment Status:" + GL20.glGetShaderInfoLog(fragmentShader));
+                GL46.glDeleteShader(vertexShader);
+                System.out.println("Fragment Status:" + GL46.glGetShaderInfoLog(fragmentShader));
                 return -1;
             }
         }else{
-            if(compileBuffer[0] == GL20.GL_TRUE){
+            if(compileBuffer[0] == GL46.GL_TRUE){
                 System.out.println("Fragment Shader compiled Successfully.");
             }else{
                 System.out.println("Fragment Shader compiled in an unknown state. This may cause strange behavior.");
@@ -92,7 +92,7 @@ public class ShaderManager {
         }
 
         //Now that we have our shaders compiled, we link them to a shader program.
-        int programID = GL20.glCreateProgram();
+        int programID = GL46.glCreateProgram();
 
         //Add the parsed meta data into this
         JsonParser parser = new JsonParser();
@@ -114,34 +114,34 @@ public class ShaderManager {
 
         int attributeIndex = 1;
         for(String attribute : attributes){
-            GL20.glBindAttribLocation(programID, attributeIndex, attribute);
+            GL46.glBindAttribLocation(programID, attributeIndex, attribute);
             attributeIndex++;
         }
 
 
         //Combine vertex and fragment shaders into one program
-        GL20.glAttachShader(programID, vertexShader);
-        GL20.glAttachShader(programID, fragmentShader);
+        GL46.glAttachShader(programID, vertexShader);
+        GL46.glAttachShader(programID, fragmentShader);
 
         //Link
-        GL20.glLinkProgram(programID);
+        GL46.glLinkProgram(programID);
 
         //Check link status
-        GL20.glGetShaderiv(vertexShader, GL20.GL_LINK_STATUS, compileBuffer);
-        if (compileBuffer[0] == GL20.GL_TRUE) {
+        GL46.glGetShaderiv(vertexShader, GL46.GL_LINK_STATUS, compileBuffer);
+        if (compileBuffer[0] == GL46.GL_TRUE) {
             System.out.println("Shader Link was successful.");
             //Add this shader to our shader cache
             shaderInstances.put(name, programID);
             shaderInstances_prime.put(programID, name);
         }else{
             System.err.println("Shader Link failed.");
-            GL20.glDeleteProgram(programID);
+            GL46.glDeleteProgram(programID);
             return -1;
         }
 
         //These programs are no longer needed, so we can simply clean them up.
-        GL20.glDeleteShader(vertexShader);
-        GL20.glDeleteShader(fragmentShader);
+        GL46.glDeleteShader(vertexShader);
+        GL46.glDeleteShader(fragmentShader);
 
         //Create a shader data object which will be used to hold data about this shader.
         Shader shader = new Shader(name, programID, version).setAttributes(attributes);
@@ -173,7 +173,7 @@ public class ShaderManager {
     //Use shader takes a shader context
     public void useShader(int programID){
         if(shaderInstances_prime.containsKey(programID)){
-            GL20.glUseProgram(programID);
+            GL46.glUseProgram(programID);
             activeShader = programID;
         }else{
             System.err.println("Tried to use a shader programID out of the range of currently available programs.");
@@ -193,19 +193,19 @@ public class ShaderManager {
                     }
 
                     //If handshake contains this buffered data.
-                    int attribPointer = GL20.glGetAttribLocation(programID, attribute);
+                    int attribPointer = GL46.glGetAttribLocation(programID, attribute);
 
                     //If this attribute is out of range of the program IE compiler optomised it out skip over loading into memory.
-                    int errorCheck = GL20.glGetError();
+                    int errorCheck = GL46.glGetError();
                     boolean error = false;
-                    while (errorCheck != GL20.GL_NO_ERROR) {
+                    while (errorCheck != GL46.GL_NO_ERROR) {
                         System.out.println("GLError:" + errorCheck);
-                        if (errorCheck == GL20.GL_INVALID_VALUE) {
+                        if (errorCheck == GL46.GL_INVALID_VALUE) {
                             error = true;
                             System.out.println("Attribute[" + attribute + "] could not be found in Shader[" + shaderInstances_prime.get(programID) + ']');
                             shader.removeAttribute(attribute);
                         }
-                        errorCheck = GL20.glGetError();
+                        errorCheck = GL46.glGetError();
                     }
 
                     //If error, skip loading data into this attribute
@@ -215,8 +215,8 @@ public class ShaderManager {
                     }
 
                     if(attribPointer > 0) {
-                        GL20.glEnableVertexAttribArray(attribPointer);
-                        GL20.glVertexAttribPointer(attribPointer, handshake.getAttributeSize(attribute), GL20.GL_FLOAT, true, 0, (FloatBuffer) handshake.getAttribute(attribute));
+                        GL46.glEnableVertexAttribArray(attribPointer);
+                        GL46.glVertexAttribPointer(attribPointer, handshake.getAttributeSize(attribute), GL46.GL_FLOAT, true, 0, (FloatBuffer) handshake.getAttribute(attribute));
                     }
                 }
             }
@@ -224,23 +224,21 @@ public class ShaderManager {
     }
 
     //lets a public interface load data into a shader
-    public void loadUniformIntoActiveShader(String name, Object uniform){
-
-        EnumGLDatatype uniformType = shaders.get(shaderInstances_prime.get(activeShader)).getUniform(name);
+    public void loadUniformIntoActiveShader(String name, Object uniform,  EnumGLDatatype uniformType){
 
         //If we dont have this uniform variable, dont do anything.
         if(uniformType == null){
             return;
         }
 
-        int location = GL20.glGetUniformLocation(activeShader, name);
+        int location = GL46.glGetUniformLocation(activeShader, name);
 
         float[] data = new float[uniformType.getSize()];
 
         switch(uniformType){
             case VEC2 : {
                 Vector2f vector2f = (Vector2f)uniform;
-                GL20.glUniform2f(location, vector2f.x(), vector2f.y());
+                GL46.glUniform2f(location, vector2f.x(), vector2f.y());
                 break;
             }
             case VEC3 : {
@@ -248,30 +246,40 @@ public class ShaderManager {
                 data[0] = vector3f.x();
                 data[1] = vector3f.y();
                 data[2] = vector3f.z();
-                GL20.glUniform3fv(location, data);
+                GL46.glUniform3fv(location, data);
                 break;
             }
             case MAT4: {
                 float[] matrix = (float[])uniform;
-                GL20.glUniformMatrix4fv(location, false, matrix);
+                GL46.glUniformMatrix4fv(location, false, matrix);
                 break;
             }
             case SAMPLER2D : {
                 int index = Integer.parseInt(uniform+"");
 //                data[0] = index;
-                GL20.glUniform1i(location, index);
+                GL46.glUniform1i(location, index);
                 break;
             }
             case SAMPLER3D : {
                 int index = Integer.parseInt(uniform+"");
 //                data[0] = index;
-                GL20.glUniform1i(location, index);
+                GL46.glUniform1i(location, index);
                 break;
             }
             default:{
                 System.out.println("[loadUniformIntoActiveShader]Error: datatype " + uniformType +" is not supported yet.");
             }
         }
+    }
+
+    public void loadUniformIntoActiveShader(String name, Object uniform){
+        EnumGLDatatype uniformType = shaders.get(shaderInstances_prime.get(activeShader)).getUniform(name);
+        loadUniformIntoActiveShader(name, uniform, uniformType);
+    }
+
+    public void loadUniformIntoActiveShaderArray(String name, int arrayIndex, Object uniform){
+        EnumGLDatatype uniformType = shaders.get(shaderInstances_prime.get(activeShader)).getUniform(name);
+        loadUniformIntoActiveShader(name+"["+arrayIndex+"]", uniform, uniformType);
     }
 
     //Initialize code
@@ -284,7 +292,7 @@ public class ShaderManager {
     //Cleanup our memory. We don't want to have old programs lying around.
     public void shutdown(){
         for(int id : shaderInstances.values()){
-            GL20.glDeleteProgram(id);
+            GL46.glDeleteProgram(id);
             System.out.println("Deleted program:" + id);
         }
     }

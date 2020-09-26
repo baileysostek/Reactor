@@ -1,6 +1,7 @@
 package serialization;
 
 import com.google.gson.*;
+import org.joml.Vector3f;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -115,5 +116,27 @@ public class SerializationHelper {
         }
 
         return base;
+    }
+
+    public static JsonObject addClass(Object object) {
+        JsonObject helperObject = new JsonObject();
+        helperObject.addProperty("class", object.getClass().getName());
+        helperObject.add("value", gson.toJsonTree(object));
+        return helperObject;
+    }
+
+    public static Object toClass(JsonObject object) {
+        // Gotta have class and value
+        if(object.has("class") && object.has("value")){
+            Class<?> classType = null;
+            try {
+                classType = Class.forName(object.get("class").getAsString());
+                return SerializationHelper.getGson().fromJson(object.get("value"), classType);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return null;
     }
 }

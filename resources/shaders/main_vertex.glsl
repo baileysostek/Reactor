@@ -5,6 +5,8 @@ precision highp int;
 precision highp float;
 precision highp sampler2D;
 
+#define maxLights 4
+
 // Inputs
 in vec4 vPosition;
 in vec3 vNormal;
@@ -20,7 +22,7 @@ uniform vec2 t_offset;    //texture offset
 uniform vec2 t_scale;     //texture scale
 
 //Lighting
-uniform mat4 lightSpaceMatrix;
+uniform mat4 lightSpaceMatrix[maxLights];
 
 // Outputs
 out vec3 passNormal;
@@ -28,7 +30,7 @@ out vec3 passCamPos;
 out vec2 passCoords;
 
 //Lighting
-out vec4 passPosLightSpace;
+out vec4[maxLights] passPosLightSpace;
 
 //Main function to run
 void main(){
@@ -47,6 +49,8 @@ void main(){
 //    vec3 normalCamera = delta;
 //    cameraDir = inverseCamera;
 
-    passPosLightSpace = lightSpaceMatrix * worldPosition;
+    for(int i = 0; i < maxLights; i++){
+        passPosLightSpace[i] = lightSpaceMatrix[i] * worldPosition;
+    }
     gl_Position = perspective * view * worldPosition;
 }

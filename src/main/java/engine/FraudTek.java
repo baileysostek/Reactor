@@ -26,6 +26,7 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.opengl.GL46;
 import physics.PhysicsEngine;
 import platform.EnumDevelopment;
 import platform.EnumPlatform;
@@ -59,8 +60,6 @@ public class FraudTek {
 
     //Local Static variables
     private static int     FRAMES = 0;
-
-    public static DirectionalLight sun;
 
     //Interface Methods
     public static void setWindowSize(int width, int height){
@@ -177,7 +176,7 @@ public class FraudTek {
                 CameraManager.initialize();
                 EntityManager.initialize();
                 SceneManager.initialize();
-                SoundEngine.initialize();
+//                SoundEngine.initialize();
                 PhysicsEngine.initialize();
                 LightingManager.initialize();
 
@@ -192,14 +191,15 @@ public class FraudTek {
 
                 Renderer.getInstance();
 
-                sun = new DirectionalLight();
+//                sun = new DirectionalLight();
+//                EntityManager.getInstance().addEntity(sun);
                 Entity drag = new Entity();
                 drag.setModel(ModelManager.getInstance().loadModel("Garden.obj").getFirst());
                 drag.setTexture(SpriteBinder.getInstance().load("Garden_BaseColor.png"));
                 EntityManager.getInstance().addEntity(drag);
-                EntityManager.getInstance().addEntity(sun);
                 EntityManager.getInstance().addEntity(new DirectionalLight());
-                EntityManager.getInstance().addEntity(new PointLight());
+                EntityManager.getInstance().addEntity(new DirectionalLight());
+//                EntityManager.getInstance().addEntity(new PointLight());
             }
         }
     }
@@ -349,7 +349,7 @@ public class FraudTek {
     private static void shutdown(){
         Renderer.getInstance().onShutdown();
         SpriteBinder.getInstance().onShutdown();
-        SoundEngine.getInstance().onShutdown();
+//        SoundEngine.getInstance().onShutdown();
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             Editor.getInstance().onShutdown();
         }

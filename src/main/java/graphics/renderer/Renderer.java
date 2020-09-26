@@ -5,16 +5,18 @@ import engine.Engine;
 import engine.FraudTek;
 import entity.Entity;
 import entity.EntityManager;
+import lighting.DirectionalLight;
+import lighting.Light;
+import lighting.LightingManager;
 import math.MatrixUtils;
 import models.AABB;
 import org.joml.*;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.*;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
 
 import java.lang.Math;
+import java.util.Collection;
 import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -28,12 +30,14 @@ public class Renderer extends Engine {
     public static final float FOV = 70;
     public static final float NEAR_PLANE = 0.1f;
     public static final float FAR_PLANE = 1024.0f;
+    //Reserve the first 7 textures for PBR
+    public static final int TEXTURE_OFFSET = 1;
 
     private float aspectRatio = 1.0f;
 
     public static int PIXELS_PER_METER = 16;
 
-    private static int RENDER_TYPE = GL11.GL_TRIANGLES;
+    private static int RENDER_TYPE = GL46.GL_TRIANGLES;
 
     private int shaderID = 0;
 
@@ -65,8 +69,8 @@ public class Renderer extends Engine {
         HEIGHT = height;
 
         //Overall GL config
-        GL20.glEnable(GL20.GL_CULL_FACE);
-        GL20.glCullFace(GL20.GL_BACK);
+        GL46.glEnable(GL46.GL_CULL_FACE);
+        GL46.glCullFace(GL46.GL_BACK);
 
         System.out.println("Shader ID:"+shaderID);
 
@@ -83,7 +87,7 @@ public class Renderer extends Engine {
         if(renderer == null){
             renderer = new Renderer(width, height);
             projectionMatrix = MatrixUtils.createProjectionMatrix();
-            GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(renderer.shaderID, "perspective"),false, projectionMatrix);
+            GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(renderer.shaderID, "perspective"),false, projectionMatrix);
             renderer.resize(width, height);
         }
     }
@@ -101,7 +105,7 @@ public class Renderer extends Engine {
 
         projectionMatrix = MatrixUtils.createProjectionMatrix();
 
-        GL20.glViewport(0, 0, width, height);
+        GL46.glViewport(0, 0, width, height);
     }
 
     public void render(){
@@ -110,21 +114,34 @@ public class Renderer extends Engine {
             frameBuffer.bindFrameBuffer();
         }
 
-        GL20.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+        GL46.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
         ShaderManager.getInstance().useShader(shaderID);
-        GL20.glEnable(GL20.GL_DEPTH_TEST);
-        GL20.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
+        GL46.glEnable(GL46.GL_DEPTH_TEST);
+        GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT);
 
-        GL20.glEnable(GL20.GL_BLEND);
-        GL20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        GL46.glEnable(GL46.GL_BLEND);
+        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
 
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
 
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
 
-        ShaderManager.getInstance().loadUniformIntoActiveShader("sunAngle", new Vector3f(0).sub(FraudTek.sun.getPosition()).normalize());
-        ShaderManager.getInstance().loadUniformIntoActiveShader("sunColor", FraudTek.sun.getColor());
-        ShaderManager.getInstance().loadUniformIntoActiveShader("lightSpaceMatrix", FraudTek.sun.getLightspaceTransform());
+        //Compute per frame, refactor to per entity eventually
+        LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
+        for(int directionalLightIndex = 0; directionalLightIndex < Math.min(shadowCasters.size(), GL46.glGetInteger(GL46.GL_MAX_TEXTURE_IMAGE_UNITS) - TEXTURE_OFFSET); directionalLightIndex++){
+            DirectionalLight shadowCaster = shadowCasters.get(directionalLightIndex);
+            //Bind and allocate this texture unit.
+            int textureUnit = TEXTURE_OFFSET + directionalLightIndex;
+            GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
+            int textureIndex = shadowCaster.getDepthBuffer().getDepthTexture();
+            GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
+
+            //Upload our uniforms.
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getPosition()).normalize());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getColor());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", directionalLightIndex, shadowCaster.getLightspaceTransform());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", directionalLightIndex, textureUnit);
+        }
 
         float[] out = new float[3];
 
@@ -132,10 +149,9 @@ public class Renderer extends Engine {
         out[1] = CameraManager.getInstance().getActiveCamera().getLookingDirection().y() * -1.0f;
         out[2] = CameraManager.getInstance().getActiveCamera().getLookingDirection().z() * -1.0f;
 
-        GL20.glUniform3fv(GL20.glGetUniformLocation(shaderID, "inverseCamera"), out);
+        GL46.glUniform3fv(GL46.glGetUniformLocation(shaderID, "inverseCamera"), out);
 
         //Render calls from the loaded scene.
-//        GL20.glUniform3fv(GL20.glGetUniformLocation(shaderID, "sunAngle"), new float[]{1, 0, 0});
 
 
         //Render all entities
@@ -151,14 +167,12 @@ public class Renderer extends Engine {
                 }
 
                 if (lastTexture != entity.getTextureID()) {
-                    GL20.glActiveTexture(GL20.GL_TEXTURE0);
-                    GL20.glBindTexture(GL20.GL_TEXTURE_2D, entity.getTextureID());
-                    GL20.glUniform1i(GL20.glGetUniformLocation(shaderID, "textureID"), 0);
+                    GL46.glActiveTexture(GL46.GL_TEXTURE0);
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, entity.getTextureID());
+                    GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "textureID"), 0);
                     lastTexture = entity.getTextureID();
                 }
-                GL20.glActiveTexture(GL20.GL_TEXTURE0 + 2);
-                GL20.glBindTexture(GL20.GL_TEXTURE_2D, FraudTek.sun.getDepthBuffer().getDepthTexture());
-                GL20.glUniform1i(GL20.glGetUniformLocation(shaderID, "shadowMap"), 2);
+
 
                 if (entity.hasAttribute("t_scale")) {
                     ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", entity.getAttribute("t_scale").getData());
@@ -173,8 +187,8 @@ public class Renderer extends Engine {
                 }
 
                 //Mess with uniforms
-                GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(shaderID, "transformation"), false, entity.getTransform().get(new float[16]));
-                GL20.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
+                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "transformation"), false, entity.getTransform().get(new float[16]));
+                GL46.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
 
                 lastID = entity.getModel().getID();
             }
@@ -530,15 +544,15 @@ public class Renderer extends Engine {
         //Render our lines!
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             drawerLine.render();
-//            GL32.glClear(GL32.GL_DEPTH_BUFFER_BIT);
+//            GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
             drawTriangle.render();
             frameBuffer.unbindFrameBuffer();
         }
 
-        GL20.glDisableVertexAttribArray(0);
-        GL20.glDisableVertexAttribArray(1);
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL20.glDisable(GL20.GL_BLEND);
+        GL46.glDisableVertexAttribArray(0);
+        GL46.glDisableVertexAttribArray(1);
+        GL46.glDisable(GL46.GL_DEPTH_TEST);
+        GL46.glDisable(GL46.GL_BLEND);
     }
 
     public FBO getFrameBuffer(){
