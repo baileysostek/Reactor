@@ -25,7 +25,8 @@
     "Uniforms": {
       "textureID": "sampler2D",
       "shadowMap": "sampler2D",
-      "sunAngle": "vec3"
+      "sunAngle": "vec3",
+      "sunColor": "vec3"
     }
   }
 }

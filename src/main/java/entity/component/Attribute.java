@@ -1,10 +1,13 @@
 package entity.component;
 
+import com.google.gson.JsonObject;
+import serialization.Serializable;
+import serialization.SerializationHelper;
 import util.Callback;
 
 import java.util.LinkedList;
 
-public class Attribute<T> {
+public class Attribute<T> implements Serializable<Attribute<T>> {
 
     private String name;
     private T attribute;
@@ -14,6 +17,7 @@ public class Attribute<T> {
     private boolean locked  = false;
     private boolean visible = true;
     private EnumAttributeType type = EnumAttributeType.NONE;
+    private boolean shouldBeSerialized = true;
 
     public Attribute(Attribute att){
         this.name = att.getName();
@@ -25,8 +29,17 @@ public class Attribute<T> {
         this.attribute = data;
     }
 
+    public Attribute(JsonObject attributes) {
+        deserialize(attributes);
+    }
+
     public Attribute setLocked(boolean locked){
         this.locked = locked;
+        return this;
+    }
+
+    public Attribute setShouldBeSerialized(boolean shouldBeSerialized){
+        this.shouldBeSerialized = shouldBeSerialized;
         return this;
     }
 
@@ -87,6 +100,44 @@ public class Attribute<T> {
 
     public Attribute setType(EnumAttributeType type) {
         this.type = type;
+        return this;
+    }
+
+    public boolean shouldBeSerialized() {
+        return this.shouldBeSerialized;
+    }
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject out = new JsonObject();
+        out.addProperty("name", name);
+        out.addProperty("locked", locked);
+        out.addProperty("visible", visible);
+        out.addProperty("type", type.toString());
+        out.add("data", SerializationHelper.addClass(attribute));
+        return out;
+    }
+
+    @Override
+    public Attribute<T> deserialize(JsonObject data) {
+        if(data.has("name")){
+            name = data.get("name").getAsString();
+        }
+        if(data.has("locked")){
+            locked = data.get("locked").getAsBoolean();
+        }
+        if(data.has("visible")){
+            visible = data.get("visible").getAsBoolean();
+        }
+        if(data.has("type")){
+            type = EnumAttributeType.valueOf(data.get("type").getAsString());
+        }
+
+        //Generics are cool!
+        if(data.has("data")){
+            attribute = (T) SerializationHelper.toClass(data.get("data").getAsJsonObject());
+        }
+
         return this;
     }
 }

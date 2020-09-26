@@ -3,7 +3,7 @@ package graphics.renderer;
 import camera.CameraManager;
 import entity.Entity;
 import org.joml.Vector3f;
-import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL46;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -53,10 +53,10 @@ public class ImmediateDrawLine {
         // Vertex data
         ShaderManager.getInstance().useShader(lineShaderID);
 //        GL40.glUseProgram(lineShaderID);
-//        GL20.glEnable(GL20.GL_DEPTH_TEST);
-//        GL20.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+//        GL46.glEnable(GL46.GL_DEPTH_TEST);
+//        GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
 
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(lineShaderID, "projectionMatrix"),false, Renderer.getInstance().getProjectionMatrix());
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lineShaderID, "projectionMatrix"),false, Renderer.getInstance().getProjectionMatrix());
 
         Handshake handshake = new Handshake();
         float[] positionsF = new float[positions.size()];
@@ -78,11 +78,11 @@ public class ImmediateDrawLine {
         //Mess with uniforms
         ShaderManager.getInstance().loadHandshakeIntoShader(lineShaderID, handshake);
 
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(lineShaderID, "viewMatrix"), false, CameraManager.getInstance().getActiveCamera().getTransform());
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lineShaderID, "viewMatrix"), false, CameraManager.getInstance().getActiveCamera().getTransform());
 
-        GL20.glDrawArrays(GL20.GL_LINES, 0, positions.size() / EnumGLDatatype.VEC3.sizePerVertex);
+        GL46.glDrawArrays(GL46.GL_LINES, 0, positions.size() / EnumGLDatatype.VEC3.sizePerVertex);
 
-        GL20.glUseProgram(0);
+        GL46.glUseProgram(0);
 
         //Clear what was rendered this frame, for next frame.
         positions.clear();

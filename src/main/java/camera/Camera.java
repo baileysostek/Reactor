@@ -9,12 +9,13 @@ import engine.Constants;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import serialization.Serializable;
 
 /**
  *
  * @author Bailey
  */
-public abstract class Camera {
+public abstract class Camera implements Serializable<Camera> {
 
     protected Matrix4f transform = new Matrix4f();
 

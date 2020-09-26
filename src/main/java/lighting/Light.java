@@ -11,6 +11,7 @@ public abstract class Light extends Entity {
         //Default is white light.
         addAttribute(new Attribute("color", new Vector3f(1)).setType(EnumAttributeType.COLOR));
         addAttribute(new Attribute("frustum", new Vector3f(10, 1, 7.5f)));
+        addAttribute(new Attribute("castsShadows", false));
     }
 
     public Vector3f getColor(){
@@ -19,24 +20,33 @@ public abstract class Light extends Entity {
 
     @Override
     public void onAdd() {
+        //Add self to LightingManager
+        LightingManager.getInstance().add(this);
+
         if(this.hasAttribute("updateInEditor")) {
             this.getAttribute("updateInEditor").setVisible(false).setData(true);
         }
-        if(this.hasAttribute("scale")) {
-            this.getAttribute("scale").setVisible(false);
-        }
-        if(this.hasAttribute("textureID")) {
-            this.getAttribute("textureID").setVisible(false);
-        }
-        if(this.hasAttribute("zIndex")) {
-            this.getAttribute("zIndex").setVisible(false);
-        }
-        if(this.hasAttribute("autoScale")) {
-            this.getAttribute("autoScale").setVisible(false);
-        }
-        if(this.hasAttribute("t_scale")) {
-            this.getAttribute("t_scale").setVisible(false);
-        }
+//        if(this.hasAttribute("scale")) {
+//            this.getAttribute("scale").setVisible(false);
+//        }
+//        if(this.hasAttribute("textureID")) {
+//            this.getAttribute("textureID").setVisible(false);
+//        }
+//        if(this.hasAttribute("zIndex")) {
+//            this.getAttribute("zIndex").setVisible(false);
+//        }
+//        if(this.hasAttribute("autoScale")) {
+//            this.getAttribute("autoScale").setVisible(false);
+//        }
+//        if(this.hasAttribute("t_scale")) {
+//            this.getAttribute("t_scale").setVisible(false);
+//        }
         super.onAdd();
+    }
+
+    @Override
+    public void onRemove() {
+        //Add self to LightingManager
+        LightingManager.getInstance().remove(this);
     }
 }

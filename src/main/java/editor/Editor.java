@@ -3,15 +3,18 @@ package editor;
 import camera.Camera;
 import camera.Camera3D;
 import camera.CameraManager;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import editor.components.UIComponet;
 import editor.components.container.Axis;
 import editor.components.container.Transform;
 import editor.components.views.LevelEditor;
 import engine.FraudTek;
+import entity.Entity;
 import entity.EntityEditor;
 import entity.EntityManager;
 import entity.WorldOutliner;
+import entity.component.Attribute;
 import graphics.renderer.Renderer;
 import graphics.sprite.SpriteBinder;
 import imgui.ImBool;
@@ -29,8 +32,10 @@ import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
+import serialization.SerializationHelper;
 import util.Callback;
 import util.Debouncer;
+import util.StringUtils;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -224,10 +229,32 @@ public class Editor {
             }
         });
 
+
+        //Load the project
+//        JsonObject project = StringUtils.loadJson("/scenes/project.tek");
+//        if(project != null) {
+//            if (project.has("camera")) {
+//                CameraManager.getInstance().setActiveCamera(new Camera3D().deserialize(project.getAsJsonObject("camera")));
+//            }
+//            if (project.has("entities")) {
+//                JsonArray entities = project.getAsJsonArray("entities");
+//                for (int i = 0; i < entities.size(); i++) {
+//                    if (entities.get(i).getAsJsonObject().has("class")) {
+//                        try {
+//                            Class<?> classType = Class.forName(entities.get(i).getAsJsonObject().get("class").getAsString());
+//                            Entity entity = ((Entity) SerializationHelper.getGson().fromJson(entities.get(i).getAsJsonObject().get("value"), classType)).deserialize(entities.get(i).getAsJsonObject().get("value").getAsJsonObject());
+//
+//                            EntityManager.getInstance().addEntity(entity);
+//                        } catch (ClassNotFoundException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                }
+//            }
+//        }
+
+        //Unlock Camera
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
-            CameraManager.getInstance().setActiveCamera(new Camera3D());
-            CameraManager.getInstance().getActiveCamera().setRotation(new Vector3f(45, -45, 0));
-            CameraManager.getInstance().getActiveCamera().setPosition(new Vector3f(8, 10, 8));
             MousePicker.getInstance().unlockMouse();
         }
 
@@ -304,11 +331,15 @@ public class Editor {
 
         ImGui.newFrame();
         ImGui.setNextWindowPos(0, 0, ImGuiCond.Once);
+
+        //Styles
         ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 0);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0, 0);
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 0, 0);
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 0, 0);
         ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1);
+
+//        ImGui.getFont().setScale(2);
 
         ImGui.setNextWindowSize(Renderer.getInstance().getWIDTH(), Renderer.getInstance().getHEIGHT());
         ImGui.setNextWindowContentSize(Renderer.getInstance().getWIDTH(), Renderer.getInstance().getHEIGHT());
@@ -399,7 +430,7 @@ public class Editor {
         ImGui.popStyleVar();
         ImGui.popStyleVar();
 
-
+        ImGui.showDemoWindow(new ImBool(true));
         //End
         ImGui.end();
 
@@ -421,6 +452,27 @@ public class Editor {
                 component.onShutdown();
             }
         }
+
+        //Update our Project file
+        JsonObject projectFile = new JsonObject();
+        projectFile.addProperty("type", "project");
+        //TODO re-implement this so that it saves as much memory as possible.
+        JsonArray entities = new JsonArray(EntityManager.getInstance().getEntities().size());
+        for(Entity e : EntityManager.getInstance().getEntities()){
+            if(!e.hasParent()) {
+                JsonObject entityMeta = new JsonObject();
+                entityMeta.addProperty("class", e.getClass().getName());
+                entityMeta.add("value", e.serialize());
+                entities.add(entityMeta);
+            }
+        }
+
+        projectFile.add("entities", entities);
+
+        projectFile.add("camera", CameraManager.getInstance().getActiveCamera().serialize());
+
+        StringUtils.write(projectFile.toString(), "/scenes/project.tek");
+
         IMGUIGL.dispose();
         ImGui.destroyContext();
     }

@@ -4,7 +4,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL46;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
 import util.StringUtils;
@@ -247,7 +247,7 @@ public class Window {
                 if(width > 0 && height > 0){
                     glfwSetWindowSize(window_p, width, height);
                     aspectRatio = (float)width / (float)height;
-                    GL11.glViewport(0, 0, width, height);
+                    GL46.glViewport(0, 0, width, height);
                     Renderer.getInstance().resize(width, height);
                     System.out.println("The window changed size, the aspect ratio is "+aspectRatio);
                 }

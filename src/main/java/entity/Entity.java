@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import entity.component.Attribute;
 import entity.component.Component;
+import entity.component.EnumAttributeType;
 import entity.interfaces.Transformable;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
@@ -34,7 +35,6 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Attributes are the raw pieces of data that make up an entity;
     private HashMap<String, Attribute> attributes    = new HashMap<>();
-    private LinkedList<Attribute>      attributeList = new LinkedList<>();
     //Components reference and set attributes on an entity, the Attributes are a state and the components are how they are modified.
     private LinkedList<Component> components = new LinkedList<Component>();
 
@@ -63,7 +63,7 @@ public class Entity implements Transformable, Serializable<Entity> {
     private final void addDefaultAttributes(){
         //Every entity has some default attributes
         this.addAttribute(new Attribute<Vector3f>("position"     , new Vector3f(0f)));
-        this.addAttribute(new Attribute<Vector3f>("rotation"     , new Vector3f(0f)));
+        this.addAttribute(new Attribute<Vector3f>("rotation"     , new Vector3f(0f)).setType(EnumAttributeType.SLIDERS));
         this.addAttribute(new Attribute<Vector3f>("scale"        , new Vector3f(1f)));
         this.addAttribute(new Attribute<Integer> ("textureID"    , SpriteBinder.getInstance().getFileNotFoundID()));
         this.addAttribute(new Attribute<Integer> ("zIndex"       , 0));
@@ -87,13 +87,6 @@ public class Entity implements Transformable, Serializable<Entity> {
     //Adds an attribute to this entity, and creates a subscriber that iterates through all components which may subscribe to this event.
     //Attribute interface
     public final void addAttribute(Attribute attribute){
-        //Add to our list of entities, if it already exists, remove so can add.
-        if(this.attributes.containsKey(attribute.getName())){
-            Attribute toRemove = this.attributes.get(attribute.getName());
-            this.attributeList.set(this.attributeList.lastIndexOf(toRemove), attribute);
-        }else{
-            this.attributeList.addLast(attribute);
-        }
         this.attributes.put(attribute.getName(), attribute);
 
         //Create subscriber to this attribute changing states
@@ -161,13 +154,12 @@ public class Entity implements Transformable, Serializable<Entity> {
     }
 
     protected final Collection<Attribute> getAttributes(){
-        return this.attributeList;
+        return this.attributes.values();
     }
 
     //NOTE this will clear all attributes, even the default and locked ones, use carefully
     protected final void clearAttributes(){
         this.attributes.clear();
-        this.attributeList.clear();
     }
 
     //Transformation
@@ -302,6 +294,9 @@ public class Entity implements Transformable, Serializable<Entity> {
     public void onAdd(){
         return;
     }
+    public void onRemove(){
+        return;
+    }
 
     //Texture
     public final int getTextureID(){
@@ -408,20 +403,15 @@ public class Entity implements Transformable, Serializable<Entity> {
         JsonObject attributesObject = new JsonObject();
         //Add all of our attributes to an out array
         for(Attribute attribute : this.attributes.values()){
-            //SOO we need to parse this object back to the initial class type, so we will make an intermediate object
-            JsonObject helperObject = new JsonObject();
-            if(attribute.getData() != null) {
-                helperObject.addProperty("class", attribute.getData().getClass().getName());
-                helperObject.add("value", SerializationHelper.getGson().toJsonTree(attribute.getData()));
-                attributesObject.add(attribute.getName(), helperObject);
-            }else{
-                attributesObject.add(attribute.getName(), null);
+            if(attribute.shouldBeSerialized()) {
+                attributesObject.add(attribute.getName(), attribute.serialize());
             }
         }
 
         //Add our attributes to out
         out.add("attributes", attributesObject);
 
+        //TODO better serialization of components
         //Create a json object to hold our components
         JsonArray componentsArray = new JsonArray(components.size());
         //Add all of our components to an out array
@@ -465,16 +455,8 @@ public class Entity implements Transformable, Serializable<Entity> {
         //If we have any attributes
         if(data.has("attributes")) {
             for(String key : data.get("attributes").getAsJsonObject().keySet()){
-                try {
-                    JsonObject helperObject = data.getAsJsonObject("attributes").getAsJsonObject(key);
-                    Class<?> classType = Class.forName(helperObject.get("class").getAsString());
-                    Attribute<?> attribute = new Attribute<>(key, SerializationHelper.getGson().fromJson(helperObject.get("value"), classType));
-                    //Add our attribute
-                    this.addAttribute(attribute);
-
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
+                Attribute attribute = new Attribute(data.getAsJsonObject("attributes").getAsJsonObject(key));
+                this.addAttribute(attribute);
             }
         }
         //If we have any components

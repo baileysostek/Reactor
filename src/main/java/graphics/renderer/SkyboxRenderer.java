@@ -6,9 +6,9 @@ import graphics.renderer.Handshake;
 import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
 import graphics.sprite.SpriteBinder;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL46;
+import org.lwjgl.opengl.GL46;
+import org.lwjgl.opengl.GL46;
 
 public class SkyboxRenderer {
     private int skyShaderID = 0;
@@ -77,7 +77,7 @@ public class SkyboxRenderer {
         ShaderManager.getInstance().useShader(skyShaderID);
 
         //Overall GL config
-        GL20.glDisable(GL20.GL_CULL_FACE);
+        GL46.glDisable(GL46.GL_CULL_FACE);
 
 
         ShaderManager.getInstance().loadHandshakeIntoShader(skyShaderID, handshake);
@@ -88,17 +88,17 @@ public class SkyboxRenderer {
         viewMatrix[13] = 0;
         viewMatrix[14] = 0;
 
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(skyShaderID, "viewMatrix"), false, viewMatrix);
-        GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(skyShaderID, "projectionMatrix"),false, Renderer.getInstance().getProjectionMatrix());
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(skyShaderID, "viewMatrix"), false, viewMatrix);
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(skyShaderID, "projectionMatrix"),false, Renderer.getInstance().getProjectionMatrix());
 
-        GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, textureID);
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, textureID);
 
         //Render
-        GL20.glDrawArrays(GL20.GL_TRIANGLES, 0, positionsF.length / EnumGLDatatype.VEC3.sizePerVertex);
+        GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, positionsF.length / EnumGLDatatype.VEC3.sizePerVertex);
 
-        GL20.glUseProgram(0);
+        GL46.glUseProgram(0);
 
         //Overall GL config
-        GL20.glEnable(GL20.GL_CULL_FACE);
+        GL46.glEnable(GL46.GL_CULL_FACE);
     }
 }

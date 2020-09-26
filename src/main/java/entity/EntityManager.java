@@ -190,6 +190,7 @@ public class EntityManager {
                 for (Entity e : new LinkedList<>(toRemove)) {
                     this.entities.remove(e);
                     this.typedEntities.get(e.getClass()).remove(e);
+                    e.onRemove();
                 }
                 toRemove.clear();
                 sortEntities();

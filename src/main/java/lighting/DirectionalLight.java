@@ -1,5 +1,6 @@
 package lighting;
 
+import engine.FraudTek;
 import entity.component.Attribute;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
@@ -13,9 +14,13 @@ public class DirectionalLight extends Light {
     private Matrix4f viewMatrix = new Matrix4f();
 
     public DirectionalLight(){
+        super();
         depthBuffer = new FBO();
         setTexture(depthBuffer.getDepthTexture());
         addAttribute(new Attribute<Vector3f>("targetPoint", new Vector3f(0)));
+
+        this.getAttribute("castsShadows").setShouldBeSerialized(false).setData(true);
+        this.getAttribute("textureID").setShouldBeSerialized(false);
     }
 
     @Override

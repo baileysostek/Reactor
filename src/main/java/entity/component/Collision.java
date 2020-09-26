@@ -31,7 +31,6 @@ public class Collision extends Component{
     //Attributes that we care about
     Attribute<org.joml.Vector3f> position    = new Attribute<org.joml.Vector3f> ("position", new org.joml.Vector3f(0));
     Attribute<Boolean>           movable     = new Attribute<Boolean>           ("movable", true);
-    Attribute<Boolean>           controlled  = new Attribute<Boolean>           ("controlled", false);
     Attribute<Float>             friction    = new Attribute<Float>             ("friction", 1.0f);
     Attribute<Float>             mass        = new Attribute<Float>             ("mass", 1.0f);
     Attribute<Float>             restitution = new Attribute<Float>             ("restitution", 0.5f);
@@ -67,7 +66,6 @@ public class Collision extends Component{
 
         out.addLast(position);
         out.addLast(movable);
-        out.addLast(controlled);
         out.addLast(friction);
         out.addLast(mass);
         out.addLast(restitution);
@@ -94,21 +92,6 @@ public class Collision extends Component{
 
         //Set Pos
         this.parent.setPosition(position.getData());
-        if(this.controlled.getData()) {
-            //Here we are controlled, so tell the resolver to stop accumulating force
-            if(Keyboard.getInstance().isKeyPressed(Keyboard.W)){
-                body.setLinearVelocity(new Vector3f(0, 0, -1));
-            }
-            if(Keyboard.getInstance().isKeyPressed(Keyboard.S)){
-                body.setLinearVelocity(new Vector3f(0, 0,  1));
-            }
-            if(Keyboard.getInstance().isKeyPressed(Keyboard.A)){
-                body.setLinearVelocity(new Vector3f(-1, 0, 0));
-            }
-            if(Keyboard.getInstance().isKeyPressed(Keyboard.D)){
-                body.setLinearVelocity(new Vector3f( 1, 0, 0));
-            }
-        }
 
 //        CollisionShape fallShape = new SphereShape(1);
 //        CollisionShape fallShape = new BoxShape(new Vector3f(parent.getScale().x(), parent.getScale().y() ,parent.getScale().z()));
@@ -142,10 +125,6 @@ public class Collision extends Component{
 
     public RigidBody getRigidBody() {
         return this.body;
-    }
-
-    public void setupControlledCharacter(){
-
     }
 
     //This components name

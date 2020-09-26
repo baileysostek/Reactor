@@ -2,7 +2,6 @@ package scene;
 
 
 import math.Vector2f;
-import org.lwjgl.opengl.GL20;
 
 import java.util.LinkedList;
 
@@ -43,7 +42,6 @@ public class SceneManager {
 
     public void render(){
         //Clear frame
-//        GL20.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         if(this.loadedScene != null){
             try {

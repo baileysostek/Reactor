@@ -9,7 +9,7 @@ package graphics.renderer;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL46;
 import serialization.Serializable;
 import serialization.SerializationHelper;
 

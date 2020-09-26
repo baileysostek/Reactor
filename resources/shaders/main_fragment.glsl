@@ -8,16 +8,19 @@ precision highp int;
 precision highp float;
 precision highp sampler2D;
 
+#define maxLights 4
+
 // Inputs
 in vec3 passNormal;
 in vec3 passCamPos;
 in vec2 passCoords;
-in vec4 passPosLightSpace;
+in vec4 passPosLightSpace[maxLights];
 
 uniform sampler2D texureID;
-uniform sampler2D shadowMap;
+uniform sampler2D shadowMap[maxLights];
 
-uniform vec3 sunAngle;
+uniform vec3 sunAngle[maxLights];
+uniform vec3 sunColor[maxLights];
 
 layout( location = 0 ) out vec4 gl_FragColor;
 
@@ -26,13 +29,13 @@ float dotProduct(vec3 posI, vec3 posJ){
     return (posI.x * posJ.x) + (posI.y * posJ.y) + (posI.z * posJ.z);
 }
 
-float ShadowCalculation()
+float ShadowCalculation(int index)
 {
-    vec3 pos = passPosLightSpace.xyz * 0.5 + 0.5;
+    vec3 pos = passPosLightSpace[index].xyz * 0.5 + 0.5;
     if(pos.z > 1.0){
         pos.z = 1.0;
     }
-    float depth = texture(shadowMap, pos.xy).r;
+    float depth = texture(shadowMap[index], pos.xy).r;
     float bias = 0.005f;
 
     return (depth + bias) < pos.z ? 1.0 : 0.0;
@@ -48,10 +51,14 @@ void main(void){
     // ambient
     vec3 ambient = 0.15 * albedo.xyz;
 
-    float diffuse = clamp(dotProduct(passNormal, sunAngle * -1), 0, 1);
-    float shadow = ShadowCalculation();
+    vec3 totalDiffuse = vec3(0);
+    for(int i = 0; i < maxLights; i++){
+        float diffuse = clamp(dotProduct(passNormal, sunAngle[i] * -1), 0, 1);
+        float shadow = ShadowCalculation(i);
+        totalDiffuse += ((1.0 - shadow) * sunColor[i] * (diffuse));
+    }
 
-    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse)) * albedo.xyz;
+    vec3 lighting = (ambient + totalDiffuse) * albedo.xyz;
 
     gl_FragColor = vec4(lighting, 1);
 
