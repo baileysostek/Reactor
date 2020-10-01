@@ -31,7 +31,7 @@ public class Renderer extends Engine {
     public static final float NEAR_PLANE = 0.1f;
     public static final float FAR_PLANE = 1024.0f;
     //Reserve the first 7 textures for PBR
-    public static final int TEXTURE_OFFSET = 1;
+    public static final int TEXTURE_OFFSET = 7;
 
     private float aspectRatio = 1.0f;
 
@@ -122,9 +122,16 @@ public class Renderer extends Engine {
         GL46.glEnable(GL46.GL_BLEND);
         GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
 
+        ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", CameraManager.getInstance().getActiveCamera().getPosition());
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
-
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
+
+        //Pos -2 is skybox
+        GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, skyboxRenderer.getTextureID());
+        GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
+
+        //-1 is closest probe to entity
 
         //Compute per frame, refactor to per entity eventually
         LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
@@ -149,7 +156,6 @@ public class Renderer extends Engine {
         out[1] = CameraManager.getInstance().getActiveCamera().getLookingDirection().y() * -1.0f;
         out[2] = CameraManager.getInstance().getActiveCamera().getLookingDirection().z() * -1.0f;
 
-        GL46.glUniform3fv(GL46.glGetUniformLocation(shaderID, "inverseCamera"), out);
 
         //Render calls from the loaded scene.
 
@@ -173,6 +179,29 @@ public class Renderer extends Engine {
                     lastTexture = entity.getTextureID();
                 }
 
+                if(entity.hasAttribute("normalID")){
+                    GL46.glActiveTexture(GL46.GL_TEXTURE0 + 1);
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("normalID").getData());
+                    GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "normalID"), 1);
+                }
+
+                if(entity.hasAttribute("metallicID")){
+                    GL46.glActiveTexture(GL46.GL_TEXTURE0 + 2);
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("metallicID").getData());
+                    GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "metallicID"), 2);
+                }
+
+                if(entity.hasAttribute("roughnessID")){
+                    GL46.glActiveTexture(GL46.GL_TEXTURE0 + 3);
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("roughnessID").getData());
+                    GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "roughnessID"), 3);
+                }
+
+                if(entity.hasAttribute("ambientOcclusionID")){
+                    GL46.glActiveTexture(GL46.GL_TEXTURE0 + 4);
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("ambientOcclusionID").getData());
+                    GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "ambientOcclusionID"), 4);
+                }
 
                 if (entity.hasAttribute("t_scale")) {
                     ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", entity.getAttribute("t_scale").getData());

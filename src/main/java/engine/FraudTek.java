@@ -27,6 +27,8 @@ import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL46;
+import particle.ParticleManager;
+import particle.ParticleSystem;
 import physics.PhysicsEngine;
 import platform.EnumDevelopment;
 import platform.EnumPlatform;
@@ -174,6 +176,7 @@ public class FraudTek {
                 LogManager.initialize();
                 ModelManager.initialize();
                 CameraManager.initialize();
+                ParticleManager.initialize();
                 EntityManager.initialize();
                 SceneManager.initialize();
 //                SoundEngine.initialize();
@@ -199,6 +202,7 @@ public class FraudTek {
                 EntityManager.getInstance().addEntity(drag);
                 EntityManager.getInstance().addEntity(new DirectionalLight());
                 EntityManager.getInstance().addEntity(new DirectionalLight());
+                EntityManager.getInstance().addEntity(new ParticleSystem());
 //                EntityManager.getInstance().addEntity(new PointLight());
             }
         }
@@ -266,6 +270,7 @@ public class FraudTek {
         SceneManager.getInstance().update(delta);
         LightingManager.getInstance().update(delta);
         EntityManager.getInstance().update(delta);
+        ParticleManager.getInstance().update(delta);
 
 //        Vector3f pos = MousePicker.rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
 //        if(pos == null){
@@ -284,11 +289,9 @@ public class FraudTek {
     }
 
     private static void render(){
-        //Render Shadow maps
-//        LightingManager.getInstance().render();
-
         //Render World.
         Renderer.getInstance().render();
+        ParticleManager.getInstance().render();
 
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
             //Draw Axis
@@ -396,7 +399,6 @@ public class FraudTek {
 //                Model model = ModelManager.getInstance().loadModel(action.get("model").getAsString());
 //                JsonObject saveData = model.serialize();
 //                System.out.println("Writing file to:"+"/models/" + action.get("model").getAsString().replace(".obj", ".tek"));
-//                StringUtils.write(saveData.toString(), "/models/" + action.get("model").getAsString().replace(".obj", ".tek"));
 //            }
 //        }
 //

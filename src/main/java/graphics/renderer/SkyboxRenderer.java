@@ -1,13 +1,7 @@
 package graphics.renderer;
 
 import camera.CameraManager;
-import graphics.renderer.EnumGLDatatype;
-import graphics.renderer.Handshake;
-import graphics.renderer.Renderer;
-import graphics.renderer.ShaderManager;
 import graphics.sprite.SpriteBinder;
-import org.lwjgl.opengl.GL46;
-import org.lwjgl.opengl.GL46;
 import org.lwjgl.opengl.GL46;
 
 public class SkyboxRenderer {
@@ -100,5 +94,9 @@ public class SkyboxRenderer {
 
         //Overall GL config
         GL46.glEnable(GL46.GL_CULL_FACE);
+    }
+
+    public int getTextureID() {
+        return this.textureID;
     }
 }
