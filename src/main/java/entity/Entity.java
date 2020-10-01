@@ -66,6 +66,10 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.addAttribute(new Attribute<Vector3f>("rotation"     , new Vector3f(0f)).setType(EnumAttributeType.SLIDERS));
         this.addAttribute(new Attribute<Vector3f>("scale"        , new Vector3f(1f)));
         this.addAttribute(new Attribute<Integer> ("textureID"    , SpriteBinder.getInstance().getFileNotFoundID()));
+        this.addAttribute(new Attribute<Integer> ("normalID"   , SpriteBinder.getInstance().getDefaultNormalMap()));
+        this.addAttribute(new Attribute<Integer> ("metallicID"   , SpriteBinder.getInstance().getDefaultMetallicMap()));
+        this.addAttribute(new Attribute<Integer> ("roughnessID"   , SpriteBinder.getInstance().getDefaultRoughnessMap()));
+        this.addAttribute(new Attribute<Integer> ("ambientOcclusionID"   , SpriteBinder.getInstance().getDefaultAmbientOcclusionMap()));
         this.addAttribute(new Attribute<Integer> ("zIndex"       , 0));
         this.addAttribute(new Attribute<Boolean> ("autoScale"    , false));
         this.addAttribute(new Attribute<String>  ("name"         , "Undefined"));
@@ -108,6 +112,20 @@ public class Entity implements Transformable, Serializable<Entity> {
             }
         });
 
+    }
+
+    //Adds an attribute to this entity, and creates a subscriber that iterates through all components which may subscribe to this event.
+    //Attribute interface
+    public final void removeAttribute(Attribute attribute){
+        if(this.attributes.containsKey(attribute.getName())) {
+            this.attributes.remove(attribute.getName());
+        }
+    }
+
+    public final void removeAttribute(String attribute){
+        if(this.attributes.containsKey(attribute)) {
+            this.attributes.remove(attribute);
+        }
     }
 
     //Attributes when they update emmit a message, this is where that message is sent.

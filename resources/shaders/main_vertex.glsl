@@ -15,7 +15,7 @@ in vec2 vTexture;
 //Uniform variables
 uniform mat4 transformation; // objects transform in space
 uniform mat4 view;           // Cameras position in space
-//uniform vec3 inverseCamera;  // Cameras position in space
+uniform vec3 cameraPos;      // Cameras position in worldSpace
 uniform mat4 perspective;    //Perspective of this world
 
 uniform vec2 t_offset;    //texture offset
@@ -28,6 +28,10 @@ uniform mat4 lightSpaceMatrix[maxLights];
 out vec3 passNormal;
 out vec3 passCamPos;
 out vec2 passCoords;
+out vec3 passFragPos;
+
+//Reflection
+out vec3 passReflectNormal;
 
 //Lighting
 out vec4[maxLights] passPosLightSpace;
@@ -40,17 +44,18 @@ void main(){
     passNormal = normalize((vec3(offsetNormal) / offsetNormal.w) - (worldOffset.xyz)/worldOffset.w);
 
     vec4 worldPosition = transformation * vec4(vPosition.xyz, 1.0);
+    passFragPos = worldPosition.xyz;
 
     passCoords = vTexture;
 
     //Camera Direction
-    passCamPos = (view * vec4(0, 0, 0, 1.0)).xyz;
-//    vec3 delta = ((offsetCameraPos.xyz / offsetCameraPos.w) * vec3(-1, -1, -1)) - (worldPosition.xyz / worldPosition.w);
-//    vec3 normalCamera = delta;
-//    cameraDir = inverseCamera;
+    passCamPos = cameraPos;
+
+    passReflectNormal = reflect(normalize(worldPosition.xyz - (cameraPos * -1)), passNormal);
 
     for(int i = 0; i < maxLights; i++){
         passPosLightSpace[i] = lightSpaceMatrix[i] * worldPosition;
     }
+
     gl_Position = perspective * view * worldPosition;
 }

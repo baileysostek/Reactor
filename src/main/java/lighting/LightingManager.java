@@ -6,6 +6,7 @@ import entity.EntityManager;
 import graphics.renderer.ShaderManager;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
+import particle.ParticleManager;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -46,6 +47,7 @@ public class LightingManager {
 
         //Render all entities
         EntityManager.getInstance().resort();
+
         for(Entity entity : EntityManager.getInstance().getEntities()){
             if(entity.getModel() != null) {
 
@@ -56,6 +58,7 @@ public class LightingManager {
                 GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, entity.getModel().getNumIndicies());
             }
         }
+
         directionalLight.getDepthBuffer().unbindFrameBuffer();
     }
 

@@ -253,11 +253,6 @@ public class Editor {
 //            }
 //        }
 
-        //Unlock Camera
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
-            MousePicker.getInstance().unlockMouse();
-        }
-
     }
 
     //Public interfaces

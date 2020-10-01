@@ -1,0 +1,21 @@
+{
+  "Name":"vector",
+  "Version": "#version 400",
+  "Vertex":{
+    "Attributes": {
+      "position": "vec3",
+      "translation": "vec4",
+      "color": "vec4"
+    },
+    "Uniforms": {
+      "view": "vec4",
+      "projection": "vec4"
+    },
+    "Varying": {
+    }
+  },
+  "Fragment":{
+    "Uniforms": {
+    }
+  }
+}

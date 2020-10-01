@@ -1,6 +1,7 @@
 package entity;
 
 import camera.CameraManager;
+import com.google.gson.JsonObject;
 import editor.Editor;
 import editor.components.UIComponet;
 import entity.component.Attribute;
@@ -153,11 +154,9 @@ public class EntityEditor extends UIComponet {
                             try {
                                 Class<?> classType = Class.forName(this.entity.getClass().getName());
                                 //This has broken attributes, set from parent
-                                entity = ((Entity) SerializationHelper.getGson().fromJson(this.entity.serialize(), classType));
-                                entity.clearAttributes();
-                                for (Attribute attribute : this.entity.getAttributes()) {
-                                    entity.addAttribute(new Attribute(attribute));
-                                }
+                                JsonObject serialziedEntity = this.entity.serialize();
+                                entity = ((Entity) SerializationHelper.getGson().fromJson(serialziedEntity, classType)).deserialize(serialziedEntity);
+
                             } catch (ClassNotFoundException e) {
                                 //TODO play sound that that entity is unknown, maybe show message dialogue too.
                                 e.printStackTrace();
