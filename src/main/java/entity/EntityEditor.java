@@ -16,6 +16,7 @@ import imgui.*;
 import imgui.enums.ImGuiCol;
 import imgui.enums.ImGuiColorEditFlags;
 import imgui.enums.ImGuiTreeNodeFlags;
+import imgui.enums.ImGuiWindowFlags;
 import input.Keyboard;
 import input.MousePicker;
 import org.joml.Vector2f;
@@ -168,6 +169,7 @@ public class EntityEditor extends UIComponet {
                         if(this.entity.hasParent()){
                             entity.setParent(this.entity.getParent());
                         }
+
                         EntityManager.getInstance().addEntity(entity);
                     }
 
@@ -569,11 +571,24 @@ enum EditorMode{
 class AttributeRenderer{
     protected static void renderAttributes(Collection<Attribute> attributes){
         //Loop through each attribute in the list.
+        //These will be Key value pairs, where the key is in the left column.
         for (Attribute attribute : attributes) {
+
+            //If this attribute should not be rendered, just skip this one.
             if(!attribute.isVisible()){
                 continue;
             }
+
             //Try find a type
+            ImGui.columns(2);
+            ImGui.pushID(Editor.getInstance().getNextID());
+            ImGui.pushItemWidth(ImGui.getColumnWidth());
+            ImGui.labelText("", attribute.getName());
+            ImGui.popItemWidth();
+            ImGui.popID();
+            ImGui.nextColumn();
+//            ImGui.pushID(Editor.getInstance().getNextID());
+            ImGui.beginChild(""+Editor.getInstance().getNextID(), ImGui.getColumnWidth(), ImGui.getColumnWidth());
             loop:{
                 if (attribute.getData() instanceof Vector4f) {
                     Vector4f data = (Vector4f) attribute.getData();
@@ -640,21 +655,27 @@ class AttributeRenderer{
 
                         ImGui.columns(3);
                         ImGui.pushID(Editor.getInstance().getNextID());
+//                        ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
                         ImGui.pushStyleColor(ImGuiCol.Border, 1, 0, 0, 1);
-                        ImGui.sliderFloat("X", sliderX, 0, 360);
+                        ImGui.sliderFloat("", sliderX, 0, 360);
                         ImGui.popStyleColor();
+//                        ImGui.popItemWidth();
                         ImGui.popID();
                         ImGui.nextColumn();
                         ImGui.pushID(Editor.getInstance().getNextID());
+//                        ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
                         ImGui.pushStyleColor(ImGuiCol.Border, 0, 1, 0, 1);
-                        ImGui.sliderFloat("Y", sliderY, 0, 360);
+                        ImGui.sliderFloat("", sliderY, 0, 360);
                         ImGui.popStyleColor();
+//                        ImGui.popItemWidth();
                         ImGui.popID();
                         ImGui.nextColumn();
                         ImGui.pushID(Editor.getInstance().getNextID());
+//                        ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
                         ImGui.pushStyleColor(ImGuiCol.Border, 0, 0, 1, 1);
-                        ImGui.sliderFloat("Z", sliderZ, 0, 360);
+                        ImGui.sliderFloat("", sliderZ, 0, 360);
                         ImGui.popStyleColor();
+//                        ImGui.popItemWidth();
                         ImGui.popID();
                         ImGui.columns();
 
@@ -759,11 +780,13 @@ class AttributeRenderer{
 
                     break loop;
                 }
-
                 //End If no type was found, render default string.
                 ImGui.inputText(attribute.getName(), new ImString(attribute.getData() + ""));
             }
+            ImGui.endChild();
+            ImGui.columns();
         }
+        ImGui.columns();
     }
 }
 

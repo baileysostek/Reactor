@@ -14,6 +14,7 @@ import org.joml.*;
 import org.lwjgl.opengl.*;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
+import util.StopwatchManager;
 
 import java.lang.Math;
 import java.util.Collection;
@@ -62,7 +63,7 @@ public class Renderer extends Engine {
 //            GLUtil.setupDebugMessageCallback();
         }
 
-        shaderID = ShaderManager.getInstance().loadShader("main");
+        shaderID = ShaderManager.getInstance().loadShader("pbr");
         ShaderManager.getInstance().useShader(shaderID);
 
         WIDTH = width;
@@ -122,6 +123,8 @@ public class Renderer extends Engine {
         GL46.glEnable(GL46.GL_BLEND);
         GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
 
+//        StopwatchManager.getInstance().getTimer("uploadUniforms").start();
+
         ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", CameraManager.getInstance().getActiveCamera().getPosition());
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
@@ -150,23 +153,27 @@ public class Renderer extends Engine {
             ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", directionalLightIndex, textureUnit);
         }
 
-        float[] out = new float[3];
+        int index = 0;
+        for(Light l : LightingManager.getInstance().getClosestPointLights(4, new Vector3f(0))){
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightPosition", index, l.getPosition());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightColor", index, l.getColor());
+            index++;
+        }
+//        StopwatchManager.getInstance().getTimer("uploadUniforms").stop();
 
-        out[0] = CameraManager.getInstance().getActiveCamera().getLookingDirection().x() * -1.0f;
-        out[1] = CameraManager.getInstance().getActiveCamera().getLookingDirection().y() * -1.0f;
-        out[2] = CameraManager.getInstance().getActiveCamera().getLookingDirection().z() * -1.0f;
-
-
-        //Render calls from the loaded scene.
+//        StopwatchManager.getInstance().getTimer("sort").start();
+        EntityManager.getInstance().resort();
+//        StopwatchManager.getInstance().getTimer("sort").stop();
 
 
         //Render all entities
+//        StopwatchManager.getInstance().getTimer("drawCalls").start();
         int lastID = -1;
         int lastTexture = -1;
         int loads = 0;
-        EntityManager.getInstance().resort();
         for(Entity entity : EntityManager.getInstance().getEntities()){
             if(entity.getModel() != null) {
+//                StopwatchManager.getInstance().getTimer("uploadUniforms").lapStart();
                 if (entity.getModel().getID() != lastID) {
                     ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
                     loads++;
@@ -215,9 +222,24 @@ public class Renderer extends Engine {
                     ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", new org.joml.Vector2f(0.0f));
                 }
 
+                if (entity.hasAttribute("mat_m")) {
+                    ShaderManager.getInstance().loadUniformIntoActiveShader("mat_m", entity.getAttribute("mat_m").getData());
+                } else {
+                    ShaderManager.getInstance().loadUniformIntoActiveShader("mat_m", 0.5f);
+                }
+
+                if (entity.hasAttribute("mat_r")) {
+                    ShaderManager.getInstance().loadUniformIntoActiveShader("mat_r", entity.getAttribute("mat_r").getData());
+                } else {
+                    ShaderManager.getInstance().loadUniformIntoActiveShader("mat_r", 0.5f);
+                }
+//                StopwatchManager.getInstance().getTimer("uploadUniforms").stop();
+
                 //Mess with uniforms
                 GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "transformation"), false, entity.getTransform().get(new float[16]));
+//                StopwatchManager.getInstance().getTimer("drawCalls").lapStart();
                 GL46.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
+//                StopwatchManager.getInstance().getTimer("drawCalls").stop();
 
                 lastID = entity.getModel().getID();
             }

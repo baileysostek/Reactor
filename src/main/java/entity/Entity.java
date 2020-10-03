@@ -76,6 +76,8 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.addAttribute(new Attribute<String>  ("type"         , this.toString()));
         this.addAttribute(new Attribute<Vector2f>("t_scale"      , new Vector2f(1)));
         this.addAttribute(new Attribute<Boolean>("updateInEditor", false));
+        this.addAttribute(new Attribute<Float>("mat_m", 0.5f));
+        this.addAttribute(new Attribute<Float>("mat_r", 0.5f));
     }
 
     //Type
@@ -338,31 +340,36 @@ public class Entity implements Transformable, Serializable<Entity> {
     }
 
     public final void setTexture(Sprite sprite){
-        if(sprite != null) {
-            if(!this.hasAttribute("textureID")){
-                this.addAttribute(new Attribute("textureID", sprite.getTextureID()));
-                System.out.println("[251] Set the texture ID to:"+this.getAttribute("textureID").getData());
-            }else {
-                this.getAttribute("textureID").setData(sprite.getTextureID());
-            }
-            System.out.println("[255] Set the texture ID to:"+this.getAttribute("textureID").getData());
-        }else{
-            this.getAttribute("textureID").setData(-1);
-            System.out.println("[262] Set the texture ID to:"+this.getAttribute("textureID").getData());
-        }
+        setTextureHelper("textureID", sprite);
         autoScaleSprite();
     }
 
-    public final void setTexture(String texture){
-        if(!this.hasAttribute("textureID")){
-            this.addAttribute(new Attribute("textureID", -1));
-            System.out.println("[269] Set the texture ID to:"+this.getAttribute("textureID").getData());
+    public final void setNormal(Sprite sprite){
+        setTextureHelper("normalID", sprite);
+    }
+
+    public final void setMetallic(Sprite sprite){
+        setTextureHelper("metallicID", sprite);
+    }
+
+    public final void setRoughness(Sprite sprite){
+        setTextureHelper("roughnessID", sprite);
+    }
+
+    public final void setAO(Sprite sprite){
+        setTextureHelper("ambientOcclusionID", sprite);
+    }
+
+    private final void setTextureHelper(String attributeName, Sprite sprite){
+        if(sprite != null) {
+            if(!this.hasAttribute(attributeName)){
+                this.addAttribute(new Attribute(attributeName, sprite.getTextureID()));
+            }else {
+                this.getAttribute(attributeName).setData(sprite.getTextureID());
+            }
+        }else{
+            this.getAttribute(attributeName).setData(-1);
         }
-        if(!texture.isEmpty()){
-            this.getAttribute("textureID").setData(SpriteBinder.getInstance().load(texture).getTextureID());
-            System.out.println("[273] Set the texture ID to:"+this.getAttribute("textureID").getData());
-        }
-        autoScaleSprite();
     }
 
     private final void autoScaleSprite(){
@@ -446,9 +453,11 @@ public class Entity implements Transformable, Serializable<Entity> {
 
         //Add our sprite
         if(this.hasAttribute("textureID")){
-            Sprite temp = SpriteBinder.getInstance().getSprite(this.getTextureID());
-            if(temp != null) {
-                out.add("image", temp.serialize());
+            if(this.getAttribute("textureID").shouldBeSerialized()) {
+                Sprite temp = SpriteBinder.getInstance().getSprite(this.getTextureID());
+                if (temp != null) {
+                    out.add("image", temp.serialize());
+                }
             }
         }
 

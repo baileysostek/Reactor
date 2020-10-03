@@ -7,7 +7,7 @@ public class Stopwatch {
     private int averageLastN = 144;
     private Double[] averages;
 
-    public Stopwatch(){
+    protected Stopwatch(){
         averages = new Double[averageLastN];
         for(int i = 0; i < averageLastN; i++){
             averages[i] = new Double(0);
@@ -31,7 +31,13 @@ public class Stopwatch {
             averages[(averageLastN)-(i)-1] = averages[(averageLastN)-(i)-2];
         }
         delta = ((double)(System.nanoTime() - startTime) / (1000000000));
-        averages[0] = delta;
+        averages[0] += delta;
+    }
+
+    public void clear(){
+        for(int i = 0; i < averages.length; i++){
+            averages[i] = 0d;
+        }
     }
 
     public Double getDelta() {

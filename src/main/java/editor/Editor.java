@@ -10,10 +10,7 @@ import editor.components.container.Axis;
 import editor.components.container.Transform;
 import editor.components.views.LevelEditor;
 import engine.FraudTek;
-import entity.Entity;
-import entity.EntityEditor;
-import entity.EntityManager;
-import entity.WorldOutliner;
+import entity.*;
 import entity.component.Attribute;
 import graphics.renderer.Renderer;
 import graphics.sprite.SpriteBinder;
@@ -189,8 +186,10 @@ public class Editor {
         addComponent(EnumEditorLocation.RIGHT, entityEditor);
         WorldOutliner worldOutliner = new WorldOutliner(entityEditor);
         addComponent(EnumEditorLocation.LEFT_TAB, worldOutliner);
-        LevelEditor levelEditor = new LevelEditor();
-        addComponent(EnumEditorLocation.LEFT_TAB, levelEditor);
+//        LevelEditor levelEditor = new LevelEditor();
+//        addComponent(EnumEditorLocation.LEFT_TAB, levelEditor);
+        Settings settings = new Settings();
+        addComponent(EnumEditorLocation.LEFT_TAB, settings);
         resourcesViewer = new ResourcesViewer();
         addComponent(EnumEditorLocation.LEFT_BOTTOM, resourcesViewer);
 
@@ -424,8 +423,6 @@ public class Editor {
         ImGui.popStyleVar();
         ImGui.popStyleVar();
         ImGui.popStyleVar();
-
-        ImGui.showDemoWindow(new ImBool(true));
         //End
         ImGui.end();
 

@@ -36,6 +36,7 @@ import platform.PlatformManager;
 import scene.SceneManager;
 import scripting.ScriptingEngine;
 import sound.SoundEngine;
+import util.StopwatchManager;
 import util.StringUtils;
 
 import java.util.LinkedList;
@@ -183,6 +184,8 @@ public class FraudTek {
                 PhysicsEngine.initialize();
                 LightingManager.initialize();
 
+                StopwatchManager.initialize();
+
                 //Add our initialized instances to our ScriptingManager
                 ScriptingEngine.initialize();
 
@@ -196,14 +199,52 @@ public class FraudTek {
 
 //                sun = new DirectionalLight();
 //                EntityManager.getInstance().addEntity(sun);
-                Entity drag = new Entity();
-                drag.setModel(ModelManager.getInstance().loadModel("Garden.obj").getFirst());
-                drag.setTexture(SpriteBinder.getInstance().load("Garden_BaseColor.png"));
-                EntityManager.getInstance().addEntity(drag);
+//                Entity drag = new Entity();
+//
+                Sprite sprite = new Sprite(1,1);
+                sprite.setPixelColor(0,0, Colors.RED);
+                sprite.flush();
+
+                float size = 6f;
+
+                LinkedList<Entity> group = new LinkedList<Entity>();
+
+                for(int m = 0; m < size; m++){
+                    for(int r = 0; r < size; r++){
+                        Entity sphere = new Entity();
+                        sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
+                        sphere.setPosition(new Vector3f(m * 2.25f, r * 2.25f, 0));
+                        sphere.getAttribute("mat_m").setData((float)m / size + 0.0001f);
+                        sphere.getAttribute("mat_r").setData((float)r / size + 0.0001f);
+                        sphere.setTexture(sprite);
+                        EntityManager.getInstance().addEntity(sphere);
+                    }
+                }
+//
+//                drag.setTexture(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_A.png"));
+//                drag.setMetallic(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_M.png"));
+//                drag.setRoughness(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_R.png"));
+//                drag.setNormal(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_N.png"));
+//                drag.setScale(0.01f);
+//                drag.setRotation(new Vector3f(270 , 0 ,0 ));
+
+//                EntityManager.getInstance().addEntity(drag);
                 EntityManager.getInstance().addEntity(new DirectionalLight());
                 EntityManager.getInstance().addEntity(new DirectionalLight());
                 EntityManager.getInstance().addEntity(new ParticleSystem());
-//                EntityManager.getInstance().addEntity(new PointLight());
+                EntityManager.getInstance().addEntity(new PointLight());
+
+
+                StopwatchManager.getInstance().addTimer("tick");
+//                StopwatchManager.getInstance().addTimer("tick_editor");
+//                StopwatchManager.getInstance().addTimer("tick_physics");
+//                StopwatchManager.getInstance().addTimer("shadowCalculations");
+//                StopwatchManager.getInstance().addTimer("uploadUniforms");
+                StopwatchManager.getInstance().addTimer("render");
+//                StopwatchManager.getInstance().addTimer("render_editor");
+//                StopwatchManager.getInstance().addTimer("drawCalls");
+//                StopwatchManager.getInstance().addTimer("sort");
+
             }
         }
     }
@@ -229,6 +270,8 @@ public class FraudTek {
                     FRAMES = frames;
                     frames = 0;
                     runningDelta -= 1;
+//                    StopwatchManager.getInstance().printAllDeltas();
+//                    StopwatchManager.getInstance().clearAll();
                 }
 
                 render();
@@ -263,14 +306,17 @@ public class FraudTek {
     }
 
     private static void tick(double delta){//Scalar to multiply positions by
+        StopwatchManager.getInstance().update(delta);
 //        ChromaManager.getInstance().tick(delta);
         //Update all engine components, this gives the editors widgets time to update
+        StopwatchManager.getInstance().getTimer("tick").start();
         CameraManager.getInstance().update(delta);
         MousePicker.getInstance().tick(delta);
         SceneManager.getInstance().update(delta);
         LightingManager.getInstance().update(delta);
         EntityManager.getInstance().update(delta);
         ParticleManager.getInstance().update(delta);
+
 
 //        Vector3f pos = MousePicker.rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
 //        if(pos == null){
@@ -281,18 +327,24 @@ public class FraudTek {
 //        test1.setPosition(pos);
 
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+//            StopwatchManager.getInstance().getTimer("tick_editor").start();
             Editor.getInstance().update(delta);
+//            StopwatchManager.getInstance().getTimer("tick_editor").start();
         }else{
+//            StopwatchManager.getInstance().getTimer("tick_physics").start();
             PhysicsEngine.getInstance().update(delta);
+//            StopwatchManager.getInstance().getTimer("tick_physics").start();
         }
-
+        StopwatchManager.getInstance().getTimer("tick").stop();
     }
 
     private static void render(){
         //Render World.
+        StopwatchManager.getInstance().getTimer("render").start();
         Renderer.getInstance().render();
         ParticleManager.getInstance().render();
 
+//        StopwatchManager.getInstance().getTimer("render_editor").start();
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
             //Draw Axis
             int size = 4096;
@@ -331,22 +383,27 @@ public class FraudTek {
 //            }
 
         }
+//        StopwatchManager.getInstance().getTimer("render_editor").stop();
 
         SceneManager.getInstance().render();
 
+//        StopwatchManager.getInstance().getTimer("render_editor").lapStart();
         //If Dev render UI
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
             Editor.getInstance().preUIRender();
         }
+//        StopwatchManager.getInstance().getTimer("render_editor").stop();
 
         PhysicsEngine.getInstance().render();
         Renderer.getInstance().postpare();
 
         //If Dev render UI
+//        StopwatchManager.getInstance().getTimer("render_editor").lapStart();
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
             Editor.getInstance().render();
         }
-
+//        StopwatchManager.getInstance().getTimer("render_editor").stop();
+        StopwatchManager.getInstance().getTimer("render").stop();
     }
 
     private static void shutdown(){
