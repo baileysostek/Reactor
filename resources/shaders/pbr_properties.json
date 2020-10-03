@@ -1,0 +1,40 @@
+{
+  "Name":"main",
+  "Version": "#version 100",
+  "Vertex":{
+    "Attributes": {
+      "vPosition": "vec4",
+      "vNormal": "vec3",
+      "vColor": "vec3",
+      "vTexture": "vec2"
+    },
+    "Uniforms": {
+      "transformation":"mat4",
+      "perspective":"mat4",
+      "view":"mat4",
+      "cameraPos": "vec3",
+      "t_offset":"vec2",
+      "t_scale": "vec2",
+      "lightSpaceMatrix": "mat4"
+    },
+    "Varying": {
+
+    }
+  },
+  "Fragment":{
+    "Uniforms": {
+      "textureID": "sampler2D",
+      "normalID": "sampler2D",
+      "metallicID": "sampler2D",
+      "roughnessID": "sampler2D",
+      "ambientOcclusionID": "sampler2D",
+      "shadowMap": "sampler2D",
+      "sunAngle": "vec3",
+      "sunColor": "vec3",
+      "lightPosition": "vec3",
+      "lightColor": "vec3",
+      "mat_m": "float",
+      "mat_r": "float"
+    }
+  }
+}

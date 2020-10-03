@@ -3,6 +3,7 @@ package particle;
 import camera.CameraManager;
 import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
+import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL46;
 
@@ -60,7 +61,7 @@ public class ParticleManager {
             colors[i * 4 + 0] = (float) Math.random();
             colors[i * 4 + 1] = (float) Math.random();
             colors[i * 4 + 2] = (float) Math.random();
-            colors[i * 4 + 3] = 1;
+            colors[i * 4 + 3] = 1f;
         }
 
 
@@ -79,18 +80,16 @@ public class ParticleManager {
         vbo_color = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_color);
         GL46.glBufferData(GL46.GL_ARRAY_BUFFER, colors, GL46.GL_STREAM_DRAW);
-        GL46.glVertexAttribPointer(2, 4, GL46.GL_UNSIGNED_BYTE, false, 0, 0);
+        GL46.glVertexAttribPointer(2, 4, GL46.GL_FLOAT, false, 0, 0);
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
         GL46.glBindVertexArray(0);
     }
 
     public void update(double delta){
-        //Update particles
-        for(int i = 0; i < getMaxParticles(); i++){
-            positions[i * 3 + 1] -= 1 * delta;
+        for(ParticleSystem system : systems){
+            updateSystem(system);
         }
-
     }
 
     public void render(){
@@ -100,71 +99,29 @@ public class ParticleManager {
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "projection"),false, Renderer.getInstance().getProjectionMatrix());
 
-//        GL46.glClear(GL46.GL_COLOR_BUFFER_BIT | GL46.GL_DEPTH_BUFFER_BIT);
-
         GL46.glBindVertexArray(vao_id);
-
-        //Flush CPU buffer to GPU
-        //Read buffered data
-//        GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_pos);
-//        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, positions.length, GL46.GL_STREAM_DRAW);
-//        GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, 0, positions);
-//
-//        GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_color);
-//        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, colors.length, GL46.GL_STREAM_DRAW);
-//        GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, 0, colors);
-
 
         // 1rst attribute buffer : vertices
         GL46.glEnableVertexAttribArray(0);
-        GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_vertex);
-        GL46.glVertexAttribPointer(
-            0, // attribute. No particular reason for 0, but must match the layout in the shader.
-            3, // size
-            GL46.GL_FLOAT, // type
-            false, // normalized?
-            0, // stride
-            0 // array buffer offset
-        );
-
-        // 2nd attribute buffer : positions of particles' centers
+        // 2nd attribute buffer : translations
         GL46.glEnableVertexAttribArray(1);
-        GL46.glBindBuffer( GL46.GL_ARRAY_BUFFER, vbo_pos);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, positions, GL46.GL_STREAM_DRAW);
-        GL46.glVertexAttribPointer(
-            1, // attribute. No particular reason for 1, but must match the layout in the shader.
-            3, // size : x + y + z + size => 4
-            GL46.GL_FLOAT, // type
-            false, // normalized?
-            0, // stride
-            0 // array buffer offset
-        );
-
         // 3rd attribute buffer : particles' colors
         GL46.glEnableVertexAttribArray(2);
-        GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_color);
-        GL46.glVertexAttribPointer(
-            2, // attribute. No particular reason for 1, but must match the layout in the shader.
-            4, // size : r + g + b + a => 4
-            GL46.GL_UNSIGNED_BYTE, // type
-            true, // normalized? *** YES, this means that the unsigned char[4] will be accessible with a vec4 (floats) in the shader ***
-            0, // stride
-            0 // array buffer offset
-        );
-        // These functions are specific to glDrawArrays*Instanced*.
-        // The first parameter is the attribute buffer we're talking about.
-        // The second parameter is the "rate at which generic vertex attributes advance when rendering multiple instances"
-        // http://www.opengl.org/sdk/docs/man/xhtml/glVertexAttribDivisor.xml
+//        // 4th attribute buffer : particles' scale
+//        GL46.glEnableVertexAttribArray(2);
+
         GL46.glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
         GL46.glVertexAttribDivisor(1, 1); // positions : one per quad (its center) -> 1
         GL46.glVertexAttribDivisor(2, 1); // color : one per quad -> 1
 
-        // Draw the particules !
-        // This draws many times a small triangle_strip (which looks like a quad).
-        // This is equivalent to :
-        // for(i in ParticlesCount) : glDrawArrays(GL_TRIANGLE_STRIP, 0, 4),
-        // but faster.
-        GL46.glDrawArraysInstanced(GL46.GL_TRIANGLE_STRIP, 0, 4, MAX_PARTICLES);
+
+        int toRender = getAllocatedParticles();
+        GL46.glDrawArraysInstanced(GL46.GL_TRIANGLE_STRIP, 0, 4, toRender);
+
+        GL46.glDisableVertexAttribArray(0);
+        GL46.glDisableVertexAttribArray(1);
+        GL46.glDisableVertexAttribArray(2);
+
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
         GL46.glBindVertexArray(0);
 
@@ -175,6 +132,15 @@ public class ParticleManager {
         return MAX_PARTICLES;
     }
 
+    public int getAllocatedParticles(){
+        int count = 0;
+        for(ParticleSystem p : systems){
+           count += p.numParticles.getData();
+        }
+        return count;
+    }
+
+    //Returns the number of particles we can still render
     public int getUnallocatedParticles(ParticleSystem self){
         int remaining = MAX_PARTICLES;
         for(ParticleSystem p : systems){
@@ -193,7 +159,53 @@ public class ParticleManager {
     }
 
     public void add(ParticleSystem particleSystem) {
-        systems.add(particleSystem);
+        if(systems.add(particleSystem)){
+            updateSystem(particleSystem);
+        }
+    }
+
+    private void updateSystem(ParticleSystem system){
+
+        Particle p = null;
+        Vector3f systemPos = system.getPosition();
+
+        int startIndex = system.getStartIndex();
+
+        float[] positions = new float[system.numParticles.getData() * 3];
+        float[] colors    = new float[system.numParticles.getData() * 4];
+
+        for(int i = 0; i < system.numParticles.getData(); i++){
+            p = system.getParticle(i);
+
+            positions[i * 3 + 0] =  systemPos.x;
+            positions[i * 3 + 1] =  systemPos.y;
+            positions[i * 3 + 2] =  systemPos.z;
+
+            colors[i * 4 + 0] = system.getColor().x;
+            colors[i * 4 + 1] = system.getColor().y;
+            colors[i * 4 + 2] = system.getColor().z;
+            colors[i * 4 + 3] = 1f;
+        }
+
+        //Buffer
+        GL46.glBindVertexArray(vao_id);
+        // 2nd attribute buffer : positions of particles' centers
+        GL46.glEnableVertexAttribArray(1);
+        GL46.glBindBuffer( GL46.GL_ARRAY_BUFFER, vbo_pos);
+        GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex, positions);
+        GL46.glVertexAttribPointer(1, 3, GL46.GL_FLOAT, false, 0, 0);
+
+
+        // 3rd attribute buffer : particles' colors
+        GL46.glEnableVertexAttribArray(2);
+        GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_color);
+        GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex, colors);
+        GL46.glVertexAttribPointer(2, 4, GL46.GL_FLOAT, false, 0, 0);
+
+        GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
+        GL46.glDisableVertexAttribArray(0);
+        GL46.glDisableVertexAttribArray(1);
+        GL46.glBindVertexArray(0);
     }
 
     public void remove(ParticleSystem particleSystem){

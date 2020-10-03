@@ -236,6 +236,10 @@ public class ShaderManager {
         float[] data = new float[uniformType.getSize()];
 
         switch(uniformType){
+            case FLOAT : {
+                GL46.glUniform1f(location, (float)uniform);
+                break;
+            }
             case VEC2 : {
                 Vector2f vector2f = (Vector2f)uniform;
                 GL46.glUniform2f(location, vector2f.x(), vector2f.y());

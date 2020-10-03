@@ -8,8 +8,9 @@ precision highp int;
 precision highp float;
 precision highp sampler2D;
 
-#define maxLights 4
-#define specularStrength 0.5
+#define maxLights 25
+#define specularStrength 0.1
+#define PI 3.14159
 
 // Inputs
 in vec3 passNormal;
@@ -21,23 +22,23 @@ in vec4 passPosLightSpace[maxLights];
 //Reflection normal.
 in vec3 passReflectNormal;
 
-//Texture Unit 1
+//Texture Units
 uniform sampler2D textureID;
 uniform sampler2D normalID;
 uniform sampler2D metallicID;
 uniform sampler2D roughnessID;
 uniform sampler2D ambientOcclusionID;
 
+//Shadow casting light sources
 uniform sampler2D shadowMap[maxLights];
-
-uniform samplerCube nearestProbe;
-uniform samplerCube skybox;
-
 uniform vec3 sunAngle[maxLights];
 uniform vec3 sunColor[maxLights];
 
-layout( location = 0 ) out vec4 gl_FragColor;
+//Skybox and nearest Reflection probe
+uniform samplerCube nearestProbe;
+uniform samplerCube skybox;
 
+layout( location = 0 ) out vec4 gl_FragColor;
 
 float dotProduct(vec3 posI, vec3 posJ){
     return (posI.x * posJ.x) + (posI.y * posJ.y) + (posI.z * posJ.z);
@@ -59,6 +60,19 @@ float ShadowCalculation(int index)
     return (depth + bias) < pos.z ? 1.0 : 0.0;
 }
 
+float DistributionGGX(vec3 N, vec3 H, float a)
+{
+    float a2     = a*a;
+    float NdotH  = max(dot(N * -1, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+
+    float nom    = a2;
+    float denom  = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom        = PI * denom * denom;
+
+    return nom / denom;
+}
+
 void main(void){
     //Sample the Albedo texture
     vec4 albedo = texture(textureID, passCoords);
@@ -71,17 +85,20 @@ void main(void){
     vec3 ambient = 0.15 * albedo.xyz;
 
     // ray to camera from frag
-    vec3 viewDir = normalize((passCamPos) - passFragPos);
+    vec3 viewDir = normalize((passCamPos * -1));
+    vec3 viewDir2 = normalize((passCamPos * -1) - passFragPos);
 
     vec3 totalDiffuse  = vec3(0);
     vec3 totalSpecular = vec3(0);
     //Directional lights
     for(int i = 0; i < maxLights; i++){
-        vec3 lightDir   = normalize(sunAngle[i] * -1);
-        vec3 reflectDir = reflect(lightDir, passNormal);
+        vec3 lightDir      = normalize(sunAngle[i]);
+        vec3 reflectDir    = reflect(lightDir, passNormal);
+        vec3 halfwayDir    = normalize(lightDir + viewDir);
+        vec3 halfwayDir2    = normalize(lightDir + viewDir2);
 
-        float diffuse  = clamp(dotProduct(passNormal, lightDir), 0, 1);
-        float specular = pow(clamp(dotProduct(viewDir, reflectDir), 0, 1), 265);
+        float diffuse  = clamp(dotProduct(passNormal, lightDir * -1), 0, 1);
+        float specular = pow(clamp(dotProduct(viewDir, reflectDir), 0, 1), 32);
 
         float shadow = ShadowCalculation(i);    
         vec3 lightColor = ((1.0 - shadow) * sunColor[i]);
@@ -93,6 +110,6 @@ void main(void){
     vec3 albedoReflect = mix(albedo.xyz, getReflection(), texture(metallicID, passCoords).r);
     vec3 lighting = (ambient + totalSpecular + clamp(totalDiffuse, 0, 1)) * albedoReflect;
 
-    gl_FragColor = vec4(lighting , 1);
+    gl_FragColor = vec4(lighting, 1);
 
 }

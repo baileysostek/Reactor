@@ -5,7 +5,7 @@ precision highp int;
 precision highp float;
 precision highp sampler2D;
 
-#define maxLights 4
+#define maxLights 25
 
 // Inputs
 in vec4 vPosition;

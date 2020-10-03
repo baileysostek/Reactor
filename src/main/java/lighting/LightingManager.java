@@ -7,7 +7,9 @@ import graphics.renderer.ShaderManager;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
 import particle.ParticleManager;
+import util.StopwatchManager;
 
+import java.awt.*;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
@@ -19,6 +21,7 @@ public class LightingManager {
 
     private LinkedList<Light> lights        = new LinkedList<>();
     private LinkedList<DirectionalLight> shadowCasters = new LinkedList<>();
+    private LinkedList<PointLight> pointLights = new LinkedList<>();
 
     //Lock for locking our entity set
     private Lock lock;
@@ -77,6 +80,10 @@ public class LightingManager {
         return shadowCasters;
     }
 
+    public LinkedList<PointLight> getClosestPointLights(int n, Vector3f point) {
+        return pointLights;
+    }
+
     public void add(Light light){
         //Disallow adding a null light.
         if(light == null){
@@ -90,6 +97,9 @@ public class LightingManager {
             this.lights.add(light);
             if(light instanceof DirectionalLight){
                 shadowCasters.add((DirectionalLight) light);
+            }
+            if(light instanceof PointLight){
+                pointLights.add((PointLight) light);
             }
         } finally {
             lock.unlock();
@@ -110,8 +120,12 @@ public class LightingManager {
             if(light instanceof DirectionalLight){
                 shadowCasters.remove(light);
             }
+            if(light instanceof PointLight){
+                pointLights.remove(light);
+            }
         } finally {
             lock.unlock();
         }
     }
+
 }
