@@ -13,7 +13,6 @@ import models.Model;
 import models.ModelManager;
 import org.joml.*;
 import serialization.Serializable;
-import serialization.SerializationHelper;
 import util.Callback;
 import util.StringUtils;
 
@@ -35,6 +34,7 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Attributes are the raw pieces of data that make up an entity;
     private HashMap<String, Attribute> attributes    = new HashMap<>();
+    private HashMap<String, LinkedList<Attribute>> categories = new HashMap<>();
     //Components reference and set attributes on an entity, the Attributes are a state and the components are how they are modified.
     private LinkedList<Component> components = new LinkedList<Component>();
 
@@ -62,19 +62,19 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     private final void addDefaultAttributes(){
         //Every entity has some default attributes
-        this.addAttribute(new Attribute<Vector3f>("position"     , new Vector3f(0f)));
-        this.addAttribute(new Attribute<Vector3f>("rotation"     , new Vector3f(0f)).setType(EnumAttributeType.SLIDERS));
-        this.addAttribute(new Attribute<Vector3f>("scale"        , new Vector3f(1f)));
-        this.addAttribute(new Attribute<Integer> ("textureID"    , SpriteBinder.getInstance().getFileNotFoundID()));
-        this.addAttribute(new Attribute<Integer> ("normalID"   , SpriteBinder.getInstance().getDefaultNormalMap()));
-        this.addAttribute(new Attribute<Integer> ("metallicID"   , SpriteBinder.getInstance().getDefaultMetallicMap()));
-        this.addAttribute(new Attribute<Integer> ("roughnessID"   , SpriteBinder.getInstance().getDefaultRoughnessMap()));
-        this.addAttribute(new Attribute<Integer> ("ambientOcclusionID"   , SpriteBinder.getInstance().getDefaultAmbientOcclusionMap()));
-        this.addAttribute(new Attribute<Integer> ("zIndex"       , 0));
-        this.addAttribute(new Attribute<Boolean> ("autoScale"    , false));
-        this.addAttribute(new Attribute<String>  ("name"         , "Undefined"));
-        this.addAttribute(new Attribute<String>  ("type"         , this.toString()));
-        this.addAttribute(new Attribute<Vector2f>("t_scale"      , new Vector2f(1)));
+        this.addAttribute("Transform", new Attribute<Vector3f>("position"     , new Vector3f(0f)));
+        this.addAttribute("Transform", new Attribute<Vector3f>("rotation"     , new Vector3f(0f)).setType(EnumAttributeType.SLIDERS));
+        this.addAttribute("Transform", new Attribute<Vector3f>("scale"        , new Vector3f(1f)));
+        this.addAttribute("Material",  new Attribute<Integer> ("textureID"    , SpriteBinder.getInstance().getFileNotFoundID()));
+        this.addAttribute("Material",  new Attribute<Integer> ("normalID"   , SpriteBinder.getInstance().getDefaultNormalMap()));
+        this.addAttribute("Material",  new Attribute<Integer> ("metallicID"   , SpriteBinder.getInstance().getDefaultMetallicMap()));
+        this.addAttribute("Material",  new Attribute<Integer> ("roughnessID"   , SpriteBinder.getInstance().getDefaultRoughnessMap()));
+        this.addAttribute("Material",  new Attribute<Integer> ("aoID"   , SpriteBinder.getInstance().getDefaultAmbientOcclusionMap()));
+        this.addAttribute("2D",        new Attribute<Integer> ("zIndex"       , 0));
+        this.addAttribute("2D",        new Attribute<Boolean> ("autoScale"    , false));
+        this.addAttribute("Title",     new Attribute<String>  ("name"         , "Undefined"));
+        this.addAttribute("Title",     new Attribute<String>  ("type"         , this.toString()));
+        this.addAttribute("2D",        new Attribute<Vector2f>("t_scale"      , new Vector2f(1)));
         this.addAttribute(new Attribute<Boolean>("updateInEditor", false));
         this.addAttribute(new Attribute<Float>("mat_m", 0.5f));
         this.addAttribute(new Attribute<Float>("mat_r", 0.5f));
@@ -93,27 +93,36 @@ public class Entity implements Transformable, Serializable<Entity> {
     //Adds an attribute to this entity, and creates a subscriber that iterates through all components which may subscribe to this event.
     //Attribute interface
     public final void addAttribute(Attribute attribute){
-        this.attributes.put(attribute.getName(), attribute);
+        addAttribute("Miscellaneous", attribute);
+    }
 
+    public final void addAttribute(String category, Attribute attribute){
+        if(!category.isEmpty()){
+            if(!this.categories.containsKey(category)){
+                this.categories.put(category, new LinkedList<Attribute>());
+            }
+            this.categories.get(category).addLast(attribute);
+        }
+
+        this.attributes.put(attribute.getName(), attribute);
         //Create subscriber to this attribute changing states
         attribute.subscribe(new Callback() {
             @Override
             public Object callback(Object... objects) {
-                //Cast passed attribute
-                Attribute attribute = (Attribute) objects[0];
-                //Update all components
-                syncAttributes(attribute, new LinkedList<Component>());
-                //IF this is an attribute with a classification that we sort based on we need to resort the entities.
-                //TODO have attribute classificaitons
-                if (attribute.getName().equals("zIndex")) {
-                    EntityManager.getInstance().resort();
-                }
+            //Cast passed attribute
+            Attribute attribute = (Attribute) objects[0];
+            //Update all components
+            syncAttributes(attribute, new LinkedList<Component>());
+            //IF this is an attribute with a classification that we sort based on we need to resort the entities.
+            //TODO have attribute classificaitons
+            if (attribute.getName().equals("zIndex")) {
+                EntityManager.getInstance().resort();
+            }
 
-                //No need to return anything.
-                return null;
+            //No need to return anything.
+            return null;
             }
         });
-
     }
 
     //Adds an attribute to this entity, and creates a subscriber that iterates through all components which may subscribe to this event.
@@ -122,11 +131,23 @@ public class Entity implements Transformable, Serializable<Entity> {
         if(this.attributes.containsKey(attribute.getName())) {
             this.attributes.remove(attribute.getName());
         }
+        for(String category : categories.keySet()){
+            if(categories.get(category).contains(attribute)){
+                categories.remove(attribute);
+            }
+        }
     }
 
     public final void removeAttribute(String attribute){
         if(this.attributes.containsKey(attribute)) {
             this.attributes.remove(attribute);
+        }
+        for(String category : categories.keySet()){
+            for(Attribute att : categories.get(category)){
+                if(att.getName().equals(attribute)){
+                    categories.remove(att);
+                }
+            }
         }
     }
 
@@ -297,7 +318,7 @@ public class Entity implements Transformable, Serializable<Entity> {
             AABB tmp = new AABB();
             for (Vector3f point : this.getModel().getAABB().getVerteces()) {
                 Vector3f tmpPoint = new Vector3f(point);
-                tmpPoint.mul(new Vector3f(this.getScale()));
+//                tmpPoint.mul(new Vector3f(this.getScale()));
                 tmpPoint.mulDirection(this.getTransform());
                 tmpPoint.add(this.getPosition());
                 tmp.recalculateFromPoint(tmpPoint);
@@ -357,7 +378,7 @@ public class Entity implements Transformable, Serializable<Entity> {
     }
 
     public final void setAO(Sprite sprite){
-        setTextureHelper("ambientOcclusionID", sprite);
+        setTextureHelper("aoID", sprite);
     }
 
     private final void setTextureHelper(String attributeName, Sprite sprite){
@@ -546,5 +567,13 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     public boolean hasParent() {
         return this.parent != null;
+    }
+
+    public Collection<String> getAttributeCategories() {
+        return this.categories.keySet();
+    }
+
+    public Collection<Attribute> getAttributesOfCategory(String category) {
+        return this.categories.get(category);
     }
 }

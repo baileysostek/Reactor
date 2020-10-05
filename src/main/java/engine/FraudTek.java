@@ -201,25 +201,25 @@ public class FraudTek {
 //                EntityManager.getInstance().addEntity(sun);
 //                Entity drag = new Entity();
 //
-                Sprite sprite = new Sprite(1,1);
-                sprite.setPixelColor(0,0, Colors.RED);
-                sprite.flush();
+//                Sprite sprite = new Sprite(1,1);
+//                sprite.setPixelColor(0,0, Colors.RED);
+//                sprite.flush();
+//
+//                float size = 6f;
+//
+//                LinkedList<Entity> group = new LinkedList<Entity>();
 
-                float size = 6f;
-
-                LinkedList<Entity> group = new LinkedList<Entity>();
-
-                for(int m = 0; m < size; m++){
-                    for(int r = 0; r < size; r++){
-                        Entity sphere = new Entity();
-                        sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
-                        sphere.setPosition(new Vector3f(m * 2.25f, r * 2.25f, 0));
-                        sphere.getAttribute("mat_m").setData((float)m / size + 0.0001f);
-                        sphere.getAttribute("mat_r").setData((float)r / size + 0.0001f);
-                        sphere.setTexture(sprite);
-                        EntityManager.getInstance().addEntity(sphere);
-                    }
-                }
+//                for(int m = 0; m < size; m++){
+//                    for(int r = 0; r < size; r++){
+//                        Entity sphere = new Entity();
+//                        sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
+//                        sphere.setPosition(new Vector3f(m * 2.25f, r * 2.25f, 0));
+//                        sphere.getAttribute("mat_m").setData((float)m / size + 0.0001f);
+//                        sphere.getAttribute("mat_r").setData((float)r / size + 0.0001f);
+//                        sphere.setTexture(sprite);
+//                        EntityManager.getInstance().addEntity(sphere);
+//                    }
+//                }
 //
 //                drag.setTexture(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_A.png"));
 //                drag.setMetallic(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_M.png"));
@@ -353,9 +353,9 @@ public class FraudTek {
             Renderer.getInstance().drawLine(new Vector3f(0, 0, -size), new Vector3f(0, 0, size), new Vector3f(0, 0, 1));
 
             //Draw arrows point in +Axis direction.
-            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(1, 0, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
-            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(0, 1, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
-            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(0, 0, 1), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
+//            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(1, 0, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
+//            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(0, 1, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
+//            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(0, 0, 1), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
 
             //Draw Grid
             size = 50;

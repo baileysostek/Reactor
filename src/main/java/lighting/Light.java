@@ -17,7 +17,7 @@ public abstract class Light extends Entity {
         removeAttribute("normalID");
         removeAttribute("metallicID");
         removeAttribute("roughnessID");
-        removeAttribute("ambientOcclusionID");
+        removeAttribute("aoID");
     }
 
     public Vector3f getColor(){

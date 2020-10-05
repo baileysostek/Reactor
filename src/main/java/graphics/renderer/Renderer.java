@@ -63,7 +63,7 @@ public class Renderer extends Engine {
 //            GLUtil.setupDebugMessageCallback();
         }
 
-        shaderID = ShaderManager.getInstance().loadShader("pbr");
+        shaderID = ShaderManager.getInstance().loadShader("main");
         ShaderManager.getInstance().useShader(shaderID);
 
         WIDTH = width;
@@ -92,6 +92,7 @@ public class Renderer extends Engine {
             renderer.resize(width, height);
         }
     }
+
 
     public void setRenderType(int type){
         RENDER_TYPE = type;
@@ -204,10 +205,10 @@ public class Renderer extends Engine {
                     GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "roughnessID"), 3);
                 }
 
-                if(entity.hasAttribute("ambientOcclusionID")){
+                if(entity.hasAttribute("aoID")){
                     GL46.glActiveTexture(GL46.GL_TEXTURE0 + 4);
-                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("ambientOcclusionID").getData());
-                    GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "ambientOcclusionID"), 4);
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("aoID").getData());
+                    GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "aoID"), 4);
                 }
 
                 if (entity.hasAttribute("t_scale")) {
