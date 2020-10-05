@@ -14,10 +14,7 @@ import entity.*;
 import entity.component.Attribute;
 import graphics.renderer.Renderer;
 import graphics.sprite.SpriteBinder;
-import imgui.ImBool;
-import imgui.ImGui;
-import imgui.ImGuiIO;
-import imgui.ImVec2;
+import imgui.*;
 import imgui.callbacks.ImStrConsumer;
 import imgui.callbacks.ImStrSupplier;
 import imgui.enums.*;
@@ -90,6 +87,58 @@ public class Editor {
         io.setBackendPlatformName("imgui_java_impl_glfw"); // For clarity reasons
         io.setBackendRendererName("imgui_java_impl_lwjgl"); // For clarity reasons
 
+        //Set Inital colors
+        ImGui.getStyle().setColor(ImGuiCol.Text,                  0.90f, 0.90f, 0.90f, 1.00f);
+        ImGui.getStyle().setColor(ImGuiCol.TextDisabled,          0.60f, 0.60f, 0.60f, 1.00f);
+        ImGui.getStyle().setColor(ImGuiCol.WindowBg,              0.00f, 0.00f, 0.00f, 0.70f);
+        ImGui.getStyle().setColor(ImGuiCol.ChildBg,               0.00f, 0.00f, 0.00f, 0.00f);
+        ImGui.getStyle().setColor(ImGuiCol.PopupBg,               0.11f, 0.11f, 0.14f, 0.92f);
+        ImGui.getStyle().setColor(ImGuiCol.Border,                0.50f, 0.50f, 0.50f, 0.50f);
+        ImGui.getStyle().setColor(ImGuiCol.BorderShadow,          0.00f, 0.00f, 0.00f, 0.00f);
+        ImGui.getStyle().setColor(ImGuiCol.FrameBg,               0.43f, 0.43f, 0.43f, 0.39f);
+        ImGui.getStyle().setColor(ImGuiCol.FrameBgHovered,        0.82f, 0.54f, 0.00f, 0.40f);
+        ImGui.getStyle().setColor(ImGuiCol.FrameBgActive,         0.64f, 0.42f, 0.00f, 0.69f);
+        ImGui.getStyle().setColor(ImGuiCol.TitleBg,               0.54f, 0.36f, 0.00f, 0.83f);
+        ImGui.getStyle().setColor(ImGuiCol.TitleBgActive,         0.63f, 0.42f, 0.00f, 0.87f);
+        ImGui.getStyle().setColor(ImGuiCol.TitleBgCollapsed,      0.80f, 0.53f, 0.00f, 0.20f);
+        ImGui.getStyle().setColor(ImGuiCol.MenuBarBg,             0.55f, 0.36f, 0.00f, 0.80f);
+        ImGui.getStyle().setColor(ImGuiCol.ScrollbarBg,           0.20f, 0.25f, 0.30f, 0.60f);
+        ImGui.getStyle().setColor(ImGuiCol.ScrollbarGrab,         0.80f, 0.53f, 0.00f, 0.30f);
+        ImGui.getStyle().setColor(ImGuiCol.ScrollbarGrabHovered,  0.80f, 0.53f, 0.00f, 0.40f);
+        ImGui.getStyle().setColor(ImGuiCol.ScrollbarGrabActive,   0.80f, 0.53f, 0.00f, 0.60f);
+        ImGui.getStyle().setColor(ImGuiCol.CheckMark,             0.90f, 0.90f, 0.90f, 0.50f);
+        ImGui.getStyle().setColor(ImGuiCol.SliderGrab,            1.00f, 1.00f, 1.00f, 0.30f);
+        ImGui.getStyle().setColor(ImGuiCol.SliderGrabActive,      0.80f, 0.53f, 0.00f, 0.60f);
+        ImGui.getStyle().setColor(ImGuiCol.Button,                0.15f, 0.15f, 0.15f, 0.62f);
+        ImGui.getStyle().setColor(ImGuiCol.ButtonHovered,         0.71f, 0.47f, 0.00f, 0.79f);
+        ImGui.getStyle().setColor(ImGuiCol.ButtonActive,          0.80f, 0.53f, 0.00f, 1.00f);
+        ImGui.getStyle().setColor(ImGuiCol.Header,                0.90f, 0.59f, 0.00f, 0.45f);
+        ImGui.getStyle().setColor(ImGuiCol.HeaderHovered,         0.90f, 0.59f, 0.00f, 0.80f);
+        ImGui.getStyle().setColor(ImGuiCol.HeaderActive,          0.87f, 0.57f, 0.00f, 0.80f);
+        ImGui.getStyle().setColor(ImGuiCol.Separator,             1.00f, 1.00f, 1.00f, 0.60f);
+        ImGui.getStyle().setColor(ImGuiCol.SeparatorHovered,      0.70f, 0.46f, 0.00f, 1.00f);
+        ImGui.getStyle().setColor(ImGuiCol.SeparatorActive,       0.90f, 0.59f, 0.00f, 1.00f);
+        ImGui.getStyle().setColor(ImGuiCol.ResizeGrip,            1.00f, 1.00f, 1.00f, 0.16f);
+        ImGui.getStyle().setColor(ImGuiCol.ResizeGripHovered,     0.78f, 0.82f, 1.00f, 0.60f);
+        ImGui.getStyle().setColor(ImGuiCol.ResizeGripActive,      0.78f, 0.82f, 1.00f, 0.90f);
+        ImGui.getStyle().setColor(ImGuiCol.Tab,                   0.40f, 0.40f, 0.40f, 0.79f);
+        ImGui.getStyle().setColor(ImGuiCol.TabHovered,            0.79f, 0.79f, 0.79f, 0.80f);
+        ImGui.getStyle().setColor(ImGuiCol.TabActive,             0.76f, 0.76f, 0.76f, 0.84f);
+        ImGui.getStyle().setColor(ImGuiCol.TabUnfocused,          0.50f, 0.50f, 0.50f, 0.82f);
+        ImGui.getStyle().setColor(ImGuiCol.TabUnfocusedActive,    0.50f, 0.50f, 0.50f, 0.84f);
+        ImGui.getStyle().setColor(ImGuiCol.PlotLines,             1.00f, 1.00f, 1.00f, 1.00f);
+        ImGui.getStyle().setColor(ImGuiCol.PlotLinesHovered,      0.90f, 0.70f, 0.00f, 1.00f);
+        ImGui.getStyle().setColor(ImGuiCol.PlotHistogram,         0.90f, 0.70f, 0.00f, 1.00f);
+        ImGui.getStyle().setColor(ImGuiCol.PlotHistogramHovered,  1.00f, 0.60f, 0.00f, 1.00f);
+        ImGui.getStyle().setColor(ImGuiCol.TextSelectedBg,        0.00f, 0.00f, 1.00f, 0.35f);
+        ImGui.getStyle().setColor(ImGuiCol.DragDropTarget,        1.00f, 1.00f, 0.00f, 0.90f);
+        ImGui.getStyle().setColor(ImGuiCol.NavHighlight,          0.45f, 0.45f, 0.90f, 0.80f);
+        ImGui.getStyle().setColor(ImGuiCol.NavWindowingHighlight, 1.00f, 1.00f, 1.00f, 0.70f);
+        ImGui.getStyle().setColor(ImGuiCol.NavWindowingDimBg,     0.80f, 0.80f, 0.80f, 0.20f);
+        ImGui.getStyle().setColor(ImGuiCol.ModalWindowDimBg,      0.20f, 0.20f, 0.20f, 0.35f);
+
+
+
         // Keyboard mapping. ImGui will use those indices to peek into the io.KeysDown[] array.
         final int[] keyMap = new int[ImGuiKey.COUNT];
         keyMap[ImGuiKey.Tab] = GLFW_KEY_TAB;
@@ -114,6 +163,7 @@ public class Editor {
         keyMap[ImGuiKey.X] = GLFW_KEY_X;
         keyMap[ImGuiKey.Y] = GLFW_KEY_Y;
         keyMap[ImGuiKey.Z] = GLFW_KEY_Z;
+
         io.setKeyMap(keyMap);
 
         // Mouse cursors mapping
@@ -130,20 +180,8 @@ public class Editor {
         // ------------------------------------------------------------
         // Here goes GLFW callbacks to update user input in Dear ImGui
 
-        glfwSetKeyCallback(FraudTek.WINDOW_POINTER, (w, key, scancode, action, mods) -> {
-            if (action == GLFW_PRESS) {
-                io.setKeysDown(key, true);
-            } else if (action == GLFW_RELEASE) {
-                io.setKeysDown(key, false);
-            }
-
-            io.setKeyCtrl(io.getKeysDown(GLFW_KEY_LEFT_CONTROL) || io.getKeysDown(GLFW_KEY_RIGHT_CONTROL));
-            io.setKeyShift(io.getKeysDown(GLFW_KEY_LEFT_SHIFT) || io.getKeysDown(GLFW_KEY_RIGHT_SHIFT));
-            io.setKeyAlt(io.getKeysDown(GLFW_KEY_LEFT_ALT) || io.getKeysDown(GLFW_KEY_RIGHT_ALT));
-            io.setKeySuper(io.getKeysDown(GLFW_KEY_LEFT_SUPER) || io.getKeysDown(GLFW_KEY_RIGHT_SUPER));
-        });
-
         glfwSetCharCallback(FraudTek.WINDOW_POINTER, (w, c) -> {
+            System.out.println("Imgui:" + c);
             if (c != GLFW_KEY_DELETE) {
                 io.addInputCharacter(c);
             }
@@ -251,6 +289,8 @@ public class Editor {
 //                }
 //            }
 //        }
+
+        this.onExitPlay();
 
     }
 
@@ -478,10 +518,10 @@ public class Editor {
 
     public void onPlay(){
         //restore the camera
-        if(this.gameCamera != null) {
-            CameraManager.getInstance().setActiveCamera(this.gameCamera);
-            this.gameCamera = null;
-        }
+//        if(this.gameCamera != null) {
+//            CameraManager.getInstance().setActiveCamera(this.gameCamera);
+//            this.gameCamera = null;
+//        }
     }
 
     public void onExitPlay(){
@@ -501,5 +541,18 @@ public class Editor {
 
     public ResourcesViewer getFileBrowser() {
         return resourcesViewer;
+    }
+
+    public void sendKeyEvent(long window, int key, int scancode, int action, int mods) {
+        if (action == GLFW_PRESS) {
+            io.setKeysDown(key, true);
+        } else if (action == GLFW_RELEASE) {
+            io.setKeysDown(key, false);
+        }
+
+        io.setKeyCtrl(io.getKeysDown(GLFW_KEY_LEFT_CONTROL) || io.getKeysDown(GLFW_KEY_RIGHT_CONTROL));
+        io.setKeyShift(io.getKeysDown(GLFW_KEY_LEFT_SHIFT) || io.getKeysDown(GLFW_KEY_RIGHT_SHIFT));
+        io.setKeyAlt(io.getKeysDown(GLFW_KEY_LEFT_ALT) || io.getKeysDown(GLFW_KEY_RIGHT_ALT));
+        io.setKeySuper(io.getKeysDown(GLFW_KEY_LEFT_SUPER) || io.getKeysDown(GLFW_KEY_RIGHT_SUPER));
     }
 }

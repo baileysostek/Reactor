@@ -63,6 +63,7 @@ public class ModelManager {
                 cachedModels.put(modelName, model);
                 LinkedList<Model> out = new LinkedList();
                 out.add(model);
+                cachedModels.put(modelName, model);
                 return out;
             }
             default: {
@@ -92,7 +93,9 @@ public class ModelManager {
                     return out;
                 }
 
-                return parseAssimp(aiScene);
+                LinkedList<Model> out = parseAssimp(aiScene);
+                cachedModels.put(modelName, out.getFirst());
+                return out;
             }
         }
     }

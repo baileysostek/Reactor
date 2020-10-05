@@ -62,11 +62,16 @@ public class EntityManager {
 
     public synchronized LinkedList<Entity> getEntitiesOfType(Class type, Class ... types){
         if(types.length == 0) {
+            if(!this.typedEntities.containsKey(type)) {
+                this.typedEntities.put(type, new LinkedList<Entity>());
+            }
             return this.typedEntities.get(type);
         }else{
             LinkedList<Entity> entities = new LinkedList<>(this.typedEntities.get(type));
             for(Class additionalType : types){
-                entities.addAll(this.typedEntities.get(additionalType));
+                if(this.typedEntities.containsKey(type)) {
+                    entities.addAll(this.typedEntities.get(additionalType));
+                }
             }
             return entities;
         }
