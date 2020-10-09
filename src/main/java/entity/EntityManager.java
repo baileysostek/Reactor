@@ -61,20 +61,20 @@ public class EntityManager {
     }
 
     public synchronized LinkedList<Entity> getEntitiesOfType(Class type, Class ... types){
-        if(types.length == 0) {
-            if(!this.typedEntities.containsKey(type)) {
-                this.typedEntities.put(type, new LinkedList<Entity>());
-            }
-            return this.typedEntities.get(type);
-        }else{
-            LinkedList<Entity> entities = new LinkedList<>(this.typedEntities.get(type));
-            for(Class additionalType : types){
-                if(this.typedEntities.containsKey(type)) {
-                    entities.addAll(this.typedEntities.get(additionalType));
-                }
-            }
-            return entities;
+        LinkedList<Entity> entities = new LinkedList<>();
+
+        if(!this.typedEntities.containsKey(type)) {
+            this.typedEntities.put(type, new LinkedList<Entity>());
         }
+        entities.addAll(this.typedEntities.get(type));
+
+        for(Class additionalType : types){
+            if(this.typedEntities.containsKey(additionalType)) {
+                entities.addAll(this.typedEntities.get(additionalType));
+            }
+        }
+
+        return entities;
     }
 
     //Once per insert
@@ -172,6 +172,15 @@ public class EntityManager {
                 hits.add(e);
             }
         }
+
+        Vector3f finalPos = pos;
+        Collections.sort(hits, new Comparator<Entity>() {
+            @Override
+            public int compare(Entity o1, Entity o2) {
+                return -1 * (int) (o1.getPosition().distance(finalPos) - o2.getPosition().distance(finalPos));
+            }
+        });
+
         return hits;
     }
 

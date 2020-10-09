@@ -301,6 +301,10 @@ public class Entity implements Transformable, Serializable<Entity> {
         }
         //Call to child
         this.update(delta);
+
+        if(this.getModel() != null){
+            this.getModel().update(delta);
+        }
     }
 
     //Update Method
@@ -343,7 +347,6 @@ public class Entity implements Transformable, Serializable<Entity> {
     public final int getTextureID(){
         if(!this.hasAttribute("textureID")){
             this.addAttribute(new Attribute("textureID", -1));
-            System.out.println("[232] Set the texture ID to:"+this.getAttribute("textureID").getData());
         }
         return (int) this.getAttribute("textureID").getData();
     }
@@ -352,10 +355,8 @@ public class Entity implements Transformable, Serializable<Entity> {
     public final void setTexture(int id){
         if(!this.hasAttribute("textureID")){
             this.addAttribute(new Attribute("textureID", id));
-            System.out.println("[241] Set the texture ID to:"+this.getAttribute("textureID").getData());
         }else {
             this.getAttribute("textureID").setData(id);
-            System.out.println("[244] Set the texture ID to:"+this.getAttribute("textureID").getData());
         }
         autoScaleSprite();
     }
@@ -371,6 +372,10 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     public final void setMetallic(Sprite sprite){
         setTextureHelper("metallicID", sprite);
+    }
+
+    public final void setMetallic(int spriteId){
+        this.getAttribute("metallicID").setData(spriteId);
     }
 
     public final void setRoughness(Sprite sprite){

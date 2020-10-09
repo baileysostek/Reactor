@@ -5,14 +5,18 @@ import graphics.renderer.GLTarget;
 import graphics.renderer.ShaderManager;
 import graphics.renderer.EnumGLDatatype;
 import graphics.renderer.Handshake;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.lwjgl.PointerBuffer;
 import org.lwjgl.assimp.*;
 import util.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -70,8 +74,6 @@ public class ModelManager {
                 //We import a scene based on our model file.
 
                 AIPropertyStore store = Assimp.aiCreatePropertyStore();
-//                Assimp.aiSetImportPropertyFloat(store, Assimp.AI_CONFIG_IMPORT_ASE_RECONSTRUCT_NORMALS, 0);
-//                Assimp.aiSetImportPropertyFloat(store, Assimp.AI_CONFIG_IMPORT_IFC_SMOOTHING_ANGLE, 0);
 
                 AIScene aiScene = Assimp.aiImportFileExWithProperties(resourceName,
 //                                Assimp.aiProcess_JoinIdenticalVertices |
@@ -131,8 +133,120 @@ public class ModelManager {
         return out;
     }
 
+    private Matrix4f toJOML(AIMatrix4x4 matrix){
+        return new Matrix4f(
+            matrix.a1(), matrix.b1(), matrix.c1(), matrix.d1(),
+            matrix.a2(), matrix.b2(), matrix.c2(), matrix.d2(),
+            matrix.a3(), matrix.b3(), matrix.c3(), matrix.d3(),
+            matrix.a4(), matrix.b4(), matrix.c4(), matrix.d4()
+        );
+    }
+
+    private LinkedList<Animation> calculateAnimations(AIScene scene, HashMap<String, Joint> joints){
+        LinkedList<Animation> animations = new LinkedList<>();
+        //For Each animation
+        for(int i = 0; i < scene.mNumAnimations(); i++) {
+            AIAnimation aiAnimation = AIAnimation.create(scene.mAnimations().get(i));
+            Animation animation = new Animation(aiAnimation.mDuration());
+            HashMap<String, LinkedList<KeyFrame>> keyframes = new HashMap<>();
+
+            for(String s : joints.keySet()){
+                keyframes.put(s, new LinkedList<>());
+            }
+
+            //For each bone
+            for(int c = 0; c < aiAnimation.mNumChannels(); c++){
+                AINodeAnim nodeAnim = AINodeAnim.create(aiAnimation.mChannels().get(c));
+                String boneName = nodeAnim.mNodeName().dataString();
+
+                if(joints.containsKey(boneName)) {
+                    //For each frame of animation for bone in animatin
+                    for (int f = 0; f < nodeAnim.mNumPositionKeys(); f++) {
+                        double time = nodeAnim.mPositionKeys().get(f).mTime();
+                        AIVector3D pos = nodeAnim.mPositionKeys().get(f).mValue();
+                        AIQuaternion rot = nodeAnim.mRotationKeys().get(f).mValue();
+                        KeyFrame keyFrame = new KeyFrame(time, new Matrix4f().identity().translate(pos.x(), pos.y(), pos.z()).rotate(new Quaternionf(rot.x(), rot.y(), rot.z(), rot.w())));
+
+                        //Insertion Sort
+                        int numBones = keyframes.get(boneName).size();
+                        if(numBones >= 1) {
+                            keyframes.get(boneName).addLast(null);
+                            for (int j = 0; j < numBones; j++) {
+                                KeyFrame otherFrame = keyframes.get(boneName).get(j);
+                                if (keyframes.get(boneName).get(j) != null) {
+                                    //if true Our new frame goes here
+                                    if (otherFrame.timelinePosition <= keyFrame.timelinePosition) {
+                                        for (int k = 0; k < (numBones - j); k++) {
+                                            keyframes.get(boneName).set(numBones - k, keyframes.get(boneName).get(numBones - k - 1));
+                                        }
+                                        keyframes.get(boneName).set(j, keyFrame);
+                                        break;
+                                    }
+                                }
+                                //We are the biggest frame
+                                keyframes.get(boneName).addLast(keyFrame);
+                            }
+                        }else{
+                            keyframes.get(boneName).add(keyFrame);
+                        }
+                    }
+
+                    //Flip the bones
+                    LinkedList<KeyFrame> flippedFrames = new LinkedList<>();
+                    for(KeyFrame frame : keyframes.get(boneName)){
+                        flippedFrames.addFirst(frame);
+                    }
+                    keyframes.put(boneName, flippedFrames);
+                }
+            }
+
+            animation.importKeyFrames(keyframes);
+
+            animations.addLast(animation);
+        }
+
+        return animations;
+    }
+
+    private Joint calcualteBoneHeierarchy(AINode node, HashMap<String, Joint> joints){
+        //Store this name.
+        String nodeName = node.mName().dataString();
+
+        //Check if this node is contained within the joints list
+        if(joints.containsKey(nodeName)){
+            Joint rootJoint = joints.get(nodeName);
+            //This is the root joint! now calculate child joints.
+            JointHelper(rootJoint, node, joints);
+            return joints.get(nodeName);
+        }
+
+
+        for(int i = 0; i < node.mNumChildren(); i++){
+            Joint childJoint = calcualteBoneHeierarchy( AINode.create(node.mChildren().get(i)), joints);
+            if(childJoint != null){
+                return childJoint;
+            }
+        }
+
+        return null;
+    }
+
+    private void JointHelper(Joint parent, AINode possibleChildren, HashMap<String, Joint> joints){
+        for(int i = 0; i < possibleChildren.mNumChildren(); i++){
+            AINode possibleChildJoint = AINode.create(possibleChildren.mChildren().get(i));
+            String possibleChildName = possibleChildJoint.mName().dataString();
+            if(joints.containsKey(possibleChildName)){
+                Joint childJoint = joints.get(possibleChildName);
+                JointHelper(childJoint, possibleChildJoint, joints);
+                parent.addChild(childJoint);
+            }
+        }
+    }
+
     private LinkedList<Model> parseAssimp(AIScene scene){
         LinkedList<Model> out = new LinkedList<>();
+
+        HashMap<String, Joint> joints = new HashMap<>();
 
         for(int meshIndex = 0; meshIndex < scene.mNumMeshes(); meshIndex++){
             AIMesh mesh = AIMesh.create(scene.mMeshes().get(meshIndex));
@@ -141,6 +255,14 @@ public class ModelManager {
             float[] vPositions = new float[mesh.mNumFaces() * 3 * 3];
             float[] vNormals = new float[mesh.mNumFaces() * 3 * 3];
             float[] vTextures = new float[mesh.mNumFaces() * 3 * 2];
+
+            int numBones = mesh.mNumBones();
+            PointerBuffer aiBones = mesh.mBones();
+            for (int i = 0; i < numBones; i++) {
+                AIBone aiBone = AIBone.create(aiBones.get(i));
+                String name = aiBone.mName().dataString();
+                joints.put(name, new Joint(i, name, this.toJOML(aiBone.mOffsetMatrix())));
+            }
 
             //For each vertex, get all data we need
             for(int i = 0; i < mesh.mNumVertices(); i++){
@@ -179,8 +301,21 @@ public class ModelManager {
             AIVector3D min = mesh.mAABB().mMin();
             AIVector3D max = mesh.mAABB().mMax();
 
+            //Get Bone info
+            Joint root = calcualteBoneHeierarchy(scene.mRootNode(), joints);
+
+            //Determine Animations
+            calculateAnimations(scene, joints);
+
             //TODO refactor to grouped model.
-            out.push(new Model(this.getNextID(), modelHandshake, mesh.mNumFaces() * 3, new Vector3f[]{new Vector3f(min.x(), min.y(), min.z()), new Vector3f(max.x(), max.y(), max.z())}));
+            Model model = new Model(this.getNextID(), modelHandshake, mesh.mNumFaces() * 3, new Vector3f[]{new Vector3f(min.x(), min.y(), min.z()), new Vector3f(max.x(), max.y(), max.z())});
+            model.setJoints(new LinkedList<>(joints.values()));
+            model.setRootJoint(root);
+            LinkedList<Animation> animations = calculateAnimations(scene, joints);
+            if(animations.size() > 0) {
+                model.animation = animations.getFirst();
+            }
+            out.push(model);
 
         }
 
