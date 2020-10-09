@@ -10,6 +10,8 @@ import lighting.Light;
 import lighting.LightingManager;
 import math.MatrixUtils;
 import models.AABB;
+import models.Joint;
+import models.Model;
 import org.joml.*;
 import org.lwjgl.opengl.*;
 import platform.EnumDevelopment;
@@ -18,6 +20,7 @@ import util.StopwatchManager;
 
 import java.lang.Math;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -177,6 +180,9 @@ public class Renderer extends Engine {
 //                StopwatchManager.getInstance().getTimer("uploadUniforms").lapStart();
                 if (entity.getModel().getID() != lastID) {
                     ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
+
+                    drawBones(entity);
+
                     loads++;
                 }
 
@@ -246,6 +252,42 @@ public class Renderer extends Engine {
             }
         }
     }
+
+    public void drawBones(Entity entity) {
+        if(entity.getModel() != null) {
+            if(entity.getModel().rootJoint != null) {
+                HashMap<String, Matrix4f> frames = entity.getModel().getAnimatedBoneTransforms();
+                drawBonesHelper(entity.getModel().getRootJoint(), entity.getTransform(), frames);
+            }
+        }
+    }
+
+    private void drawBonesHelper(Joint root, Matrix4f parentTransform, HashMap<String, Matrix4f> frames) {
+        if(frames.containsKey(root.getName())) {
+            Matrix4f animationOffset = frames.get(root.getName());
+            Matrix4f currentTransform = new Matrix4f(parentTransform).mul(animationOffset);
+            for (Joint childJoint : root.getChildren()) {
+                drawBonesHelper(childJoint, currentTransform, frames);
+            }
+            Vector4f parentPos = new Vector4f(0, 0, 0, 1).mul(parentTransform);
+            Vector4f childPos = new Vector4f(0, 0, 0, 1).mul(currentTransform);
+//            currentTransform = currentTransform.mul(root.getInverseBindTransform());
+            drawLine(new Vector3f(parentPos.x, parentPos.y, parentPos.z), new Vector3f(childPos.x, childPos.y, childPos.z), new Vector3f(1));
+        }
+    }
+
+//    private void drawBonesHelper(Joint root, Matrix4f entityTransform, HashMap<String, Matrix4f> frames) {
+//        Matrix4f animationOffset = frames.get(root.getName());
+////        .mul(new Matrix4f(animationOffset).invert())
+//        Vector4f parentPos = new Vector4f(0, 0, 0, 1).mul(root.getInverseBindTransform()).mul(entityTransform);
+//        for(Joint childJoint : root.getChildren()){
+//            Vector4f childPos = new Vector4f(0, 0, 0, 1).mul(childJoint.getInverseBindTransform()).mul(entityTransform);
+////            drawCone(new Vector3f(parentPos.x, parentPos.y, parentPos.z), new Vector3f(childPos.x, childPos.y, childPos.z), new Vector3f(0.125f), 13, new Vector3f(1));
+//            drawLine(new Vector3f(parentPos.x, parentPos.y, parentPos.z), new Vector3f(childPos.x, childPos.y, childPos.z), new Vector3f(1));
+//            drawBonesHelper(childJoint, entityTransform, frames);
+//        }
+//    }
+
 
     public void drawAABB(AABB aabb) {
         this.drawAABB(aabb.getMIN(), aabb.getMAX());
@@ -595,8 +637,8 @@ public class Renderer extends Engine {
 
         //Render our lines!
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
-            drawerLine.render();
 //            GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
+            drawerLine.render();
             drawTriangle.render();
             frameBuffer.unbindFrameBuffer();
         }

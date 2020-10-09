@@ -2,8 +2,13 @@ package models;
 
 import com.google.gson.JsonObject;
 import graphics.renderer.Handshake;
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import serialization.Serializable;
+import util.FileObject;
+
+import java.util.HashMap;
+import java.util.LinkedList;
 
 public class Model implements Serializable<Model> {
 
@@ -14,8 +19,14 @@ public class Model implements Serializable<Model> {
 
     private AABB aabb = new AABB();
 
+    public Joint rootJoint;
+    public LinkedList<Joint> joints = new LinkedList<Joint>();
+    public Animation animation;
+
     //VAO
     private Handshake handshake;
+
+    double time = 0;
 
     //Just used to create a new pointer so deserilize can be called
     public Model(int id){
@@ -65,4 +76,24 @@ public class Model implements Serializable<Model> {
         return this;
     }
 
+    public void setJoints(LinkedList<Joint> joints) {
+        this.joints = joints;
+    }
+
+    //todo refactor
+    public void update(double delta){
+        time+=delta;
+    }
+
+    public void setRootJoint(Joint joint) {
+        this.rootJoint = joint;
+    }
+
+    public Joint getRootJoint() {
+        return rootJoint;
+    }
+
+    public HashMap<String, Matrix4f> getAnimatedBoneTransforms() {
+        return animation.getBoneTransformsForTime(time);
+    }
 }
