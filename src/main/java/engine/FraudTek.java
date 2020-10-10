@@ -10,6 +10,7 @@ import editor.Editor;
 import entity.Entity;
 import entity.EntityManager;
 import entity.EntityUtils;
+import entity.component.Collision;
 import graphics.renderer.*;
 import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
@@ -234,6 +235,14 @@ public class FraudTek {
                 EntityManager.getInstance().addEntity(new ParticleSystem());
                 EntityManager.getInstance().addEntity(new PointLight());
 
+                Entity sphere = new Entity();
+                sphere.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
+                sphere.setPosition(new Vector3f(0, 5, 0));
+                sphere.addComponent(new Collision());
+                EntityManager.getInstance().addEntity(sphere);
+
+                EntityManager.getInstance().addEntity(new Entity());
+
 
                 StopwatchManager.getInstance().addTimer("tick");
 //                StopwatchManager.getInstance().addTimer("tick_editor");
@@ -270,8 +279,6 @@ public class FraudTek {
                     FRAMES = frames;
                     frames = 0;
                     runningDelta -= 1;
-//                    StopwatchManager.getInstance().printAllDeltas();
-//                    StopwatchManager.getInstance().clearAll();
                 }
 
                 render();

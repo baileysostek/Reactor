@@ -249,6 +249,11 @@ public class Entity implements Transformable, Serializable<Entity> {
         return this;
     }
 
+
+    public void setRotation(Quaternionf rotation) {
+        this.attributes.get("rotation").setData(rotation);
+    }
+
     @Override
     public final Vector3f getRotation() {
         return (Vector3f) this.attributes.get("rotation").getData();
@@ -280,12 +285,21 @@ public class Entity implements Transformable, Serializable<Entity> {
             transform.mul(parent, transform);
         }
 
-        Vector3f rotation = (Vector3f) this.attributes.get("rotation").getData();
-        Quaternionf qPitch   = new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), rotation.x);
-        Quaternionf qRoll    = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), rotation.y);
-        Quaternionf qYaw     = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), rotation.z);
+        Object rotationData = this.attributes.get("rotation").getData();
+        Quaternionf orientation = new Quaternionf();
 
-        Quaternionf orientation = ((qPitch.mul(qYaw)).mul(qRoll)).normalize();
+        if(rotationData instanceof Vector3f) {
+            Vector3f rotation = (Vector3f) rotationData;
+            Quaternionf qPitch = new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), rotation.x);
+            Quaternionf qRoll = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), rotation.y);
+            Quaternionf qYaw = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 0, 1), rotation.z);
+
+            orientation = ((qPitch.mul(qYaw)).mul(qRoll)).normalize();
+        }
+
+        if(rotationData instanceof Quaternionf) {
+            orientation = (Quaternionf) rotationData;
+        }
 
         transform.translate((Vector3f) this.attributes.get("position").getData(), transform);
         transform.rotate(orientation);

@@ -3,6 +3,7 @@ package physics;
 import com.bulletphysics.collision.broadphase.BroadphaseInterface;
 import com.bulletphysics.collision.broadphase.DbvtBroadphase;
 import com.bulletphysics.collision.broadphase.Dispatcher;
+import com.bulletphysics.collision.dispatch.CollisionConfiguration;
 import com.bulletphysics.collision.dispatch.CollisionDispatcher;
 import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
 import com.bulletphysics.collision.narrowphase.ManifoldPoint;
@@ -10,8 +11,10 @@ import com.bulletphysics.collision.narrowphase.PersistentManifold;
 import com.bulletphysics.collision.shapes.CollisionShape;
 import com.bulletphysics.collision.shapes.StaticPlaneShape;
 import com.bulletphysics.dynamics.*;
+import com.bulletphysics.dynamics.constraintsolver.ConstraintSolver;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 import com.bulletphysics.linearmath.DefaultMotionState;
+import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
 import entity.component.Collision;
 
@@ -27,7 +30,6 @@ public class PhysicsEngine {
     BroadphaseInterface broadphase = new DbvtBroadphase();
     DefaultCollisionConfiguration collisionConfiguration = new DefaultCollisionConfiguration();
     CollisionDispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
-
     SequentialImpulseConstraintSolver solver = new SequentialImpulseConstraintSolver();
 
     DiscreteDynamicsWorld dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
@@ -38,26 +40,22 @@ public class PhysicsEngine {
     //This is the drawer that renders the wireframe meshes for the engine.
     private final BulletDebugDrawer drawer;
 
+    private final int UPDATES_PER_SECOND = 144;
+    private final float update_ms = 1.0f / (float)UPDATES_PER_SECOND;
+    private double delta = 0;
+
     private PhysicsEngine(){
         //Define our drawer
         drawer = new BulletDebugDrawer();
 
-        // set the gravity of our world
-        dynamicsWorld.setGravity(new Vector3f(0, -9.8f, 0));
+        dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+        dynamicsWorld.setGravity(new javax.vecmath.Vector3f(0, -9.8f, 0));
+        CollisionShape ground = new StaticPlaneShape(new javax.vecmath.Vector3f(0, 1, 0), 0.0f);
 
-        // setup our collision shapes
-        CollisionShape groundShape = new StaticPlaneShape(new Vector3f(0, 1, 0), 1);
-
-        // setup the motion state
-        DefaultMotionState groundMotionState = new DefaultMotionState(new Transform(new Matrix4f(new Quat4f(0, 0, 0, 1), new Vector3f(0, 0, 0), 1.0f)));
-
-        RigidBodyConstructionInfo groundRigidBodyCI = new RigidBodyConstructionInfo(0, groundMotionState, groundShape, new Vector3f(0,-1f,0));
-        RigidBody groundRigidBody = new RigidBody(groundRigidBodyCI);
-
-        groundRigidBody.setFriction(0.5f);
-        groundRigidBody.setRestitution(0.5f);
-
-        dynamicsWorld.addRigidBody(groundRigidBody); // add our ground to the dynamic world.
+        MotionState motionState = new DefaultMotionState(new Transform(new Matrix4f(new Quat4f(0, 0, 0, 1), new javax.vecmath.Vector3f(0, 0, 0), 1.0f)));
+        RigidBodyConstructionInfo groundBodyConstructionInfo = new RigidBodyConstructionInfo(0, motionState, ground, new javax.vecmath.Vector3f(0, 0, 0));
+        RigidBody groundRigidBody = new RigidBody(groundBodyConstructionInfo);
+        dynamicsWorld.addRigidBody(groundRigidBody);
 
         blackList.add(groundRigidBody);
 
@@ -120,6 +118,11 @@ public class PhysicsEngine {
     }
 
     public void update(double delta){
+//        this.delta += delta;
+//        if(this.delta > update_ms) {
+//            dynamicsWorld.stepSimulation((float) this.delta);
+//            this.delta -= update_ms;
+//        }
         dynamicsWorld.stepSimulation((float) delta);
     }
 

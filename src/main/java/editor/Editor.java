@@ -181,7 +181,6 @@ public class Editor {
         // Here goes GLFW callbacks to update user input in Dear ImGui
 
         glfwSetCharCallback(FraudTek.WINDOW_POINTER, (w, c) -> {
-            System.out.println("Imgui:" + c);
             if (c != GLFW_KEY_DELETE) {
                 io.addInputCharacter(c);
             }
@@ -390,8 +389,8 @@ public class Editor {
         if(firstDraw) {
             //Set column sizes
             ImGui.setColumnWidth(0, COLUMN_WIDTHS);
-            ImGui.setColumnWidth(1, Renderer.getWIDTH() - (COLUMN_WIDTHS * 2));
-            ImGui.setColumnWidth(2, COLUMN_WIDTHS);
+            ImGui.setColumnWidth(1, Renderer.getWIDTH() - (COLUMN_WIDTHS * 2.5f));
+            ImGui.setColumnWidth(2, COLUMN_WIDTHS * 1.5f);
             //Turn off first draw.
             firstDraw = false;
         }

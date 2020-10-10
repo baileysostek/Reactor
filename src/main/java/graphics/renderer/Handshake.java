@@ -93,4 +93,9 @@ public class Handshake implements Serializable<Handshake> {
         return this;
     }
 
+    public void clear() {
+        bufferNameIndexes.clear();
+        bufferedSizes.clear();
+        bufferedAttributes.clear();
+    }
 }
