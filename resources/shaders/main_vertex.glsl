@@ -7,10 +7,15 @@ precision highp sampler2D;
 
 #define maxLights 25
 
+#define maxJoints 50
+#define maxWeights 3
+
 // Inputs
 in vec4 vPosition;
 in vec3 vNormal;
 in vec2 vTexture;
+in ivec3 jointIndices;
+in vec3 weights;
 
 //Uniform variables
 uniform mat4 transformation; // objects transform in space
@@ -23,6 +28,8 @@ uniform vec2 t_scale;     //texture scale
 
 //Lighting
 uniform mat4 lightSpaceMatrix[maxLights];
+
+uniform mat4 boneTransforms[maxJoints];
 
 // Outputs
 out vec3 passNormal;

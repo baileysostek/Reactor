@@ -20,14 +20,12 @@ import imgui.enums.ImGuiTreeNodeFlags;
 import imgui.enums.ImGuiWindowFlags;
 import input.Keyboard;
 import input.MousePicker;
-import org.joml.Vector2f;
-import org.joml.Vector2i;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
+import org.joml.*;
 import org.lwjgl.glfw.GLFW;
 import serialization.SerializationHelper;
 import util.Callback;
 
+import java.lang.Math;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -410,15 +408,21 @@ public class EntityEditor extends UIComponet {
                 Vector3f size = new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]);
                 float biggestDimension = Math.max(Math.max(size.x, size.y), size.z) / 2f;
 
-                DirectDrawData ddd_x = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(1, 0, 0), new Vector2i(32, 9), 360f, new Vector3f(1, 0, 0));
+                Quaternionf rotation = new Matrix4f(entity.getTransform()).getNormalizedRotation(new Quaternionf());
+
+                Vector4f rotx = new Vector4f(1, 0, 0, 1).mul(new Matrix4f().identity().rotate(rotation));
+                Vector4f roty = new Vector4f(0, 1, 0, 1).mul(new Matrix4f().identity().rotate(rotation));
+                Vector4f rotz = new Vector4f(0, 0, 1, 1).mul(new Matrix4f().identity().rotate(rotation));
+
+                DirectDrawData ddd_x = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(rotx.x, rotx.y, rotx.z), new Vector2i(32, 9), 360f, new Vector3f(1, 0, 0));
                 if(MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_x.getAABB()) != null){
                     Renderer.getInstance().redrawTriangleColor(ddd_x, drawColor);
                 }
-                DirectDrawData ddd_y = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(0, 1, 0), new Vector2i(32, 9), 360f, new Vector3f(0, 1, 0));
+                DirectDrawData ddd_y = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(roty.x, roty.y, roty.z), new Vector2i(32, 9), 360f, new Vector3f(0, 1, 0));
                 if(MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_y.getAABB()) != null){
                     Renderer.getInstance().redrawTriangleColor(ddd_y, drawColor);
                 }
-                DirectDrawData ddd_z = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(0, 0, 1), new Vector2i(32, 9), 360f, new Vector3f(0, 0, 1));
+                DirectDrawData ddd_z = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(rotz.x, rotz.y, rotz.z), new Vector2i(32, 9), 360f, new Vector3f(0, 0, 1));
                 if(MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_z.getAABB()) != null){
                     Renderer.getInstance().redrawTriangleColor(ddd_z, drawColor);
                 }

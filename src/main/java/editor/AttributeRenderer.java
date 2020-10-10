@@ -26,11 +26,12 @@ public class AttributeRenderer{
             //Try find a type
             ImGui.columns(2);
             ImGui.pushID(Editor.getInstance().getNextID());
-            ImGui.pushItemWidth(ImGui.getColumnWidth());
+            ImGui.pushItemWidth(ImGui.getColumnWidth() / 0.33f);
             ImGui.labelText("", attribute.getName());
             ImGui.popItemWidth();
             ImGui.popID();
             ImGui.nextColumn();
+            ImGui.pushItemWidth(ImGui.getColumnWidth() / 0.67f);
 //            ImGui.pushID(Editor.getInstance().getNextID());
             if(attribute.getData() instanceof Collection){
                 Collection<?> data = (Collection<?>)attribute.getData();
@@ -45,6 +46,7 @@ public class AttributeRenderer{
                 renderAttribute(attribute);
             }
             ImGui.endChild();
+            ImGui.popItemWidth();
             ImGui.columns();
         }
         ImGui.columns();

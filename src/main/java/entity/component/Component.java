@@ -120,6 +120,7 @@ public abstract class Component implements Serializable<Component>{
         if(hasAttribute(observed.getName())){
             //Set data unsafe because we dont want this to recurse
             this.attributes.get(observed.getName()).setDataUnsafe(observed.getData());
+            this.attributes.get(observed.getName()).setData(observed.getData());
             if(!components.contains(this)){
                 components.add(this);
             }

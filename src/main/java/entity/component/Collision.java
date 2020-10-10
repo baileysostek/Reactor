@@ -15,6 +15,7 @@ import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
 import entity.Entity;
 import input.Keyboard;
+import org.joml.Quaternionf;
 import physics.PhysicsEngine;
 
 import javax.vecmath.Matrix4f;
@@ -32,8 +33,8 @@ public class Collision extends Component{
     Attribute<org.joml.Vector3f> position    = new Attribute<org.joml.Vector3f> ("position", new org.joml.Vector3f(0));
     Attribute<Boolean>           movable     = new Attribute<Boolean>           ("movable", true);
     Attribute<Float>             friction    = new Attribute<Float>             ("friction", 1.0f);
-    Attribute<Float>             mass        = new Attribute<Float>             ("mass", 1.0f);
-    Attribute<Float>             restitution = new Attribute<Float>             ("restitution", 0.5f);
+    Attribute<Float>             mass        = new Attribute<Float>             ("mass", 10.0f);
+    Attribute<Float>             restitution = new Attribute<Float>             ("restitution", 0.35f);
 
 
     public Collision(){
@@ -46,17 +47,18 @@ public class Collision extends Component{
         //This we're going to give mass so it responds to gravity
 
 //        CollisionShape fallShape = new SphereShape(1);
-        CollisionShape fallShape = new BoxShape(new Vector3f(parent.getScale().x(), parent.getScale().y(),parent.getScale().z() ));
+        CollisionShape fallShape = new BoxShape(new Vector3f(parent.getScale().x(), parent.getScale().y(), parent.getScale().z()));
 
         Vector3f fallInertia = new Vector3f(0,0,0);
-        fallShape.calculateLocalInertia(mass.getData(),fallInertia);
+        fallShape.calculateLocalInertia(mass.getData(), fallInertia);
 
         MotionState ballMotionState = new DefaultMotionState(new Transform(new Matrix4f(new Quat4f(0, 0, 0, 1), new Vector3f(parent.getPosition().x(), parent.getPosition().y(), parent.getPosition().z()), 1.0f)));
         RigidBodyConstructionInfo ballConstructionInfo = new RigidBodyConstructionInfo(mass.getData(), ballMotionState, fallShape, fallInertia);
         ballConstructionInfo.restitution = restitution.getData();
-        ballConstructionInfo.angularDamping = 0.9f;
+        ballConstructionInfo.angularDamping = 0.0f;
         body = new RigidBody(ballConstructionInfo);
 
+        body.setMassProps(this.mass.getData(), fallInertia);
 
         //Add ourself to the physics engine
         PhysicsEngine.getInstance().addRigidBody(this);
@@ -76,30 +78,32 @@ public class Collision extends Component{
 
     @Override
     public void update(double delta) {
-        //This is the frame update
-        //If we are not controlled externally set this entities pos to the rigid body pos
-        body.getMotionState().getWorldTransform(trans);
+//        if(!body.wantsSleeping()) {
+            //This is the frame update
+            //If we are not controlled externally set this entities pos to the rigid body pos
+            body.getWorldTransform(trans);
 
-        //Update Pos
-        position.getData().x = trans.origin.x;
-        position.getData().y = trans.origin.y;
-        position.getData().z = trans.origin.z;
+            body.updateInertiaTensor();
 
-        javax.vecmath.Vector3f inertia = new javax.vecmath.Vector3f();
-        body.getCollisionShape().calculateLocalInertia(this.mass.getData(), inertia);
-        body.setMassProps(this.mass.getData(), inertia);
-        body.updateInertiaTensor();
+            //Update Pos
+            position.getData().x = trans.origin.x;
+            position.getData().y = trans.origin.y;
+            position.getData().z = trans.origin.z;
 
-        //Set Pos
-        this.parent.setPosition(position.getData());
+            Quaternionf rotation = new Quaternionf();
+            Quat4f bulletRot = new Quat4f();
+            trans.getRotation(bulletRot);
 
-//        CollisionShape fallShape = new SphereShape(1);
-//        CollisionShape fallShape = new BoxShape(new Vector3f(parent.getScale().x(), parent.getScale().y() ,parent.getScale().z()));
-//        body.setCollisionShape(fallShape);
+            rotation.x = bulletRot.x;
+            rotation.y = bulletRot.y;
+            rotation.z = bulletRot.z;
+            rotation.w = bulletRot.w;
 
-//        Transform newTransform = new Transform();
-//        body.getWorldTransform(newTransform).setRotation(new Quat4f());
-//        body.setWorldTransform(newTransform);
+            this.parent.setRotation(rotation);
+
+            //Set Pos
+            this.parent.setPosition(position.getData());
+//        }
     }
 
     @Override
@@ -108,10 +112,22 @@ public class Collision extends Component{
         switch (observed.getName()){
             case "friction":{
                 body.setFriction((Float) observed.getData());
+                break;
             }
             case "mass":{
                 Vector3f fallInertia = new Vector3f(0,0,0);
                 body.setMassProps((Float) observed.getData(), fallInertia);
+                break;
+            }
+            case "position":{
+                org.joml.Vector3f pos = (org.joml.Vector3f) observed.getData();
+                Transform t = new Transform();
+                body.getWorldTransform(t);
+                t.origin.x = pos.x;
+                t.origin.y = pos.y;
+                t.origin.z = pos.z;
+                body.setWorldTransform(t);
+                break;
             }
         }
 
