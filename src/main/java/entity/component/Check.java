@@ -65,6 +65,11 @@ public class Check extends Component{
     }
 
     @Override
+    public void onRemove(){
+
+    }
+
+    @Override
     public void onAttributeUpdate(Attribute observed) {
         //Called back every time an attribute changes
         if(parent.hasAttribute(attributeName.getData())){
@@ -98,7 +103,6 @@ public class Check extends Component{
 
             System.out.println("Checking:"+checkPassed);
         }
-
     }
 
     //This components name

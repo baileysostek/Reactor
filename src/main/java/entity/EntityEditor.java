@@ -145,16 +145,18 @@ public class EntityEditor extends UIComponet {
 
                     if(Keyboard.getInstance().isKeyPressed(Keyboard.ALT_LEFT)){
                         Entity entity;
+
+                        //This has broken attributes, set from parent
+                        JsonObject serialziedEntity = this.entity.serialize();
+
                         //Deserialize the entity
                         if(this.entity.getClass().equals(Entity.class)) {
                             //Regula old entity
-                            entity = new Entity().deserialize(this.entity.serialize());
+                            entity = new Entity().deserialize(serialziedEntity);
                         }else{
                             //Fancy entity from another class or namespace :)
                             try {
                                 Class<?> classType = Class.forName(this.entity.getClass().getName());
-                                //This has broken attributes, set from parent
-                                JsonObject serialziedEntity = this.entity.serialize();
                                 entity = ((Entity) SerializationHelper.getGson().fromJson(serialziedEntity, classType)).deserialize(serialziedEntity);
 
                             } catch (ClassNotFoundException e) {

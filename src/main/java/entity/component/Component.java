@@ -35,6 +35,8 @@ public abstract class Component implements Serializable<Component>{
         setEventTargets(parent);
     }
 
+    public abstract void onRemove();
+
     private void setEventTargets(Entity target) {
         for(LinkedList<Event> eventTriggers : events.values()){
             for(Event event : eventTriggers){
@@ -88,28 +90,33 @@ public abstract class Component implements Serializable<Component>{
     }
 
     public void addAttribute(Attribute attribute){
+        String name = attribute.getName();
         //Check if parent has attribute
-        if(!this.parent.hasAttribute(attribute.getName())){
-            this.parent.addAttribute(new Attribute(attribute.getName(), attribute.getData()));
+        if(!this.parent.hasAttribute(name)){
+            //Parent does not have us, so add us to parent
+            this.parent.addAttribute(attribute);
+            this.attributes.put(name, attribute);
         }else{
-            //If the parent dose have this attribute with a value of null, set the value to this
-            if(this.parent.getAttribute(attribute.getName()).getData() == null){
-                this.parent.getAttribute(attribute.getName()).setData(attribute.getData());
+            //Parent has an attribute with our name
+            if(this.parent.getAttribute(name).getData() == null){
+                //Parent Value is null, so overwrite parent
+                this.parent.setAttribute(attribute);
             }
+
+            this.attributes.put(name, this.parent.getAttribute(name));
         }
         //Add to our list
-        attribute.subscribe(new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                LinkedList<Component> closedList = new LinkedList<Component>();
-                closedList.add(Component.this);
-                parent.getAttribute(attribute.getName()).setDataUnsafe(attribute.getData());
-                //Sync with all other attributes
-                parent.syncAttributes(attribute, closedList);
-                return null;
-            }
-        });
-        this.attributes.put(attribute.getName(), attribute);
+//        this.attributes.get(name).subscribe(new Callback() {
+//            @Override
+//            public Object callback(Object... objects) {
+//                LinkedList<Component> closedList = new LinkedList<Component>();
+//                closedList.add(Component.this);
+////                parent.getAttribute(attribute.getName()).setDataUnsafe(attribute.getData());
+//                //Sync with all other attributes
+////                parent.syncAttributes(attribute, closedList);
+//                return null;
+//            }
+//        });
     }
 
     public boolean hasAttribute(String name){

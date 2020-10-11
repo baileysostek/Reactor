@@ -97,32 +97,45 @@ public class Entity implements Transformable, Serializable<Entity> {
     }
 
     public final void addAttribute(String category, Attribute attribute){
-        if(!category.isEmpty()){
-            if(!this.categories.containsKey(category)){
-                this.categories.put(category, new LinkedList<Attribute>());
+        String name = attribute.getName();
+
+        if(!this.hasAttribute(name)){
+            if(!category.isEmpty()){
+                if(!this.categories.containsKey(category)){
+                    this.categories.put(category, new LinkedList<Attribute>());
+                }
+                this.categories.get(category).addLast(attribute);
+                attribute.setCategory(category);
             }
-            this.categories.get(category).addLast(attribute);
+
+            this.attributes.put(attribute.getName(), attribute);
+            //Create subscriber to this attribute changing states
+            attribute.subscribe(new Callback() {
+                @Override
+                public Object callback(Object... objects) {
+                    //Cast passed attribute
+                    Attribute attribute = (Attribute) objects[0];
+                    //Update all components
+                    syncAttributes(attribute, new LinkedList<Component>());
+                    //IF this is an attribute with a classification that we sort based on we need to resort the entities.
+                    //TODO have attribute classificaitons
+                    if (attribute.getName().equals("zIndex")) {
+                        EntityManager.getInstance().resort();
+                    }
+
+                    //No need to return anything.
+                    return null;
+                }
+            });
+        }else{
+            //Parent has an attribute with our name
+            if(AttributeUtils.isEmpty(this.getAttribute(name))){
+                //Parent Value is null, so overwrite parent
+                this.setAttribute(attribute);
+            }
+
+            attribute = this.getAttribute(name);
         }
-
-        this.attributes.put(attribute.getName(), attribute);
-        //Create subscriber to this attribute changing states
-        attribute.subscribe(new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-            //Cast passed attribute
-            Attribute attribute = (Attribute) objects[0];
-            //Update all components
-            syncAttributes(attribute, new LinkedList<Component>());
-            //IF this is an attribute with a classification that we sort based on we need to resort the entities.
-            //TODO have attribute classificaitons
-            if (attribute.getName().equals("zIndex")) {
-                EntityManager.getInstance().resort();
-            }
-
-            //No need to return anything.
-            return null;
-            }
-        });
     }
 
     //Adds an attribute to this entity, and creates a subscriber that iterates through all components which may subscribe to this event.
@@ -523,7 +536,7 @@ public class Entity implements Transformable, Serializable<Entity> {
         if(data.has("attributes")) {
             for(String key : data.get("attributes").getAsJsonObject().keySet()){
                 Attribute attribute = new Attribute(data.getAsJsonObject("attributes").getAsJsonObject(key));
-                this.addAttribute(attribute);
+                this.addAttribute(attribute.getCategory(), attribute);
             }
         }
         //If we have any components
@@ -594,5 +607,17 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     public Collection<Attribute> getAttributesOfCategory(String category) {
         return this.categories.get(category);
+    }
+
+    public void setAttribute(Attribute attribute) {
+        if(this.hasAttribute(attribute.getName())){
+            this.attributes.put(attribute.getName(), attribute);
+        }
+    }
+
+    protected final void cleanup(){
+        for(Component c : components){
+            c.onRemove();
+        }
     }
 }

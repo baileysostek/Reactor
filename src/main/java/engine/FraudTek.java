@@ -11,6 +11,7 @@ import entity.Entity;
 import entity.EntityManager;
 import entity.EntityUtils;
 import entity.component.Collision;
+import entity.component.EnumCollisionShape;
 import graphics.renderer.*;
 import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
@@ -37,6 +38,7 @@ import platform.PlatformManager;
 import scene.SceneManager;
 import scripting.ScriptingEngine;
 import sound.SoundEngine;
+import util.Callback;
 import util.StopwatchManager;
 import util.StringUtils;
 
@@ -236,12 +238,10 @@ public class FraudTek {
                 EntityManager.getInstance().addEntity(new PointLight());
 
                 Entity sphere = new Entity();
-                sphere.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
+                sphere.setModel(ModelManager.getInstance().loadModel("cube.obj").getFirst());
                 sphere.setPosition(new Vector3f(0, 5, 0));
                 sphere.addComponent(new Collision());
                 EntityManager.getInstance().addEntity(sphere);
-
-                EntityManager.getInstance().addEntity(new Entity());
 
 
                 StopwatchManager.getInstance().addTimer("tick");
@@ -275,7 +275,7 @@ public class FraudTek {
 
                 tick(frameDelta);
                 if (runningDelta > 1) {
-                    System.out.println("FPS:" + frames + " Entities:" + EntityManager.getInstance().getSize());
+                    System.out.println("FPS:" + frames + " Entities:" + EntityManager.getInstance().getSize()+" Bodies:"+PhysicsEngine.getInstance().getNumBodies());
                     FRAMES = frames;
                     frames = 0;
                     runningDelta -= 1;

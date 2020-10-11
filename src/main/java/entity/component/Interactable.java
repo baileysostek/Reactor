@@ -82,6 +82,11 @@ public class Interactable extends Component{
         }
     }
 
+    @Override
+    public void onRemove(){
+
+    }
+
     //This components name
     @Override
     public String getName() {

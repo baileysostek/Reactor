@@ -14,6 +14,7 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
     private LinkedList<Callback> subscribers = new LinkedList<Callback>(){};
 
     //Rendering helpers
+    private String category = "";
     private boolean locked  = false;
     private boolean visible = true;
     private EnumAttributeType type = EnumAttributeType.NONE;
@@ -55,7 +56,7 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
                 System.out.println("Problem");
             }
             if(subscribers == null){
-                System.out.println("Problem");
+                subscribers = new LinkedList<Callback>(){};
             }
             for (Callback callback : subscribers) {
                 if(callback == null){
@@ -114,6 +115,7 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
         out.addProperty("locked", locked);
         out.addProperty("visible", visible);
         out.addProperty("type", type.toString());
+        out.addProperty("category", category);
         out.add("data", SerializationHelper.addClass(attribute));
         return out;
     }
@@ -132,6 +134,9 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
         if(data.has("type")){
             type = EnumAttributeType.valueOf(data.get("type").getAsString());
         }
+        if(data.has("category")){
+            category = data.get("category").getAsString();
+        }
 
         //Generics are cool!
         if(data.has("data")){
@@ -139,5 +144,13 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
         }
 
         return this;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getCategory(){
+        return this.category;
     }
 }

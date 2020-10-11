@@ -205,6 +205,8 @@ public class EntityManager {
                     this.entities.remove(e);
                     this.typedEntities.get(e.getClass()).remove(e);
                     e.onRemove();
+                    //TODO refactor maybe?
+                    e.cleanup();
                 }
                 toRemove.clear();
                 sortEntities();

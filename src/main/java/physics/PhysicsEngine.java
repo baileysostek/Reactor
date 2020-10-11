@@ -5,6 +5,7 @@ import com.bulletphysics.collision.broadphase.DbvtBroadphase;
 import com.bulletphysics.collision.broadphase.Dispatcher;
 import com.bulletphysics.collision.dispatch.CollisionConfiguration;
 import com.bulletphysics.collision.dispatch.CollisionDispatcher;
+import com.bulletphysics.collision.dispatch.CollisionObject;
 import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
 import com.bulletphysics.collision.narrowphase.ManifoldPoint;
 import com.bulletphysics.collision.narrowphase.PersistentManifold;
@@ -33,16 +34,12 @@ public class PhysicsEngine {
     SequentialImpulseConstraintSolver solver = new SequentialImpulseConstraintSolver();
 
     DiscreteDynamicsWorld dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-    HashMap<RigidBody, Collision> bodies = new HashMap<RigidBody, Collision>();
+    HashMap<RigidBody, Collider> bodies = new HashMap<RigidBody, Collider>();
     Collection<RigidBody> blackList = new LinkedList<RigidBody>();
 
     private static PhysicsEngine physicsManager;
     //This is the drawer that renders the wireframe meshes for the engine.
     private final BulletDebugDrawer drawer;
-
-    private final int UPDATES_PER_SECOND = 144;
-    private final float update_ms = 1.0f / (float)UPDATES_PER_SECOND;
-    private double delta = 0;
 
     private PhysicsEngine(){
         //Define our drawer
@@ -70,8 +67,8 @@ public class PhysicsEngine {
                 for (int i = 0; i < manifoldCount; i++) {
                     PersistentManifold manifold = dispatcher.getManifoldByIndexInternal(i);
                     // The following two lines are optional.
-                    RigidBody object1 = (RigidBody)manifold.getBody0();
-                    RigidBody object2 = (RigidBody)manifold.getBody1();
+                    CollisionObject object1 = (CollisionObject)manifold.getBody0();
+                    CollisionObject object2 = (CollisionObject)manifold.getBody1();
 
                     //Not collision with anything on blacklist
                     if(!(blackList.contains(object1) || blackList.contains(object2))) {
@@ -81,11 +78,16 @@ public class PhysicsEngine {
 //                                normal = contactPoint.normalWorldOnB;
 
                                 //Get Components of each entity
-                                Collision entity1 = bodies.get(object1);
-                                Collision entity2 = bodies.get(object2);
+                                Collider entity1 = bodies.get(object1);
+                                Collider entity2 = bodies.get(object2);
 
-                                entity1.onCollide(entity2.getParent(), contactPoint);
-                                entity2.onCollide(entity1.getParent(), contactPoint);
+                                System.out.println("E1:"+entity1);
+                                System.out.println("E2:"+entity2);
+
+                                if(entity1 != null && entity2 != null) {
+                                    entity1.onCollide(entity2.getParent(), contactPoint);
+                                    entity2.onCollide(entity1.getParent(), contactPoint);
+                                }
 
                                 break;
                             }
@@ -100,18 +102,37 @@ public class PhysicsEngine {
         return this.drawer;
     }
 
-    public void addRigidBody(Collision body){
+    public void addRigidBody(Collider body){
         //Backwards mapping
         bodies.put(body.getRigidBody(), body);
         dynamicsWorld.addRigidBody(body.getRigidBody());
     }
 
-    public void removeRigidBody(Collision body) {
+//    public void addRigidBody(RigidBody body){
+//        dynamicsWorld.addRigidBody(body);
+//    }
+
+    public void removeRigidBody(Collider body) {
         if(bodies.containsKey(body.getRigidBody())){
             bodies.remove(body.getRigidBody());
         }
         dynamicsWorld.removeRigidBody(body.getRigidBody());
     }
+
+//    public void removeRigidBody(RigidBody body){
+//        dynamicsWorld.removeRigidBody(body);
+//    }
+
+    //Encapsulating DynamicsWorld so people cant mess it up
+
+    public void addCollisionObject(CollisionObject object, short collisionFilterGroup, short collisionFilterMask){
+        dynamicsWorld.addCollisionObject(object, collisionFilterGroup, collisionFilterMask);
+    }
+
+    public void addAction(ActionInterface action){
+        dynamicsWorld.addAction(action);
+    }
+
 
     public void render(){
         dynamicsWorld.debugDrawWorld();
@@ -123,7 +144,7 @@ public class PhysicsEngine {
 //            dynamicsWorld.stepSimulation((float) this.delta);
 //            this.delta -= update_ms;
 //        }
-        dynamicsWorld.stepSimulation((float) delta);
+        dynamicsWorld.stepSimulation((float) delta * 2f);
     }
 
     public static void initialize(){
@@ -136,4 +157,7 @@ public class PhysicsEngine {
         return physicsManager;
     }
 
+    public int getNumBodies() {
+        return this.bodies.size();
+    }
 }
