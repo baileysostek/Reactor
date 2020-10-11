@@ -10,7 +10,7 @@ public class ImmediateDrawLine {
 
     private Handshake handshake;
 
-    private final int MAX_LINES = 64;
+    private final int MAX_LINES = 1024;
 
     float[] positionsF;
     float[] colorsF;
@@ -80,7 +80,7 @@ public class ImmediateDrawLine {
 
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lineShaderID, "viewMatrix"), false, CameraManager.getInstance().getActiveCamera().getTransform());
 
-        GL46.glDrawArrays(GL46.GL_LINES, 0, MAX_LINES);
+        GL46.glDrawArrays(GL46.GL_LINES, 0, drawIndex * 2);
 
         GL46.glUseProgram(0);
 

@@ -7,11 +7,14 @@ import graphics.renderer.Renderer;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
+import util.Callback;
 
 public class DirectionalLight extends Light {
 
     private FBO depthBuffer;
     private Matrix4f viewMatrix = new Matrix4f();
+
+    private Callback resize;
 
     public DirectionalLight(){
         super();
@@ -21,6 +24,23 @@ public class DirectionalLight extends Light {
 
         this.getAttribute("castsShadows").setShouldBeSerialized(false).setData(true);
         this.getAttribute("textureID").setShouldBeSerialized(false);
+
+        resize = new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                depthBuffer.resize(Renderer.getWIDTH(), Renderer.getHEIGHT());
+                return null;
+            }
+        };
+
+        Renderer.getInstance().addResizeCallback(resize);
+
+    }
+
+    @Override
+    public void onRemove(){
+        Renderer.getInstance().removeResizeCallback(resize);
+        super.onRemove();
     }
 
     @Override

@@ -16,6 +16,7 @@ import org.joml.*;
 import org.lwjgl.opengl.*;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
+import util.Callback;
 import util.StopwatchManager;
 
 import java.lang.Math;
@@ -55,6 +56,8 @@ public class Renderer extends Engine {
     //ImmediateDraw
     private ImmediateDrawLine     drawerLine;
     private ImmediateDrawTriangle drawTriangle;
+
+    private LinkedList<Callback> resizeCallbacks = new LinkedList<>();
 
     private Renderer(int width, int height){
         //init
@@ -111,6 +114,12 @@ public class Renderer extends Engine {
         projectionMatrix = MatrixUtils.createProjectionMatrix();
 
         GL46.glViewport(0, 0, width, height);
+
+        //Now itterate through callbacks
+        for(Callback c : resizeCallbacks){
+            c.callback(width, height);
+        }
+
     }
 
     public void render(){
@@ -651,6 +660,14 @@ public class Renderer extends Engine {
 
     public FBO getFrameBuffer(){
         return this.frameBuffer;
+    }
+
+    public void addResizeCallback(Callback resize) {
+        resizeCallbacks.add(resize);
+    }
+
+    public void removeResizeCallback(Callback resize) {
+        resizeCallbacks.remove(resize);
     }
 
     @Override

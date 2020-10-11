@@ -10,7 +10,7 @@ public abstract class Light extends Entity {
     public Light(){
         //Default is white light.
         addAttribute(new Attribute("color", new Vector3f(1)).setType(EnumAttributeType.COLOR));
-        addAttribute(new Attribute("frustum", new Vector3f(10, 1, 7.5f)));
+        addAttribute(new Attribute("frustum", new Vector3f(10, 1, 16f)));
         addAttribute(new Attribute("castsShadows", false));
 
         //Remove unneeded attributes
@@ -50,6 +50,7 @@ public abstract class Light extends Entity {
         if(this.hasAttribute("textureID")) {
             this.getAttribute("textureID").setShouldBeSerialized(false).setVisible(true);
         }
+
         super.onAdd();
     }
 
