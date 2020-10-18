@@ -80,20 +80,20 @@ public class CharacterController extends Component implements Collider {
         PhysicsEngine.getInstance().addCollisionObject(ghostObject, CollisionFilterGroups.CHARACTER_FILTER, (short)(CollisionFilterGroups.STATIC_FILTER | CollisionFilterGroups.DEFAULT_FILTER));
         PhysicsEngine.getInstance().addAction(character);
 
-        Vector3f fallInertia = new Vector3f(0,0,0);
-        capsule.calculateLocalInertia(mass.getData(), fallInertia);
 
         MotionState ballMotionState = new DefaultMotionState(startTransform);
-        RigidBodyConstructionInfo ballConstructionInfo = new RigidBodyConstructionInfo(mass.getData(), ballMotionState, capsule, fallInertia);
+        RigidBodyConstructionInfo ballConstructionInfo = new RigidBodyConstructionInfo(0f, ballMotionState, capsule, new Vector3f(0, 0, 0));
         ballConstructionInfo.restitution = restitution.getData();
         ballConstructionInfo.angularDamping = 0.1f;
+        ballConstructionInfo.friction = 0f;
+
         body = new RigidBody(ballConstructionInfo);
 
         body.setCollisionFlags(body.getCollisionFlags() | CollisionFlags.KINEMATIC_OBJECT);
         body.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
 
         //Add ourself to the physics engine
-//        PhysicsEngine.getInstance().addRigidBody(this);
+        PhysicsEngine.getInstance().addRigidBody(this);
 
         //Attribute stuff
         LinkedList<Attribute> out = new LinkedList<Attribute>();
@@ -110,15 +110,16 @@ public class CharacterController extends Component implements Collider {
 
     @Override
     public void update(double delta) {
-        org.joml.Vector3f pos = super.getParent().getPosition();
-
+        org.joml.Vector3f pos = (org.joml.Vector3f) super.parent.getPosition();
         Transform t = new Transform();
+        t.setIdentity();
         t.origin.x = pos.x;
         t.origin.y = pos.y;
         t.origin.z = pos.z;
 
-//        body.getMotionState().setWorldTransform(t);
-//        body.setWorldTransform(t);
+        body.applyCentralImpulse(PhysicsEngine.getInstance().getGravity());
+
+        body.getMotionState().setWorldTransform(t);
         ghostObject.setWorldTransform(t);
     }
 
@@ -128,18 +129,20 @@ public class CharacterController extends Component implements Collider {
         switch (observed.getName()){
             case "scale":{
                 CollisionShape fallShape = new CapsuleShape(parent.getScale().x(), parent.getScale().y());
-                ghostObject.setCollisionShape(fallShape);
+                body.setCollisionShape(fallShape);
                 break;
             }
 
             case "position":{
                 org.joml.Vector3f pos = (org.joml.Vector3f) observed.getData();
                 Transform t = new Transform();
+                t.setIdentity();
                 t.origin.x = pos.x;
                 t.origin.y = pos.y;
                 t.origin.z = pos.z;
-                ghostObject.setWorldTransform(t);
 
+                body.setWorldTransform(t);
+                ghostObject.setWorldTransform(t);
                 break;
             }
         }

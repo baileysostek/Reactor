@@ -199,14 +199,16 @@ public class MousePicker extends Engine {
     }
 
     public boolean requestLockMouse(){
-        //No logic yet, will always lock mouse
-        lockMouse = true;
         //If our mouse has been locked, lets move the mouse to the default position and reset the mouse ray
-        if(lockMouse){
+        if(!lockMouse){
             this.tick(0);
             MouseDeltaX = 0;
             MouseDeltaY = 0;
         }
+
+        //No logic yet, will always lock mouse
+        lockMouse = true;
+
         //Returns if the mouse has been locked or not.
         return lockMouse;
     }

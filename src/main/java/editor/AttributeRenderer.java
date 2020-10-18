@@ -11,6 +11,7 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.util.Collection;
+import java.util.LinkedList;
 
 public class AttributeRenderer{
 
@@ -34,13 +35,32 @@ public class AttributeRenderer{
             ImGui.pushItemWidth(ImGui.getColumnWidth() / 0.67f);
 //            ImGui.pushID(Editor.getInstance().getNextID());
             if(attribute.getData() instanceof Collection){
-                Collection<?> data = (Collection<?>)attribute.getData();
-                ImGui.beginChild("", ImGui.getColumnWidth(), 16 * data.size());
-                int index = 0;
-                for(Object object : data){
-                    renderAttribute(new Attribute(""+index, object));
-                    index++;
+                if(attribute.getData() instanceof LinkedList){
+                    LinkedList data = (LinkedList)attribute.getData();
+                    ImGui.beginChild("", ImGui.getColumnWidth(), 16 * data.size());
+                    int index = 0;
+                    for(Object object : data){
+                        Attribute tmp = new Attribute(""+index, object);
+                        tmp.setType(attribute.getType());
+                        renderAttribute(tmp);
+                        data.set(index, tmp.getData());
+                        index++;
+                    }
+                }else{
+                    Collection<?> data = (Collection<?>)attribute.getData();
+                    ImGui.beginChild("", ImGui.getColumnWidth(), 16 * data.size());
+                    int index = 0;
+                    for(Object object : data){
+                        Attribute tmp = new Attribute(""+index, object);
+                        tmp.setType(attribute.getType());
+                        renderAttribute(tmp);
+                        object = attribute.getData();
+                        index++;
+                    }
                 }
+            }else if(attribute.getType().equals(EnumAttributeType.COLOR)){
+                ImGui.beginChild(""+Editor.getInstance().getNextID(), ImGui.getColumnWidth(), ImGui.getColumnWidth() + 32);
+                renderAttribute(attribute);
             }else{
                 ImGui.beginChild(""+Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16 );
                 renderAttribute(attribute);

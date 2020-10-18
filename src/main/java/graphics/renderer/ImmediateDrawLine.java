@@ -10,7 +10,7 @@ public class ImmediateDrawLine {
 
     private Handshake handshake;
 
-    private final int MAX_LINES = 1024;
+    private final int MAX_LINES = 2048;
 
     float[] positionsF;
     float[] colorsF;

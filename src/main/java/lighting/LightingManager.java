@@ -40,7 +40,6 @@ public class LightingManager {
         directionalLight.getDepthBuffer().bindFrameBuffer();
         GL46.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
         ShaderManager.getInstance().useShader(lightDepth);
-        GL46.glEnable(GL46.GL_DEPTH_TEST);
         GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT);
 
         GL46.glEnable(GL46.GL_BLEND);
@@ -53,16 +52,21 @@ public class LightingManager {
 
         for(Entity entity : EntityManager.getInstance().getEntities()){
             if(entity.getModel() != null) {
+                if(entity.isVisible()) {
+                    ShaderManager.getInstance().loadHandshakeIntoShader(lightDepth, entity.getModel().getHandshake());
 
-                ShaderManager.getInstance().loadHandshakeIntoShader(lightDepth, entity.getModel().getHandshake());
-
-                //Mess with uniforms
-                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lightDepth, "model"), false, entity.getTransform().get(new float[16]));
-                GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, entity.getModel().getNumIndicies());
+                    //Mess with uniforms
+                    GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lightDepth, "model"), false, entity.getTransform().get(new float[16]));
+                    GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, entity.getModel().getNumIndicies());
+                }
             }
         }
 
         directionalLight.getDepthBuffer().unbindFrameBuffer();
+
+
+        GL46.glDisable(GL46.GL_BLEND);
+
     }
 
     public static void initialize(){

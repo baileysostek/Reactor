@@ -1,6 +1,7 @@
 package particle;
 
 import camera.CameraManager;
+import entity.component.Attribute;
 import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
 import org.joml.Vector3f;
@@ -27,9 +28,14 @@ public class ParticleManager {
     private int vao_id;
     private int vbo_vertex;
     private int vbo_pos;
+    private int vbo_rot;
     private int vbo_color;
+    private int vbo_scale;
+    private int vbo_matrix;
 
     private int shaderID;
+
+    private boolean startIndicesDirty = false;
 
     private ParticleManager(){
         //Start up our shader
@@ -87,6 +93,11 @@ public class ParticleManager {
     }
 
     public void update(double delta){
+        // Check if indices are dirty, this happens when a ParticleSystem changes size.
+        if(startIndicesDirty){
+            recalculateSystemsStartIndices();
+            startIndicesDirty = false;
+        }
         for(ParticleSystem system : systems){
             updateSystem(system);
         }
@@ -116,6 +127,7 @@ public class ParticleManager {
 
 
         int toRender = getAllocatedParticles();
+        System.out.println(toRender);
         GL46.glDrawArraysInstanced(GL46.GL_TRIANGLE_STRIP, 0, 4, toRender);
 
         GL46.glDisableVertexAttribArray(0);
@@ -151,11 +163,8 @@ public class ParticleManager {
         return remaining;
     }
 
-    private FloatBuffer storeDataInFloatBuffer(float[] data){
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length);
-        buffer.put(data);
-        buffer.flip();
-        return buffer;
+    public void markIndicesDirty(){
+        this.startIndicesDirty = true;
     }
 
     public void add(ParticleSystem particleSystem) {
@@ -164,27 +173,40 @@ public class ParticleManager {
         }
     }
 
-    private void updateSystem(ParticleSystem system){
+    public void remove(ParticleSystem particleSystem){
+        systems.remove(particleSystem);
+    }
 
+    private FloatBuffer storeDataInFloatBuffer(float[] data){
+        FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length);
+        buffer.put(data);
+        buffer.flip();
+        return buffer;
+    }
+
+    private void updateSystem(ParticleSystem system){
         Particle p = null;
         Vector3f systemPos = system.getPosition();
 
-        int startIndex = system.getStartIndex();
+        int startIndex = system.getStartIndex() * 4;
+        int numParticles = system.numParticles.getData();
+        System.out.println("System:"+system);
+        System.out.println("StartIndex:"+startIndex);
+        System.out.println("NumParticles:"+numParticles);
+        float[] positions = new float[numParticles * 3];
+        float[] colors    = new float[numParticles * 4];
 
-        float[] positions = new float[system.numParticles.getData() * 3];
-        float[] colors    = new float[system.numParticles.getData() * 4];
-
-        for(int i = 0; i < system.numParticles.getData(); i++){
+        for(int i = 0; i < numParticles; i++){
             p = system.getParticle(i);
 
-            positions[i * 3 + 0] =  systemPos.x;
-            positions[i * 3 + 1] =  systemPos.y;
-            positions[i * 3 + 2] =  systemPos.z;
+            positions[i * 3 + 0] = systemPos.x + p.pos.x;
+            positions[i * 3 + 1] = systemPos.y + p.pos.y;
+            positions[i * 3 + 2] = systemPos.z + p.pos.z;
 
-            colors[i * 4 + 0] = system.getColor().x;
-            colors[i * 4 + 1] = system.getColor().y;
-            colors[i * 4 + 2] = system.getColor().z;
-            colors[i * 4 + 3] = 1f;
+            colors[i * 4 + 0] = p.col.x;
+            colors[i * 4 + 1] = p.col.y;
+            colors[i * 4 + 2] = p.col.z;
+            colors[i * 4 + 3] = 0.5f;
         }
 
         //Buffer
@@ -192,14 +214,13 @@ public class ParticleManager {
         // 2nd attribute buffer : positions of particles' centers
         GL46.glEnableVertexAttribArray(1);
         GL46.glBindBuffer( GL46.GL_ARRAY_BUFFER, vbo_pos);
-        GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex, positions);
+        GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex * 3, positions);
         GL46.glVertexAttribPointer(1, 3, GL46.GL_FLOAT, false, 0, 0);
-
 
         // 3rd attribute buffer : particles' colors
         GL46.glEnableVertexAttribArray(2);
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_color);
-        GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex, colors);
+        GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex * 4, colors);
         GL46.glVertexAttribPointer(2, 4, GL46.GL_FLOAT, false, 0, 0);
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
@@ -208,8 +229,12 @@ public class ParticleManager {
         GL46.glBindVertexArray(0);
     }
 
-    public void remove(ParticleSystem particleSystem){
-        systems.remove(particleSystem);
+    private void recalculateSystemsStartIndices(){
+        int count = 0;
+        for(ParticleSystem s : systems){
+            s.overrideStartIndex(count);
+            count += s.numParticles.getData();
+        }
     }
 
     public static void initialize(){

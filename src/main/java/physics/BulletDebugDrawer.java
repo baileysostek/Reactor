@@ -1,5 +1,6 @@
 package physics;
 
+import com.bulletphysics.linearmath.DebugDrawModes;
 import com.bulletphysics.linearmath.IDebugDraw;
 import graphics.renderer.*;
 import org.joml.Vector4f;
