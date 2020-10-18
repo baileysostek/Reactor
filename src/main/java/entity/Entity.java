@@ -66,16 +66,17 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.addAttribute("Transform", new Attribute<Vector3f>("rotation"     , new Vector3f(0f)).setType(EnumAttributeType.SLIDERS));
         this.addAttribute("Transform", new Attribute<Vector3f>("scale"        , new Vector3f(1f)));
         this.addAttribute("Material",  new Attribute<Integer> ("textureID"    , SpriteBinder.getInstance().getFileNotFoundID()));
-        this.addAttribute("Material",  new Attribute<Integer> ("normalID"   , SpriteBinder.getInstance().getDefaultNormalMap()));
+        this.addAttribute("Material",  new Attribute<Integer> ("normalID"     , SpriteBinder.getInstance().getDefaultNormalMap()));
         this.addAttribute("Material",  new Attribute<Integer> ("metallicID"   , SpriteBinder.getInstance().getDefaultMetallicMap()));
-        this.addAttribute("Material",  new Attribute<Integer> ("roughnessID"   , SpriteBinder.getInstance().getDefaultRoughnessMap()));
-        this.addAttribute("Material",  new Attribute<Integer> ("aoID"   , SpriteBinder.getInstance().getDefaultAmbientOcclusionMap()));
+        this.addAttribute("Material",  new Attribute<Integer> ("roughnessID"  , SpriteBinder.getInstance().getDefaultRoughnessMap()));
+        this.addAttribute("Material",  new Attribute<Integer> ("aoID"         , SpriteBinder.getInstance().getDefaultAmbientOcclusionMap()));
         this.addAttribute("2D",        new Attribute<Integer> ("zIndex"       , 0));
         this.addAttribute("2D",        new Attribute<Boolean> ("autoScale"    , false));
         this.addAttribute("Title",     new Attribute<String>  ("name"         , "Undefined"));
         this.addAttribute("Title",     new Attribute<String>  ("type"         , this.toString()));
         this.addAttribute("2D",        new Attribute<Vector2f>("t_scale"      , new Vector2f(1)));
         this.addAttribute(new Attribute<Boolean>("updateInEditor", false));
+        this.addAttribute(new Attribute<Boolean>("visible"      , true));
         this.addAttribute(new Attribute<Float>("mat_m", 0.5f));
         this.addAttribute(new Attribute<Float>("mat_r", 0.5f));
     }
@@ -595,6 +596,20 @@ public class Entity implements Transformable, Serializable<Entity> {
         }
 
         return name;
+    }
+
+    //If this entity does not have a visible property it is not rendered.
+    public boolean isVisible(){
+        if (this.hasAttribute("visible")) {
+           return (boolean) this.getAttribute("visible").getData();
+        }
+        return false;
+    }
+
+    public void setVisible(boolean visible){
+        if (this.hasAttribute("visible")) {
+            this.getAttribute("visible").setData(visible);
+        }
     }
 
     public boolean hasParent() {

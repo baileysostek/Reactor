@@ -81,10 +81,9 @@ public class PhysicsEngine {
                                 Collider entity1 = bodies.get(object1);
                                 Collider entity2 = bodies.get(object2);
 
-                                System.out.println("E1:"+entity1);
-                                System.out.println("E2:"+entity2);
-
                                 if(entity1 != null && entity2 != null) {
+                                    System.out.println("E1:"+entity1);
+                                    System.out.println("E2:"+entity2);
                                     entity1.onCollide(entity2.getParent(), contactPoint);
                                     entity2.onCollide(entity1.getParent(), contactPoint);
                                 }
@@ -159,5 +158,9 @@ public class PhysicsEngine {
 
     public int getNumBodies() {
         return this.bodies.size();
+    }
+
+    public Vector3f getGravity() {
+        return dynamicsWorld.getGravity(new Vector3f());
     }
 }

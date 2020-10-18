@@ -30,6 +30,7 @@ public class Collision extends Component implements Collider {
 
     //Attributes that we care about
     Attribute<org.joml.Vector3f> position    = new Attribute<org.joml.Vector3f> ("position", new org.joml.Vector3f(0));
+    Attribute<org.joml.Vector3f> scale       = new Attribute<org.joml.Vector3f> ("scale", new org.joml.Vector3f(1));
     Attribute<Float>             friction    = new Attribute<Float> ("friction", 1.0f).setType(EnumAttributeType.SLIDERS);
     Attribute<Float>             mass        = new Attribute<Float> ("mass", 10.0f).setType(EnumAttributeType.SLIDERS);
     Attribute<Float>             restitution = new Attribute<Float> ("restitution", 0.35f).setType(EnumAttributeType.SLIDERS);
@@ -70,6 +71,7 @@ public class Collision extends Component implements Collider {
         LinkedList<Attribute> out = new LinkedList<Attribute>();
 
         out.addLast(position);
+        out.addLast(scale);
         out.addLast(friction);
         out.addLast(mass);
         out.addLast(restitution);
@@ -124,6 +126,11 @@ public class Collision extends Component implements Collider {
                 t.origin.y = pos.y;
                 t.origin.z = pos.z;
                 body.setWorldTransform(t);
+                break;
+            }
+            case "scale":{
+                org.joml.Vector3f scale = (org.joml.Vector3f) observed.getData();
+                body.getCollisionShape().setLocalScaling(new Vector3f(scale.x, scale.y, scale.z));
                 break;
             }
         }

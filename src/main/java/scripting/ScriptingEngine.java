@@ -26,7 +26,7 @@ public class ScriptingEngine extends Engine {
     HashMap<String, Script> loadedScripts = new HashMap<>();
     private static HashMap<String, Object> staticClassInstances = new HashMap<>();
     HashMap<String, ClassStruct> classStructs = new HashMap<>();
-    //Use reflection to access these
+    //Use graphics.renderer.reflection to access these
     static HashMap<String, ExpandedClass> registeredClasses = new HashMap<>();
 
     private ScriptingEngine(){

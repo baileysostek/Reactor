@@ -24,11 +24,13 @@ public class CameraManager {
     //Set the camera
     public void setActiveCamera(Camera cam){
         if(cam != null) {
-            if (this.activeCamera != null) {
-                this.activeCamera.onDeactivated();
+            if(!cam.equals(this.activeCamera)) {
+                if (this.activeCamera != null) {
+                    this.activeCamera.onDeactivated();
+                }
+                this.activeCamera = cam;
+                cam.onActive();
             }
-            this.activeCamera = cam;
-            cam.onActive();
         }
     }
 

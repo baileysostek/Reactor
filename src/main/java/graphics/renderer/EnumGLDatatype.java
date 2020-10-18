@@ -31,6 +31,10 @@ public enum EnumGLDatatype implements Serializable<EnumGLDatatype> {
         this.sizePerVertex = sizePerVertex;
     }
 
+    public int getSizePerVertex(){
+        return sizePerVertex;
+    }
+
     protected int getSize(){
         return this.instanceSize;
     }
