@@ -50,7 +50,7 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
     }
 
     public void setData(T newData){
-        if(attribute != newData) {
+        if(differ(newData)) {
             this.attribute = newData;
             if(newData == null){
                 System.out.println("Problem");
@@ -64,6 +64,14 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
                 }
                 callback.callback(this);
             }
+        }
+    }
+
+    private boolean differ(T newData){
+        if(newData instanceof String){
+            return !attribute.equals(newData);
+        }else{
+            return attribute != newData;
         }
     }
 

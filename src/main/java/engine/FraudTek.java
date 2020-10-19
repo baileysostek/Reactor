@@ -31,6 +31,7 @@ import graphics.renderer.reflection.ReflectionProbe;
 import graphics.renderer.reflection.ReflectionManager;
 import scene.SceneManager;
 import scripting.ScriptingEngine;
+import skybox.Skybox;
 import skybox.SkyboxManager;
 import util.StopwatchManager;
 import util.StringUtils;
@@ -230,6 +231,7 @@ public class FraudTek {
                 EntityManager.getInstance().addEntity(new ParticleSystem());
                 EntityManager.getInstance().addEntity(new ParticleSystem());
                 EntityManager.getInstance().addEntity(new PointLight());
+                EntityManager.getInstance().addEntity(new Skybox());
 
                 Entity sphere = new Entity();
                 sphere.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());

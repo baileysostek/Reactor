@@ -23,16 +23,27 @@ public class ParticleSystem extends Entity {
     Attribute<ColorInterpolation> deriveEndColor;
 
     //Lifespan
+        //Curve of lifepsan values, Min, Max, Interpolation
 
     //Size
+        //Curve of lifepsan values, Start{min max}, End{}, Interpolation
 
     //Rotation
+        //Curve of lifepsan values, Start{min max}, End{min max}, Interpolation
 
     //Opacity
+        //Curve of lifepsan values, Start{min max}, End{min max}, Interpolation
 
     //Texture
 
+
+
     //Physics
+        //Gravity
+        //Collision Detection
+        //
+
+    //Burst Loop or Not
 
     //Emission
 //    Attribute<ColorInterpolation> deriveEndColor;

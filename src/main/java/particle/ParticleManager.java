@@ -2,12 +2,15 @@ package particle;
 
 import camera.CameraManager;
 import entity.component.Attribute;
+import graphics.renderer.Handshake;
 import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
+import models.ModelManager;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL46;
 
+import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.LinkedList;
 
@@ -16,7 +19,7 @@ public class ParticleManager {
     //Also will batch together textures into a texture atlas
     private static ParticleManager particleManager;
 
-    private final int MAX_PARTICLES = 100000;
+    private final int MAX_PARTICLES = 10000;
 
 
     private final LinkedList<ParticleSystem> systems = new LinkedList<ParticleSystem>();
@@ -42,12 +45,18 @@ public class ParticleManager {
         shaderID = ShaderManager.getInstance().loadShader("particle");
         // The VBO containing the 4 vertices of the particles.
         // Thanks to instancing, they will be shared by all particles.
-        verticies = new float[]{
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            -0.5f, 0.5f, 0.0f,
-            0.5f, 0.5f, 0.0f,
-        };
+
+        Handshake shape = ModelManager.getInstance().loadModel("cube2.obj").getFirst().getHandshake();
+        FloatBuffer positions_data = (FloatBuffer) shape.getAttribute("vPosition");
+        verticies = new float[positions_data.remaining()];
+        positions_data.get(verticies);
+
+//        verticies = new float[]{
+//            -0.5f, -0.5f, 0.0f,
+//            0.5f, -0.5f, 0.0f,
+//            -0.5f, 0.5f, 0.0f,
+//            0.5f, 0.5f, 0.0f,
+//        };
 
         positions = new float[MAX_PARTICLES * 3];
         colors    = new float[MAX_PARTICLES * 4];
@@ -127,8 +136,7 @@ public class ParticleManager {
 
 
         int toRender = getAllocatedParticles();
-        System.out.println(toRender);
-        GL46.glDrawArraysInstanced(GL46.GL_TRIANGLE_STRIP, 0, 4, toRender);
+        GL46.glDrawArraysInstanced(GL46.GL_TRIANGLES, 0, verticies.length / 3, toRender);
 
         GL46.glDisableVertexAttribArray(0);
         GL46.glDisableVertexAttribArray(1);
@@ -175,6 +183,8 @@ public class ParticleManager {
 
     public void remove(ParticleSystem particleSystem){
         systems.remove(particleSystem);
+        //recalculate indices
+        recalculateSystemsStartIndices();
     }
 
     private FloatBuffer storeDataInFloatBuffer(float[] data){
@@ -190,9 +200,7 @@ public class ParticleManager {
 
         int startIndex = system.getStartIndex() * 4;
         int numParticles = system.numParticles.getData();
-        System.out.println("System:"+system);
-        System.out.println("StartIndex:"+startIndex);
-        System.out.println("NumParticles:"+numParticles);
+
         float[] positions = new float[numParticles * 3];
         float[] colors    = new float[numParticles * 4];
 

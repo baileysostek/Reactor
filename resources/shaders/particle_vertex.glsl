@@ -9,8 +9,18 @@ uniform mat4 projection;
 
 out vec4 passColor;
 
+vec2 scale = vec2(1, 1);
+
 void main(void){
-	vec4 worldPosition = vec4(translation.xyz + position, 1.0);
+	vec3 CameraRight_worldspace = vec3(view[0][0], view[1][0], view[2][0]);
+    vec3 CameraUp_worldspace    = vec3(view[0][1], view[1][1], view[2][1]);
+    vec3 vertexPosition_worldspace =
+        translation.xyz
+        + CameraRight_worldspace * position.x * scale.x
+        + CameraUp_worldspace * position.y * scale.y;
+
+	vec4 worldPosition = vec4(vertexPosition_worldspace, 1.0);
+
     gl_Position = projection * view * worldPosition;
 	passColor = color;
 }

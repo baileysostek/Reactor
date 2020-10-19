@@ -33,6 +33,7 @@
       "sunColor": "vec3",
       "lightPosition": "vec3",
       "lightColor": "vec3",
+      "lightIntensity": "float",
       "mat_m": "float",
       "mat_r": "float"
     }

@@ -35,8 +35,10 @@ uniform sampler2D shadowMap[maxLights];
 uniform vec3 sunAngle[maxLights];
 uniform vec3 sunColor[maxLights];
 
+//Point Light Sources
 uniform vec3 lightPosition[maxPointLights];
 uniform vec3 lightColor[maxPointLights];
+uniform float lightIntensity[maxPointLights];
 
 //Skybox and nearest Reflection probe
 uniform samplerCube nearestProbe;
@@ -132,13 +134,14 @@ void main(void){
     F0      = mix(F0, albedo.xyz, metallic);
 
     vec3 Lo = vec3(0.0);
+    //Point lights
     for(int i = 0; i < maxPointLights; i++){
         vec3 L = normalize(lightPosition[i] - WorldPos);
         vec3 H = normalize(V + L);
 
         float cosTheta = dot(normalize(lightPosition[i]), N);
 
-        float distance    = length(lightPosition[i] - WorldPos);
+        float distance    = length(lightPosition[i] - WorldPos) / lightIntensity[i];
         float attenuation = 1.0 / (distance * distance);
         vec3 radiance     = lightColor[i] * attenuation;
 
@@ -157,6 +160,33 @@ void main(void){
         float NdotL = max(dot(N, L), 0.0);
         Lo += (kD * albedo.xyz / PI + specular) * radiance * NdotL;
     }
+
+    //Directional lights
+    for(int i = 0; i < maxLights; i++){
+        vec3 L = normalize(sunAngle[i] * -1);
+        vec3 H = normalize(V + L);
+
+        float cosTheta = dot(normalize(sunAngle[i] * -1), N);
+
+        float distance    = length(sunAngle[i] * -1);
+        float attenuation = 1.0 / (distance * distance);
+        vec3 radiance     = sunColor[i] * attenuation;
+
+        float NDF = DistributionGGX(N, H, roughness);
+        float G   = GeometrySmith(N, V, L, roughness);
+        vec3 F  = fresnelSchlick(max(dot(H, V), 0.0), F0);
+
+        vec3 kS = F;
+        vec3 kD = vec3(1.0) - kS;
+        kD *= 1.0 - metallic;
+
+        vec3 numerator    = NDF * G * F;
+        float denominator = maxLights * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
+        vec3 specular     = (numerator / max(denominator, 0.001));
+
+        float NdotL = max(dot(N, L), 0.0);
+        Lo += (kD * albedo.xyz / PI + specular) * radiance * NdotL;
+        }
 
     // ambient
     vec3 ambient = vec3(0.15) * albedo.xyz * ao;
