@@ -5,5 +5,6 @@ public enum EmmissionShape {
     CUBE(),
     SPHERE(),
     CYLINDER(),
-    RING()
+    RING(),
+    CONE(),
 }

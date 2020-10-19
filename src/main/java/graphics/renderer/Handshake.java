@@ -8,13 +8,10 @@ package graphics.renderer;
 //This class was specifically designed to operate similar to a VAO since OpenGL ES 2.0 does not have vaos
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import org.lwjgl.opengl.GL46;
 import serialization.Serializable;
 import serialization.SerializationHelper;
 
 import java.nio.Buffer;
-import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.LinkedList;
 

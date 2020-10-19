@@ -184,6 +184,35 @@ public class SpriteBinder extends Engine {
         return textureID;
     }
 
+    public int updateCubeMap(int id, Vector4f color){
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, id);
+
+        for(int i = 0; i < 6; i++){
+            Sprite sprite = new Sprite(1, 1);
+            sprite.setPixelColor(0, 0, color);
+            sprite.flush();
+
+            int[] pixels = sprite.getPixels();
+            ByteBuffer buffer = ByteBuffer.allocateDirect(pixels.length * 4);
+            for (int pixel : pixels) {
+                buffer.put((byte) ((pixel >> 16) & 0xFF));
+                buffer.put((byte) ((pixel >> 8) & 0xFF));
+                buffer.put((byte) (pixel & 0xFF));
+                buffer.put((byte) (pixel >> 24));
+            }
+            buffer.flip();
+
+            GL46.glTexImage2D(GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL46.GL_RGBA, sprite.getWidth(), sprite.getHeight(), 0, GL46.GL_RGBA, GL46.GL_UNSIGNED_BYTE, buffer);
+        }
+
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_LINEAR);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_LINEAR);
+
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, 0);
+
+        return id;
+    }
+
     public int generateCubeMap(Vector4f color){
         int textureID = this.genTexture();
 

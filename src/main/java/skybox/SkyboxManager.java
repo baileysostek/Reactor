@@ -148,7 +148,7 @@ public class SkyboxManager {
 
     public int getSkyboxTexture(){
         if(this.selected != null){
-            return selected.getTextureID();
+            return selected.getSkyboxTexture();
         }else {
             return defaultSkyboxTexture;
         }
@@ -160,5 +160,9 @@ public class SkyboxManager {
 
     public boolean hasSkybox() {
         return this.selected != null;
+    }
+
+    public int getDefaultTexture() {
+        return this.defaultSkyboxTexture;
     }
 }
