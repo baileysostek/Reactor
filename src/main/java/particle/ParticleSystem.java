@@ -26,13 +26,13 @@ public class ParticleSystem extends Entity {
         //Curve of lifepsan values, Min, Max, Interpolation
 
     //Size
-        //Curve of lifepsan values, Start{min max}, End{}, Interpolation
+        //Curve of Size values, Start{min max}, End{min max}, Interpolation
 
     //Rotation
-        //Curve of lifepsan values, Start{min max}, End{min max}, Interpolation
+        //Curve of Rotation values, Start{min max}, End{min max}, Interpolation
 
     //Opacity
-        //Curve of lifepsan values, Start{min max}, End{min max}, Interpolation
+        //Curve of Opacity values, Start{min max}, End{min max}, Interpolation
 
     //Texture
 
@@ -44,18 +44,28 @@ public class ParticleSystem extends Entity {
         //
 
     //Burst Loop or Not
+    Attribute<EmissionType> emissionType;
 
     //Emission
+    Attribute<EmissionShape> emissionShape;
 //    Attribute<ColorInterpolation> deriveEndColor;
 
     //Transition
     Attribute<ColorTransition> startToEndTransition;
     Attribute<Integer> startIndex;
 
+    //Buttons
+    Attribute<Callback> playButton;
+    Attribute<Callback> pauseButton;
 
 
-    public float lifetime = 2.0f;
+
+    public float lifetime = 8.0f;
+    private float time = 0;
+    private int burstCount = 0;
+    private boolean canBurst = false;
     private boolean needsUpdate = true;
+    private boolean paused = false;
 
     private Particle[] particles;
 
@@ -66,16 +76,37 @@ public class ParticleSystem extends Entity {
         startColorsList.add(new Vector3f(0, 1, 0));
         startColorsList.add(new Vector3f(0, 0, 1));
         startColors = new Attribute<LinkedList<Vector3f>>("startColor", startColorsList).setType(EnumAttributeType.COLOR);
+        startColors.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                updateSystem();
+                return null;
+            }
+        });
 
         deriveStartColor = new Attribute<ColorInterpolation>("startInterpolationType" , ColorInterpolation.DISCRETE);
+        deriveStartColor.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                updateSystem();
+                return null;
+            }
+        });
 
         LinkedList<Vector3f> endColorsList = new LinkedList<Vector3f>(){};
         endColorsList.add(new Vector3f(1, 0, 0));
         endColorsList.add(new Vector3f(0, 1, 0));
         endColorsList.add(new Vector3f(0, 0, 1));
-        endColors = new Attribute<LinkedList<Vector3f>>("endColor", startColorsList).setType(EnumAttributeType.COLOR);
+        endColors = new Attribute<LinkedList<Vector3f>>("endColors", endColorsList).setType(EnumAttributeType.COLOR);
+        endColors.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                updateSystem();
+                return null;
+            }
+        });
 
-        startIndex = new Attribute<Integer>("startIndex", 0);
+        startIndex = new Attribute<Integer>("startIndex", 0).setShouldBeSerialized(false);
         startIndex.subscribe(new Callback() {
             @Override
             public Object callback(Object... objects) {
@@ -101,6 +132,35 @@ public class ParticleSystem extends Entity {
             return null;
             }
         });
+
+        //Emission type
+        emissionType  = new Attribute<EmissionType>( "Emission Type" , EmissionType.CONTINUOUS);
+        emissionShape = new Attribute<EmissionShape>("Emission Shape", EmissionShape.CUBE);
+        emissionShape.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                updateSystem();
+                return null;
+            }
+        });
+
+        //Buttons
+        playButton = new Attribute<Callback>("Play", new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                start();
+                return null;
+            }
+        }).setShouldBeSerialized(false);
+
+        pauseButton = new Attribute<Callback>("Pause", new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                pause();
+                return null;
+            }
+        }).setShouldBeSerialized(false);
+
         //Add attributes
         this.addAttribute(numParticles);
         this.addAttribute(startColors);
@@ -108,8 +168,26 @@ public class ParticleSystem extends Entity {
 
         this.addAttribute(startIndex);
 
+        this.addAttribute(emissionType);
+        this.addAttribute(emissionShape);
+
+        //Buttons
+        this.addAttribute(playButton);
+        this.addAttribute(pauseButton);
+
         //Force update
         this.getAttribute("updateInEditor").setData(true);
+
+        //add subscription to scale
+        super.getAttribute("scale").subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                updateSystem();
+                return null;
+            }
+        });
+
+        //Set system based on initial params
         updateSystem();
     }
 
@@ -139,9 +217,62 @@ public class ParticleSystem extends Entity {
         }
     }
 
+    public void start(){
+        paused = false;
+        time = lifetime;
+        canBurst = true;
+        burstCount = 0;
+    }
+
+    public void pause(){
+        paused = true;
+    }
+
+    public void stop(){
+        this.paused = true;
+        for (Particle p : particles) {
+            p.reset();
+        }
+        canBurst = false;
+        burstCount = 0;
+    }
+
     public void update(double delta){
-        for(Particle p : particles){
-            p.update(delta);
+        if(!paused) {
+            //Burst
+            time += delta;
+            if(time > lifetime){
+                canBurst = true;
+                burstCount++;
+            }else{
+                canBurst = false;
+            }
+            time %= lifetime;
+
+            for (Particle p : particles) {
+                p.update(delta);
+            }
+        }
+    }
+
+    protected boolean canRespawn(){
+        switch (emissionType.getData()){
+            case CONTINUOUS:{
+                return true;
+            }
+            case BURST_LOOP:{
+                return canBurst;
+            }
+            case BURST_SINGLE:{
+                if(burstCount <= 1) {
+                    return canBurst;
+                }else{
+                    return false;
+                }
+            }
+            default:{
+                return true;
+            }
         }
     }
 
@@ -156,6 +287,38 @@ public class ParticleSystem extends Entity {
     }
 
     protected Vector3f determineEndColor(){
+        return new Vector3f(0);
+    }
+
+    protected Vector3f determineStartPosition(){
+        switch (emissionShape.getData()){
+            case POINT:{
+                return new Vector3f(0);
+            }
+            case CUBE:{
+                return new Vector3f((float)(Math.random() - 0.5f),(float)(Math.random() - 0.5f), (float)(Math.random() - 0.5f)).mul(2).mul(super.getScale());
+            }
+            case PLANE:{
+                return new Vector3f((float)(Math.random() - 0.5f),(float)(Math.random() - 0.5f), 0).mul(2).mul(super.getScale());
+            }
+            case SPHERE:{
+                while (true) {
+                    Vector3f cube = new Vector3f((float)(Math.random() - 0.5f),(float)(Math.random() - 0.5f), (float)(Math.random() - 0.5f)).mul(2).mul(super.getScale());
+                    if ( cube.length() <= super.getScale().x ){
+                        return cube;
+                    }
+                }
+            }
+            case CYLINDER:{
+                while (true) {
+                    Vector3f cube = new Vector3f((float)(Math.random() - 0.5f),0, (float)(Math.random() - 0.5f)).mul(2).mul(super.getScale());
+                    if ( cube.length() <= super.getScale().x ){
+                        cube.y = (float)(Math.random() - 0.5f) * (2f * super.getScale().y);
+                        return cube;
+                    }
+                }
+            }
+        }
         return new Vector3f(0);
     }
 

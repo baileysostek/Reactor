@@ -7,7 +7,10 @@ import org.joml.Vector3f;
 
 public class Particle {
 
+    private Vector3f startPosition;
     public Vector3f pos;
+
+    public Vector3f scale;
     public Vector3f col;
     private Vector3f startColor;
     private Vector3f endColor;
@@ -18,8 +21,13 @@ public class Particle {
 
     public ParticleSystem system;
 
+    private boolean awaitingRespawn = false;
+
     public Particle(ParticleSystem system){
-        pos      = new Vector3f(0);
+        startPosition = system.determineStartPosition();
+        pos      = new Vector3f(startPosition);
+        scale    = new Vector3f(1);
+
         velocity = new Vector3f(0.5f, 30, 0);
         acceleration = new Vector3f(0, -0.1f, 0);
         startColor = system.determineStartColor();
@@ -28,26 +36,47 @@ public class Particle {
         this.system = system;
     }
 
-    public void reset(Vector3f initalPos, Vector3f initialVelocity){
-        pos      = new Vector3f(initalPos);
-        velocity = new Vector3f(initialVelocity);
+    public void reset(){
+        lifetime = (float) (8f * Math.random());
+        life = lifetime;
+        pos = new Vector3f(startPosition);
+        scale.set(1);
+        velocity.set((float) (Math.random() * 8f - 4f), (float) (Math.random() * 30f), (float) (Math.random() * 8f - 4f));
     }
 
     public void update(double delta){
+        if(awaitingRespawn){
+            if(system.canRespawn()) {
+                reset();
+                awaitingRespawn = false;
+            }
+            return;
+        }
         //Lifespan
         life -= delta;
-        Vector3f orbitPos = MousePicker.rayHitsPlane(CameraManager.getInstance().getActiveCamera().getPosition(), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
-        if(orbitPos != null) {
-            orbit(orbitPos);
-        }
-        pos.add(new Vector3f(velocity.add(acceleration)).mul((float) delta));
-        col = new Vector3f(endColor).lerp(startColor, (life / lifetime));
+
+        float lifePercent = (life / lifetime);
+
+//        Vector3f orbitPos = MousePicker.rayHitsPlane(CameraManager.getInstance().getActiveCamera().getPosition(), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
+//        if(orbitPos != null) {
+//            orbit(orbitPos);
+//        }
+//        pos.add(new Vector3f(velocity.add(acceleration)).mul((float) delta));
+        col = new Vector3f(endColor).lerp(startColor, lifePercent);
+
+        scale = new Vector3f(0).lerp(new Vector3f(1), lifePercent);
+
         if(life <= 0){
-            lifetime = (float) (8f * Math.random());
-            life = lifetime;
-            pos.set(0);
-            velocity.set((float) (Math.random() * 8f - 4f), (float) (Math.random() * 30f), (float) (Math.random() * 8f - 4f));
+            awaitingRespawn = true;
+            if(system.canRespawn()) {
+                reset();
+                awaitingRespawn = false;
+            }
         }
+    }
+
+    public boolean isLive(){
+        return !this.awaitingRespawn;
     }
 
     private void orbit(Vector3f point){

@@ -1,6 +1,7 @@
 package entity.component;
 
 import com.google.gson.JsonObject;
+import org.joml.Vector3f;
 import serialization.Serializable;
 import serialization.SerializationHelper;
 import util.Callback;
@@ -52,16 +53,11 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
     public void setData(T newData){
         if(differ(newData)) {
             this.attribute = newData;
-            if(newData == null){
-                System.out.println("Problem");
-            }
+
             if(subscribers == null){
                 subscribers = new LinkedList<Callback>(){};
             }
             for (Callback callback : subscribers) {
-                if(callback == null){
-                    System.out.println("Problem");
-                }
                 callback.callback(this);
             }
         }
@@ -70,6 +66,11 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
     private boolean differ(T newData){
         if(newData instanceof String){
             return !attribute.equals(newData);
+        }if(newData instanceof Vector3f){
+            Vector3f newVec = ((Vector3f) newData);
+            Vector3f oldData = ((Vector3f) attribute);
+
+            return (newVec.x != oldData.x) || (newVec.y != oldData.y) || (newVec.z != oldData.z);
         }else{
             return attribute != newData;
         }
