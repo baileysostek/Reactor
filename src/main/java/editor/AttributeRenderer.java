@@ -6,14 +6,19 @@ import imgui.*;
 import imgui.enums.ImGuiCol;
 import imgui.enums.ImGuiColorEditFlags;
 import imgui.enums.ImGuiInputTextFlags;
+import imgui.enums.ImGuiSelectableFlags;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import util.Callback;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.LinkedList;
 
 public class AttributeRenderer{
+
+    private static boolean initialized = false;
 
     public static void renderAttributes(Collection<Attribute> attributes){
         //Loop through each attribute in the list.
@@ -24,20 +29,27 @@ public class AttributeRenderer{
                 continue;
             }
 
+            float baseWidth = ImGui.getColumnWidth();
+
             //Try find a type
             ImGui.columns(2);
             ImGui.pushID(Editor.getInstance().getNextID());
-            ImGui.pushItemWidth(ImGui.getColumnWidth() / 0.33f);
+            if(!initialized) {
+                ImGui.setColumnWidth(0, baseWidth * 0.33f);
+            }
+            ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
             ImGui.labelText("", attribute.getName());
             ImGui.popItemWidth();
             ImGui.popID();
             ImGui.nextColumn();
-            ImGui.pushItemWidth(ImGui.getColumnWidth() / 0.67f);
+            if(!initialized) {
+                ImGui.setColumnWidth(1, baseWidth * 0.67f);
+            }
 //            ImGui.pushID(Editor.getInstance().getNextID());
             if(attribute.getData() instanceof Collection){
                 if(attribute.getData() instanceof LinkedList){
                     LinkedList data = (LinkedList)attribute.getData();
-                    ImGui.beginChild("", ImGui.getColumnWidth(), 16 * data.size());
+                    ImGui.beginChild("", ImGui.getColumnWidth(), lookupHeight(attribute));
                     int index = 0;
                     for(Object object : data){
                         Attribute tmp = new Attribute(""+index, object);
@@ -66,14 +78,28 @@ public class AttributeRenderer{
                 renderAttribute(attribute);
             }
             ImGui.endChild();
-            ImGui.popItemWidth();
             ImGui.columns();
         }
         ImGui.columns();
+
+        initialized = true;
+
     }
 
     private static void renderAttribute(Attribute attribute){
         {
+            if(attribute.getData() instanceof Callback){
+                if(ImGui.button(attribute.getName(), ImGui.getColumnWidth() - 3, 16)){
+                    ((Callback)attribute.getData()).callback();
+                }
+                return;
+            }
+            if(attribute.getData() instanceof Enum){
+                ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
+                renderEnum(attribute, ((Enum) attribute.getData()).getDeclaringClass());
+                ImGui.popItemWidth();
+                return;
+            }
             if (attribute.getData() instanceof Vector4f) {
                 Vector4f data = (Vector4f) attribute.getData();
 
@@ -127,9 +153,10 @@ public class AttributeRenderer{
                     float[] color = new float[]{data.x, data.y, data.z};
                     ImGui.pushID(Editor.getInstance().getNextID());
                     ImGui.pushItemWidth(ImGui.getColumnWidth());
-                    ImGui.colorPicker3(attribute.getName(), color, ImGuiColorEditFlags.PickerHueWheel | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoSidePreview | ImGuiColorEditFlags.NoSmallPreview | ImGuiColorEditFlags.NoTooltip | ImGuiColorEditFlags.NoLabel);
+                    if(ImGui.colorPicker3(attribute.getName(), color, ImGuiColorEditFlags.PickerHueWheel | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoSidePreview | ImGuiColorEditFlags.NoSmallPreview | ImGuiColorEditFlags.NoTooltip | ImGuiColorEditFlags.NoLabel)){
+                        attribute.setData(new Vector3f(color[0], color[1], color[2]));
+                    }
                     ImGui.popItemWidth();
-                    attribute.setData(new Vector3f(color[0], color[1], color[2]));
                     ImGui.popID();
                 }else if(attribute.getType().equals(EnumAttributeType.SLIDERS)){
                     float[] sliderX = new float[]{data.x};
@@ -280,4 +307,36 @@ public class AttributeRenderer{
             ImGui.inputText(attribute.getName(), new ImString(attribute.getData() + ""));
         }
     }
+
+    private static float lookupHeight(Attribute attribute){
+
+        float modifier = 1f;
+
+        if(attribute.getData() instanceof Collection){
+            modifier = (float)((Collection) attribute.getData()).size();
+        }
+
+        switch (attribute.getType()){
+            case COLOR:{
+                return (ImGui.getColumnWidth() + 32) * modifier;
+            }
+        }
+
+        return 16f * modifier;
+    }
+
+    //This can take ANY enum and iterate through each element.
+    private static <T extends Enum<T>> void renderEnum(Attribute<T> attribute, Class<T> cls) {
+        if (ImGui.beginCombo(attribute.getName(), attribute.getData().toString())){
+            int flags = ImGuiSelectableFlags.AllowDoubleClick;
+            for (T item : EnumSet.allOf(cls)){
+                if(ImGui.selectable(item.toString(), item.equals(attribute.getData()), flags)){
+                    attribute.setData(item);
+                }
+            }
+            ImGui.endCombo();
+        }
+
+    }
+
 }

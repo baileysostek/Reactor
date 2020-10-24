@@ -7,6 +7,7 @@ import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
 import models.ModelManager;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL46;
 
@@ -26,6 +27,7 @@ public class ParticleManager {
 
     private float[] verticies;
     private float[] positions;
+    private float[] scales;
     private float[] colors;
 
     private int vao_id;
@@ -46,19 +48,20 @@ public class ParticleManager {
         // The VBO containing the 4 vertices of the particles.
         // Thanks to instancing, they will be shared by all particles.
 
-        Handshake shape = ModelManager.getInstance().loadModel("cube2.obj").getFirst().getHandshake();
-        FloatBuffer positions_data = (FloatBuffer) shape.getAttribute("vPosition");
-        verticies = new float[positions_data.remaining()];
-        positions_data.get(verticies);
+//        Handshake shape = ModelManager.getInstance().loadModel("cube2.obj").getFirst().getHandshake();
+//        FloatBuffer positions_data = (FloatBuffer) shape.getAttribute("vPosition");
+//        verticies = new float[positions_data.remaining()];
+//        positions_data.get(verticies);
 
-//        verticies = new float[]{
-//            -0.5f, -0.5f, 0.0f,
-//            0.5f, -0.5f, 0.0f,
-//            -0.5f, 0.5f, 0.0f,
-//            0.5f, 0.5f, 0.0f,
-//        };
+        verticies = new float[]{
+            -0.5f, -0.5f, 0.0f,
+            0.5f, -0.5f, 0.0f,
+            -0.5f, 0.5f, 0.0f,
+            0.5f, 0.5f, 0.0f,
+        };
 
         positions = new float[MAX_PARTICLES * 3];
+        scales    = new float[MAX_PARTICLES * 3];
         colors    = new float[MAX_PARTICLES * 4];
 
         //Create our vao
@@ -71,6 +74,11 @@ public class ParticleManager {
             positions[i * 3 + 0] = (float) Math.random() * 256;
             positions[i * 3 + 1] = (float) Math.random() * 256;
             positions[i * 3 + 2] = (float) Math.random() * 256;
+
+            //scale
+            scales[i * 3 + 0] = 1;
+            scales[i * 3 + 1] = 1;
+            scales[i * 3 + 2] = 1;
 
             //col
             colors[i * 4 + 0] = (float) Math.random();
@@ -96,6 +104,12 @@ public class ParticleManager {
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_color);
         GL46.glBufferData(GL46.GL_ARRAY_BUFFER, colors, GL46.GL_STREAM_DRAW);
         GL46.glVertexAttribPointer(2, 4, GL46.GL_FLOAT, false, 0, 0);
+
+        // The VBO containing the scale of the particles
+        vbo_scale = GL46.glGenBuffers();
+        GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_scale);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, scales, GL46.GL_STREAM_DRAW);
+        GL46.glVertexAttribPointer(3, 3, GL46.GL_FLOAT, false, 0, 0);
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
         GL46.glBindVertexArray(0);
@@ -128,19 +142,21 @@ public class ParticleManager {
         // 3rd attribute buffer : particles' colors
         GL46.glEnableVertexAttribArray(2);
 //        // 4th attribute buffer : particles' scale
-//        GL46.glEnableVertexAttribArray(2);
+        GL46.glEnableVertexAttribArray(3);
 
         GL46.glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
         GL46.glVertexAttribDivisor(1, 1); // positions : one per quad (its center) -> 1
         GL46.glVertexAttribDivisor(2, 1); // color : one per quad -> 1
+        GL46.glVertexAttribDivisor(3, 1); // scale : one per quad -> 1
 
 
         int toRender = getAllocatedParticles();
-        GL46.glDrawArraysInstanced(GL46.GL_TRIANGLES, 0, verticies.length / 3, toRender);
+        GL46.glDrawArraysInstanced(GL46.GL_TRIANGLE_STRIP, 0, verticies.length / 3, toRender);
 
         GL46.glDisableVertexAttribArray(0);
         GL46.glDisableVertexAttribArray(1);
         GL46.glDisableVertexAttribArray(2);
+        GL46.glDisableVertexAttribArray(3);
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
         GL46.glBindVertexArray(0);
@@ -202,20 +218,36 @@ public class ParticleManager {
         int numParticles = system.numParticles.getData();
 
         float[] positions = new float[numParticles * 3];
+        float[] scales    = new float[numParticles * 3];
         float[] colors    = new float[numParticles * 4];
+
+        Vector4f pos = new Vector4f(1);
 
         for(int i = 0; i < numParticles; i++){
             p = system.getParticle(i);
+            if(p.isLive()) {
+                pos.x = p.pos.x;
+                pos.y = p.pos.y;
+                pos.z = p.pos.z;
 
-            positions[i * 3 + 0] = systemPos.x + p.pos.x;
-            positions[i * 3 + 1] = systemPos.y + p.pos.y;
-            positions[i * 3 + 2] = systemPos.z + p.pos.z;
+                pos = pos.mul(system.getTransform());
 
-            colors[i * 4 + 0] = p.col.x;
-            colors[i * 4 + 1] = p.col.y;
-            colors[i * 4 + 2] = p.col.z;
-            colors[i * 4 + 3] = 0.5f;
+                positions[i * 3 + 0] = pos.x;
+                positions[i * 3 + 1] = pos.y;
+                positions[i * 3 + 2] = pos.z;
+
+                scales[i * 3 + 0] = p.scale.x;
+                scales[i * 3 + 1] = p.scale.y;
+                scales[i * 3 + 2] = p.scale.z;
+
+                colors[i * 4 + 0] = p.col.x;
+                colors[i * 4 + 1] = p.col.y;
+                colors[i * 4 + 2] = p.col.z;
+                colors[i * 4 + 3] = 0.5f;
+            }
         }
+
+
 
         //Buffer
         GL46.glBindVertexArray(vao_id);
@@ -231,9 +263,15 @@ public class ParticleManager {
         GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex * 4, colors);
         GL46.glVertexAttribPointer(2, 4, GL46.GL_FLOAT, false, 0, 0);
 
+        GL46.glEnableVertexAttribArray(3);
+        GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_scale);
+        GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex * 3, scales);
+        GL46.glVertexAttribPointer(3, 3, GL46.GL_FLOAT, false, 0, 0);
+
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
-        GL46.glDisableVertexAttribArray(0);
         GL46.glDisableVertexAttribArray(1);
+        GL46.glDisableVertexAttribArray(2);
+        GL46.glDisableVertexAttribArray(3);
         GL46.glBindVertexArray(0);
     }
 
