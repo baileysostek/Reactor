@@ -2,6 +2,7 @@ package entity.component;
 
 import com.google.gson.JsonObject;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import serialization.Serializable;
 import serialization.SerializationHelper;
 import util.Callback;
@@ -71,6 +72,11 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
             Vector3f oldData = ((Vector3f) attribute);
 
             return (newVec.x != oldData.x) || (newVec.y != oldData.y) || (newVec.z != oldData.z);
+        }else if(newData instanceof Vector4f){
+            Vector4f newVec = ((Vector4f) newData);
+            Vector4f oldData = ((Vector4f) attribute);
+
+            return (newVec.x != oldData.x) || (newVec.y != oldData.y) || (newVec.z != oldData.z) || (newVec.w != oldData.w);
         }else{
             return attribute != newData;
         }

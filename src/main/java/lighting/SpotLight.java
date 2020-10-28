@@ -1,25 +1,23 @@
 package lighting;
 
-import engine.FraudTek;
 import entity.component.Attribute;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.joml.Vector3fc;
 import util.Callback;
 
-public class DirectionalLight extends Light implements CastsShadows{
+public class SpotLight extends Light implements CastsShadows{
 
     private FBO depthBuffer;
     private Matrix4f viewMatrix = new Matrix4f();
 
     private Callback resize;
 
-    public DirectionalLight(){
+    public SpotLight(){
         super();
         depthBuffer = new FBO();
-        setTexture(depthBuffer.getTextureID());
+        setTexture(depthBuffer.getDepthTexture());
         addAttribute(new Attribute<Vector3f>("targetPoint", new Vector3f(0)));
 
         this.getAttribute("castsShadows").setShouldBeSerialized(false).setData(true);
@@ -28,8 +26,8 @@ public class DirectionalLight extends Light implements CastsShadows{
         resize = new Callback() {
             @Override
             public Object callback(Object... objects) {
-            depthBuffer.resize(Renderer.getWIDTH(), Renderer.getHEIGHT());
-            return null;
+                depthBuffer.resize(Renderer.getWIDTH(), Renderer.getHEIGHT());
+                return null;
             }
         };
 
@@ -77,7 +75,7 @@ public class DirectionalLight extends Light implements CastsShadows{
 
     public float[] getLightspaceTransform() {
         Vector3f frustum = (Vector3f) this.getAttribute("frustum").getData();
-        return new Matrix4f().ortho(-frustum.x, frustum.x, -frustum.x,frustum.x, frustum.y, frustum.z).mul(viewMatrix).get(new float[16]);
+        return new Matrix4f().perspective((float) Math.toRadians(70), 1, 0.1f,200).mul(viewMatrix).get(new float[16]);
     }
 
     public FBO getDepthBuffer() {

@@ -6,6 +6,8 @@
 package camera;
 
 import engine.Constants;
+import graphics.renderer.Renderer;
+import org.joml.FrustumIntersection;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -22,6 +24,8 @@ public abstract class Camera implements Serializable<Camera> {
     private Vector3f rotationV = new Vector3f(0, 0, 0);
     private Vector3f position = new Vector3f(0, 0, 0);
     private Vector3f offset = new Vector3f(0f);
+
+    private FrustumIntersection view;
 
     protected float speed = 0.1f;
 
@@ -131,16 +135,14 @@ public abstract class Camera implements Serializable<Camera> {
     public float[] getTransform() {
         Matrix4f transform = getTransformationMatrix();
 
-
         float[] modelMatrix = new float[]{
-                transform.m00(), transform.m01(), transform.m02(), transform.m03(),
-                transform.m10(), transform.m11(), transform.m12(), transform.m13(),
-                transform.m20(), transform.m21(), transform.m22(), transform.m23(),
-                transform.m30(), transform.m31(), transform.m32(), transform.m33()
+            transform.m00(), transform.m01(), transform.m02(), transform.m03(),
+            transform.m10(), transform.m11(), transform.m12(), transform.m13(),
+            transform.m20(), transform.m21(), transform.m22(), transform.m23(),
+            transform.m30(), transform.m31(), transform.m32(), transform.m33()
         };
 
         return modelMatrix;
     }
-
 
 }
