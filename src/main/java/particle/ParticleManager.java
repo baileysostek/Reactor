@@ -20,7 +20,7 @@ public class ParticleManager {
     //Also will batch together textures into a texture atlas
     private static ParticleManager particleManager;
 
-    private final int MAX_PARTICLES = 10000;
+    private final int MAX_PARTICLES = 100000;
 
 
     private final LinkedList<ParticleSystem> systems = new LinkedList<ParticleSystem>();
@@ -225,6 +225,7 @@ public class ParticleManager {
 
         for(int i = 0; i < numParticles; i++){
             p = system.getParticle(i);
+
             if(p.isLive()) {
                 pos.x = p.pos.x;
                 pos.y = p.pos.y;

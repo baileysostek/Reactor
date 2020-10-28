@@ -4,6 +4,7 @@ import camera.CameraManager;
 import engine.Engine;
 import entity.Entity;
 import entity.EntityManager;
+import lighting.CastsShadows;
 import lighting.DirectionalLight;
 import lighting.Light;
 import lighting.LightingManager;
@@ -45,6 +46,7 @@ public class Renderer extends Engine {
 
     private FBO frameBuffer;
 
+    //TODO refactor to be camera specific
     private static float[] projectionMatrix = new float[16];
 
     //ImmediateDraw
@@ -142,9 +144,9 @@ public class Renderer extends Engine {
         //-1 is closest probe to entity
 
         //Compute per frame, refactor to per entity eventually
-        LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
+        LinkedList<CastsShadows> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
         for(int directionalLightIndex = 0; directionalLightIndex < Math.min(shadowCasters.size(), GL46.glGetInteger(GL46.GL_MAX_TEXTURE_IMAGE_UNITS) - TEXTURE_OFFSET); directionalLightIndex++){
-            DirectionalLight shadowCaster = shadowCasters.get(directionalLightIndex);
+            CastsShadows shadowCaster = shadowCasters.get(directionalLightIndex);
             //Bind and allocate this texture unit.
             int textureUnit = TEXTURE_OFFSET + directionalLightIndex;
             GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
@@ -152,8 +154,8 @@ public class Renderer extends Engine {
             GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
 
             //Upload our uniforms.
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getPosition()).normalize());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getColor());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getLight().getPosition()).normalize());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getLight().getColor());
             ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", directionalLightIndex, shadowCaster.getLightspaceTransform());
             ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", directionalLightIndex, textureUnit);
         }

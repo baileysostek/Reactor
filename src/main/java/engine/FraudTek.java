@@ -16,6 +16,7 @@ import input.MousePicker;
 import lighting.DirectionalLight;
 import lighting.LightingManager;
 import lighting.PointLight;
+import lighting.SpotLight;
 import logging.LogManager;
 import models.Model;
 import models.ModelManager;
@@ -227,7 +228,7 @@ public class FraudTek {
 
 //                EntityManager.getInstance().addEntity(drag);
                 EntityManager.getInstance().addEntity(new DirectionalLight());
-                EntityManager.getInstance().addEntity(new DirectionalLight());
+                EntityManager.getInstance().addEntity(new SpotLight());
                 EntityManager.getInstance().addEntity(new ParticleSystem());
                 EntityManager.getInstance().addEntity(new ParticleSystem());
                 EntityManager.getInstance().addEntity(new PointLight());

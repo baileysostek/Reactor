@@ -20,7 +20,7 @@ public class LightingManager {
     private int lightDepth;
 
     private LinkedList<Light> lights        = new LinkedList<>();
-    private LinkedList<DirectionalLight> shadowCasters = new LinkedList<>();
+    private LinkedList<CastsShadows> shadowCasters = new LinkedList<>();
     private LinkedList<PointLight> pointLights = new LinkedList<>();
 
     //Lock for locking our entity set
@@ -38,12 +38,9 @@ public class LightingManager {
 
     public void drawFromMyPerspective(DirectionalLight directionalLight) {
         directionalLight.getDepthBuffer().bindFrameBuffer();
-        GL46.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+        GL46.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         ShaderManager.getInstance().useShader(lightDepth);
         GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT);
-
-        GL46.glEnable(GL46.GL_BLEND);
-        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
 
         ShaderManager.getInstance().loadUniformIntoActiveShader("lightSpaceMatrix", directionalLight.getLightspaceTransform());
 
@@ -64,9 +61,32 @@ public class LightingManager {
 
         directionalLight.getDepthBuffer().unbindFrameBuffer();
 
+    }
 
-        GL46.glDisable(GL46.GL_BLEND);
+    public void drawFromMyPerspective(SpotLight directionalLight) {
+        directionalLight.getDepthBuffer().bindFrameBuffer();
+        GL46.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        ShaderManager.getInstance().useShader(lightDepth);
+        GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT);
 
+        ShaderManager.getInstance().loadUniformIntoActiveShader("lightSpaceMatrix", directionalLight.getLightspaceTransform());
+
+        //Render all entities
+        EntityManager.getInstance().resort();
+
+        for(Entity entity : EntityManager.getInstance().getEntities()){
+            if(entity.getModel() != null) {
+                if(entity.isVisible()) {
+                    ShaderManager.getInstance().loadHandshakeIntoShader(lightDepth, entity.getModel().getHandshake());
+
+                    //Mess with uniforms
+                    GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lightDepth, "model"), false, entity.getTransform().get(new float[16]));
+                    GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, entity.getModel().getNumIndicies());
+                }
+            }
+        }
+
+        directionalLight.getDepthBuffer().unbindFrameBuffer();
     }
 
     public static void initialize(){
@@ -80,7 +100,7 @@ public class LightingManager {
     }
 
     // returns the closest n lights to point
-    public LinkedList<DirectionalLight> getClosestLights(int n, Vector3f point) {
+    public LinkedList<CastsShadows> getClosestLights(int n, Vector3f point) {
         return shadowCasters;
     }
 
@@ -99,8 +119,8 @@ public class LightingManager {
         try {
             //Add the entity
             this.lights.add(light);
-            if(light instanceof DirectionalLight){
-                shadowCasters.add((DirectionalLight) light);
+            if(light instanceof CastsShadows){
+                shadowCasters.add((CastsShadows) light);
             }
             if(light instanceof PointLight){
                 pointLights.add((PointLight) light);
@@ -121,7 +141,7 @@ public class LightingManager {
         try {
             //Add the entity
             this.lights.remove(light);
-            if(light instanceof DirectionalLight){
+            if(light instanceof CastsShadows){
                 shadowCasters.remove(light);
             }
             if(light instanceof PointLight){

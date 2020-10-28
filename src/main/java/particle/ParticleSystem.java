@@ -6,6 +6,7 @@ import entity.component.EnumAttributeType;
 import graphics.renderer.Renderer;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import util.Callback;
 
 import java.util.LinkedList;
@@ -84,7 +85,7 @@ public class ParticleSystem extends Entity {
             }
         });
 
-        deriveStartColor = new Attribute<ColorInterpolation>("startInterpolationType" , ColorInterpolation.DISCRETE);
+        deriveStartColor = new Attribute<ColorInterpolation>("startInterpolationType" , ColorInterpolation.RANDOM);
         deriveStartColor.subscribe(new Callback() {
             @Override
             public Object callback(Object... objects) {
@@ -101,8 +102,8 @@ public class ParticleSystem extends Entity {
         endColors.subscribe(new Callback() {
             @Override
             public Object callback(Object... objects) {
-                updateSystem();
-                return null;
+            updateSystem();
+            return null;
             }
         });
 
@@ -164,9 +165,9 @@ public class ParticleSystem extends Entity {
         //Add attributes
         this.addAttribute(numParticles);
         this.addAttribute(startColors);
+        this.addAttribute(startIndex);
         this.addAttribute(endColors);
 
-        this.addAttribute(startIndex);
 
         this.addAttribute(emissionType);
         this.addAttribute(emissionShape);
@@ -281,6 +282,24 @@ public class ParticleSystem extends Entity {
             case DISCRETE:{
                 int index = (int) Math.floor(startColors.getData().size() * Math.random());
                 return startColors.getData().get(index);
+            }
+            case RANDOM:{
+                //If there are not enough colors to do a random, return the first.
+                if(startColors.getData().size() < 2){
+                    return startColors.getData().getFirst();
+                }
+
+                //Pick two random colors.
+                int index_first  = (int) Math.floor(startColors.getData().size() * Math.random());
+                int index_second = (int) Math.floor(startColors.getData().size() * Math.random());
+                while(index_first == index_second){
+                    index_second = (int) Math.floor(startColors.getData().size() * Math.random());
+                }
+
+                Vector3f color1 = new Vector3f(startColors.getData().get(index_first));
+                Vector3f color2 = new Vector3f(startColors.getData().get(index_second));
+
+                return new Vector3f(new Vector3f(color1).add(color2)).lerp(color1.lerp(color2, (float) Math.random()).normalize(), (float) Math.random());
             }
         }
         return new Vector3f(0);
