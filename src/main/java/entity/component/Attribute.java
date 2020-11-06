@@ -7,6 +7,8 @@ import serialization.Serializable;
 import serialization.SerializationHelper;
 import util.Callback;
 
+import java.awt.*;
+import java.util.Collection;
 import java.util.LinkedList;
 
 public class Attribute<T> implements Serializable<Attribute<T>> {
@@ -51,8 +53,8 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
         return this;
     }
 
-    public void setData(T newData){
-        if(differ(newData)) {
+    public boolean setData(T newData){
+        if(differ(newData, attribute)) {
             this.attribute = newData;
 
             if(subscribers == null){
@@ -61,24 +63,47 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
             for (Callback callback : subscribers) {
                 callback.callback(this);
             }
+            return true;
         }
+        return false;
     }
 
-    private boolean differ(T newData){
+    private boolean differ(Object newData, Object existingData){
         if(newData instanceof String){
-            return !attribute.equals(newData);
+            return !existingData.equals(newData);
         }if(newData instanceof Vector3f){
             Vector3f newVec = ((Vector3f) newData);
-            Vector3f oldData = ((Vector3f) attribute);
+            Vector3f oldData = ((Vector3f) existingData);
 
             return (newVec.x != oldData.x) || (newVec.y != oldData.y) || (newVec.z != oldData.z);
         }else if(newData instanceof Vector4f){
             Vector4f newVec = ((Vector4f) newData);
-            Vector4f oldData = ((Vector4f) attribute);
+            Vector4f oldData = ((Vector4f) existingData);
 
             return (newVec.x != oldData.x) || (newVec.y != oldData.y) || (newVec.z != oldData.z) || (newVec.w != oldData.w);
         }else{
-            return attribute != newData;
+            if(newData instanceof Collection){
+                Collection newCollection = ((Collection)newData);
+                Collection currentData   = ((Collection) existingData);
+                Object[] currentDataBuffer = currentData.toArray();
+                //Quick Compare if size of elements are different return true.
+                if(currentData.size() != newCollection.size()){
+                    return true;
+                }
+
+                //Deep compare. Element size did not change, lets do a deep compare on each object.
+                int index = 0;
+                for(Object obj : newCollection){
+                    if(this.differ(obj, currentDataBuffer[index])){
+                        System.out.println("Changed!");
+                        return true;
+                    }
+                    index++;
+                }
+                return false;
+            }
+
+            return existingData != newData;
         }
     }
 
@@ -96,11 +121,24 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
         }
     }
 
+    public void subscribe(Attribute<T> attribute){
+        for(Callback c : attribute.subscribers){
+            subscribe(c);
+        }
+    }
+
     public void unsubscribe(Callback c){
         if(this.subscribers.contains(c)) {
             this.subscribers.remove(c);
         }
     }
+
+    public void unsubscribe(Attribute<T> attribute){
+        for(Callback c : attribute.subscribers){
+            unsubscribe(c);
+        }
+    }
+
 
     public String getName(){
         return this.name;
@@ -131,7 +169,12 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
         out.addProperty("visible", visible);
         out.addProperty("type", type.toString());
         out.addProperty("category", category);
-        out.add("data", SerializationHelper.addClass(attribute));
+        if(attribute != null){
+            out.add("data", SerializationHelper.addClass(attribute));
+        }else{
+            out.add("data", null);
+            System.err.println("Error: Attribute had no associated data:" + name);
+        }
         return out;
     }
 

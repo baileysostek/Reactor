@@ -6,15 +6,12 @@ import camera.CameraManager;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import editor.components.UIComponet;
-import editor.components.container.Axis;
-import editor.components.container.Transform;
-import editor.components.views.LevelEditor;
 import engine.FraudTek;
 import entity.*;
-import entity.component.Attribute;
 import graphics.renderer.Renderer;
-import graphics.sprite.SpriteBinder;
-import imgui.*;
+import imgui.ImGui;
+import imgui.ImGuiIO;
+import imgui.ImVec2;
 import imgui.callbacks.ImStrConsumer;
 import imgui.callbacks.ImStrSupplier;
 import imgui.enums.*;
@@ -22,11 +19,9 @@ import imgui.gl3.ImGuiImplGl3;
 import input.Keyboard;
 import input.MousePicker;
 import org.joml.Vector2f;
-import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
-import serialization.SerializationHelper;
 import util.Callback;
 import util.Debouncer;
 import util.StringUtils;
@@ -35,7 +30,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_NORMAL;
 
 public class Editor {
 
@@ -240,7 +234,7 @@ public class Editor {
                     PlatformManager.getInstance().setDevelopmentLevel(EnumDevelopment.DEVELOPMENT);
                     onExitPlay();
                 }
-                System.out.println("Pressed new state is:"+PlatformManager.getInstance().getDevelopmentStatus());
+                System.out.println("Pressed new state is:"+ PlatformManager.getInstance().getDevelopmentStatus());
                 return null;
             }
         });
@@ -344,7 +338,7 @@ public class Editor {
         //Buffer at start
         for(EnumEditorLocation location : EnumEditorLocation.values()) {
             LinkedList<UIComponet> safeItterate = new LinkedList<>(UIComponets.get(location));
-            for (UIComponet UIComponet : safeItterate) {
+            for (editor.components.UIComponet UIComponet : safeItterate) {
                 UIComponet.update(delta);
             }
         }
@@ -403,7 +397,7 @@ public class Editor {
         int index = 0;
         ImVec2 availDimensions = new ImVec2();
         ImGui.getContentRegionAvail(availDimensions);
-        for(UIComponet UIComponet : UIComponets.get(EnumEditorLocation.LEFT_TAB)){
+        for(editor.components.UIComponet UIComponet : UIComponets.get(EnumEditorLocation.LEFT_TAB)){
             if(ImGui.beginTabItem(UIComponet.getName(),ImGuiTabBarFlags.FittingPolicyDefault_ | ImGuiTabBarFlags.NoCloseWithMiddleMouseButton)) {
                 ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), availDimensions.y);
                 UIComponet.setVisable(true);
@@ -418,7 +412,7 @@ public class Editor {
         ImGui.endTabBar();
         ImGui.endChildFrame();
         ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth() - (padding.x * 2), ImGui.getWindowHeight()/2);
-        for(UIComponet UIComponet : UIComponets.get(EnumEditorLocation.LEFT_BOTTOM)){
+        for(editor.components.UIComponet UIComponet : UIComponets.get(EnumEditorLocation.LEFT_BOTTOM)){
             UIComponet.render();
         }
         ImGui.endChildFrame();
@@ -428,7 +422,7 @@ public class Editor {
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 2, 2);
         ImGui.nextColumn();
             //Do our column math out here
-            float adj_height = ((float)Renderer.getInstance().getHEIGHT() / (float)Renderer.getInstance().getWIDTH()) * ImGui.getColumnWidth();
+            float adj_height = ((float) Renderer.getInstance().getHEIGHT() / (float) Renderer.getInstance().getWIDTH()) * ImGui.getColumnWidth();
             float colX = ImGui.getColumnOffset(ImGui.getColumnIndex());
             float colY = 0;
             ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth()  - (padding.x * 2), ImGui.getWindowHeight());
@@ -471,7 +465,7 @@ public class Editor {
 
     private void renderComponentSet(EnumEditorLocation enumEditorLocation){
         LinkedList<UIComponet> safeItterate = new LinkedList<>(UIComponets.get(enumEditorLocation));
-        for(UIComponet UIComponet : safeItterate){
+        for(editor.components.UIComponet UIComponet : safeItterate){
             UIComponet.render();
         }
     }

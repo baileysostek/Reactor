@@ -3,8 +3,6 @@ package input;
 import editor.Editor;
 import engine.Engine;
 import engine.FraudTek;
-import imgui.ImGui;
-import input.Chroma.ChromaManager;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import platform.EnumDevelopment;
@@ -72,7 +70,8 @@ public class Keyboard extends Engine {
     public static final int BACKSPACE = 259;
     public static final int SPACE     = KeyEvent.VK_SPACE;
 
-    public static final int CONTROL   = KeyEvent.VK_CONTROL;
+    public static final int CONTROL_LEFT   = GLFW.GLFW_KEY_LEFT_CONTROL;
+    public static final int CONTROL_RIGHT   = GLFW.GLFW_KEY_RIGHT_CONTROL;
     public static final int ALT_LEFT  = GLFW.GLFW_KEY_LEFT_ALT;
     public static final int SHIFT_LEFT = GLFW.GLFW_KEY_LEFT_SHIFT;
     public static final int SHIFT_RIGHT = GLFW.GLFW_KEY_RIGHT;

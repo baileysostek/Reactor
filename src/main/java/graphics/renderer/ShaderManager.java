@@ -199,15 +199,11 @@ public class ShaderManager {
                     int errorCheck = GL46.glGetError();
                     boolean error = false;
                     while (errorCheck != GL46.GL_NO_ERROR) {
-                        System.out.println("GLError:" + errorCheck + " for shader[" + shaderInstances_prime.get(activeShader)+"] attribute:"+attribute);
+                        System.out.println("GLError:" + errorCheck);
                         if (errorCheck == GL46.GL_INVALID_VALUE) {
                             error = true;
                             System.out.println("Attribute[" + attribute + "] could not be found in Shader[" + shaderInstances_prime.get(programID) + ']');
                             shader.removeAttribute(attribute);
-                        }
-                        if(errorCheck == GL46.GL_INVALID_OPERATION){
-                            //Invalid opp
-                            System.out.println("Invalid Operation.");
                         }
                         errorCheck = GL46.glGetError();
                     }

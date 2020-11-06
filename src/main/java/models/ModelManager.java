@@ -55,13 +55,6 @@ public class ModelManager {
         String resourceName = StringUtils.getRelativePath() + "models/" + modelName;
 
         String data = StringUtils.load("models/" + modelName);
-
-        if(data == null){
-            LinkedList<Model> out = new LinkedList();
-            out.add(DEFAULT_MODEL);
-            return out;
-        }
-
         String[] lines = data.split("\n");
         String fileExtension = modelName.split("\\.")[1];
 

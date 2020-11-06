@@ -7,40 +7,20 @@ import graphics.renderer.Renderer;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
-import util.Callback;
 
-public class DirectionalLight extends Light implements CastsShadows{
+public class DirectionalLight extends Light {
 
     private FBO depthBuffer;
     private Matrix4f viewMatrix = new Matrix4f();
 
-    private Callback resize;
-
     public DirectionalLight(){
         super();
         depthBuffer = new FBO();
-        setTexture(depthBuffer.getTextureID());
+        setTexture(depthBuffer.getDepthTexture());
         addAttribute(new Attribute<Vector3f>("targetPoint", new Vector3f(0)));
 
         this.getAttribute("castsShadows").setShouldBeSerialized(false).setData(true);
         this.getAttribute("textureID").setShouldBeSerialized(false);
-
-        resize = new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-            depthBuffer.resize(Renderer.getWIDTH(), Renderer.getHEIGHT());
-            return null;
-            }
-        };
-
-        Renderer.getInstance().addResizeCallback(resize);
-
-    }
-
-    @Override
-    public void onRemove(){
-        Renderer.getInstance().removeResizeCallback(resize);
-        super.onRemove();
     }
 
     @Override
@@ -82,10 +62,5 @@ public class DirectionalLight extends Light implements CastsShadows{
 
     public FBO getDepthBuffer() {
         return this.depthBuffer;
-    }
-
-    @Override
-    public Light getLight() {
-        return this;
     }
 }

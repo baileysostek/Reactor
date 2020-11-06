@@ -1,17 +1,13 @@
 package particle;
 
 import camera.CameraManager;
-import entity.component.Attribute;
-import graphics.renderer.Handshake;
 import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
-import models.ModelManager;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL46;
 
-import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.LinkedList;
 

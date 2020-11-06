@@ -1,8 +1,5 @@
 package particle;
 
-import camera.CameraManager;
-import entity.EntityManager;
-import input.MousePicker;
 import org.joml.Vector3f;
 
 public class Particle {
@@ -29,7 +26,7 @@ public class Particle {
         scale    = new Vector3f(1);
 
         velocity = new Vector3f(0.5f, 30, 0);
-        acceleration = new Vector3f(0, -0.1f, 0);
+        acceleration = new Vector3f(0, 0, 0);
         startColor = system.determineStartColor();
         endColor = system.determineEndColor();
         col = new Vector3f(startColor);
@@ -61,7 +58,7 @@ public class Particle {
 //        if(orbitPos != null) {
 //            orbit(orbitPos);
 //        }
-//        pos.add(new Vector3f(velocity.add(acceleration)).mul((float) delta));
+        pos.add(new Vector3f(velocity.add(acceleration)).mul((float) delta));
         col = new Vector3f(endColor).lerp(startColor, lifePercent);
 
         scale = new Vector3f(0).lerp(new Vector3f(1), lifePercent);

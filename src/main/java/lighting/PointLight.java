@@ -1,25 +1,19 @@
 package lighting;
 
-import camera.CameraManager;
 import entity.component.Attribute;
 import graphics.renderer.Renderer;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 public class PointLight extends Light {
 
-    Matrix4f transform = new Matrix4f();
-
     public PointLight(){
-
+        addAttribute(new Attribute<Float>("brightness", (float) 1));
     }
 
     @Override
     public void update(double delta){
-        transform = new Matrix4f(CameraManager.getInstance().getActiveCamera().getTransformationMatrix());
-        super.setRotation(transform.getNormalizedRotation(new Quaternionf()));
+
     }
 
     @Override

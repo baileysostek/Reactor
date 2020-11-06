@@ -2,23 +2,24 @@ package graphics.renderer;
 
 import camera.CameraManager;
 import engine.Engine;
+import engine.FraudTek;
 import entity.Entity;
 import entity.EntityManager;
-import lighting.CastsShadows;
 import lighting.DirectionalLight;
 import lighting.Light;
 import lighting.LightingManager;
 import math.MatrixUtils;
 import models.AABB;
 import models.Joint;
+import models.Model;
 import org.joml.*;
 import org.lwjgl.opengl.*;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
-import skybox.SkyboxManager;
-import util.Callback;
+import util.StopwatchManager;
 
 import java.lang.Math;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -46,14 +47,14 @@ public class Renderer extends Engine {
 
     private FBO frameBuffer;
 
-    //TODO refactor to be camera specific
     private static float[] projectionMatrix = new float[16];
+
+    //Skybox
+    private SkyboxRenderer skyboxRenderer;
 
     //ImmediateDraw
     private ImmediateDrawLine     drawerLine;
     private ImmediateDrawTriangle drawTriangle;
-
-    private LinkedList<Callback> resizeCallbacks = new LinkedList<>();
 
     private Renderer(int width, int height){
         //init
@@ -78,6 +79,8 @@ public class Renderer extends Engine {
         System.out.println("Shader ID:"+shaderID);
 
         frameBuffer = new FBO(width, height);
+
+        skyboxRenderer = new SkyboxRenderer();
 
         drawerLine = new ImmediateDrawLine();
         drawTriangle = new ImmediateDrawTriangle();
@@ -108,12 +111,6 @@ public class Renderer extends Engine {
         projectionMatrix = MatrixUtils.createProjectionMatrix();
 
         GL46.glViewport(0, 0, width, height);
-
-        //Now itterate through callbacks
-        for(Callback c : resizeCallbacks){
-            c.callback(width, height);
-        }
-
     }
 
     public void render(){
@@ -138,15 +135,15 @@ public class Renderer extends Engine {
 
         //Pos -2 is skybox
         GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
-        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, SkyboxManager.getInstance().getSkyboxTexture());
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, skyboxRenderer.getTextureID());
         GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
 
         //-1 is closest probe to entity
 
         //Compute per frame, refactor to per entity eventually
-        LinkedList<CastsShadows> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
+        LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
         for(int directionalLightIndex = 0; directionalLightIndex < Math.min(shadowCasters.size(), GL46.glGetInteger(GL46.GL_MAX_TEXTURE_IMAGE_UNITS) - TEXTURE_OFFSET); directionalLightIndex++){
-            CastsShadows shadowCaster = shadowCasters.get(directionalLightIndex);
+            DirectionalLight shadowCaster = shadowCasters.get(directionalLightIndex);
             //Bind and allocate this texture unit.
             int textureUnit = TEXTURE_OFFSET + directionalLightIndex;
             GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
@@ -154,8 +151,8 @@ public class Renderer extends Engine {
             GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
 
             //Upload our uniforms.
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getLight().getPosition()).normalize());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getLight().getColor());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getPosition()).normalize());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getColor());
             ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", directionalLightIndex, shadowCaster.getLightspaceTransform());
             ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", directionalLightIndex, textureUnit);
         }
@@ -164,7 +161,6 @@ public class Renderer extends Engine {
         for(Light l : LightingManager.getInstance().getClosestPointLights(4, new Vector3f(0))){
             ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightPosition", index, l.getPosition());
             ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightColor", index, l.getColor());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightIntensity", index, l.getBrightness());
             index++;
         }
 //        StopwatchManager.getInstance().getTimer("uploadUniforms").stop();
@@ -622,8 +618,8 @@ public class Renderer extends Engine {
         drawerLine.drawLine(from, to, color);
     }
 
-    public void drawLine(Vector4f from, Vector4f to, Vector4f color) {
-        drawerLine.drawLine(new Vector3f(from.x, from.y, from.z), new Vector3f(to.x, to.y, to.z), new Vector3f(color.x, color.y, color.z));
+    public void drawLine(Vector3f from, Vector3f to, Vector4f color) {
+        drawerLine.drawLine(from, to, new Vector3f(color.x, color.y, color.z));
     }
 
     //Color overrides
@@ -636,6 +632,9 @@ public class Renderer extends Engine {
 
 
     public void postpare(){
+        //Render our Skybox
+        skyboxRenderer.render();
+
         //Render our lines!
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
 //            GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
@@ -652,14 +651,6 @@ public class Renderer extends Engine {
 
     public FBO getFrameBuffer(){
         return this.frameBuffer;
-    }
-
-    public void addResizeCallback(Callback resize) {
-        resizeCallbacks.add(resize);
-    }
-
-    public void removeResizeCallback(Callback resize) {
-        resizeCallbacks.remove(resize);
     }
 
     @Override

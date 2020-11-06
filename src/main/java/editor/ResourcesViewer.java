@@ -6,7 +6,6 @@ import engine.FraudTek;
 import entity.Entity;
 import entity.EntityManager;
 import entity.component.Attribute;
-import graphics.renderer.Renderer;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
