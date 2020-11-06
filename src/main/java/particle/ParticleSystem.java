@@ -1,12 +1,12 @@
 package particle;
 
+import com.google.gson.JsonObject;
 import entity.Entity;
 import entity.component.Attribute;
 import entity.component.EnumAttributeType;
 import graphics.renderer.Renderer;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 import util.Callback;
 
 import java.util.LinkedList;
@@ -15,13 +15,13 @@ public class ParticleSystem extends Entity {
     //Entity implementation for a collection of particles, contains information about what properties effect this particle system.
 
     //Attributes are variables controlled in editor.
-    Attribute<Integer>  numParticles;
+    Attribute<Integer> numParticles;
 
     //Color
     Attribute<LinkedList<Vector3f>> startColors;
     Attribute<ColorInterpolation> deriveStartColor;
-    Attribute<LinkedList<Vector3f>> endColors;
-    Attribute<ColorInterpolation> deriveEndColor;
+//    Attribute<LinkedList<Vector3f>> endColors;
+//    Attribute<ColorInterpolation> deriveEndColor;
 
     //Lifespan
         //Curve of lifepsan values, Min, Max, Interpolation
@@ -94,18 +94,18 @@ public class ParticleSystem extends Entity {
             }
         });
 
-        LinkedList<Vector3f> endColorsList = new LinkedList<Vector3f>(){};
-        endColorsList.add(new Vector3f(1, 0, 0));
-        endColorsList.add(new Vector3f(0, 1, 0));
-        endColorsList.add(new Vector3f(0, 0, 1));
-        endColors = new Attribute<LinkedList<Vector3f>>("endColors", endColorsList).setType(EnumAttributeType.COLOR);
-        endColors.subscribe(new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-            updateSystem();
-            return null;
-            }
-        });
+//        LinkedList<Vector3f> endColorsList = new LinkedList<Vector3f>(){};
+//        endColorsList.add(new Vector3f(1, 0, 0));
+//        endColorsList.add(new Vector3f(0, 1, 0));
+//        endColorsList.add(new Vector3f(0, 0, 1));
+//        endColors = new Attribute<LinkedList<Vector3f>>("endColors", endColorsList).setType(EnumAttributeType.COLOR);
+//        endColors.subscribe(new Callback() {
+//            @Override
+//            public Object callback(Object... objects) {
+//            updateSystem();
+//            return null;
+//            }
+//        });
 
         startIndex = new Attribute<Integer>("startIndex", 0).setShouldBeSerialized(false);
         startIndex.subscribe(new Callback() {
@@ -141,6 +141,7 @@ public class ParticleSystem extends Entity {
             @Override
             public Object callback(Object... objects) {
                 updateSystem();
+                System.out.println("Test");
                 return null;
             }
         });
@@ -162,24 +163,24 @@ public class ParticleSystem extends Entity {
             }
         }).setShouldBeSerialized(false);
 
-        //Add attributes
-        this.addAttribute(numParticles);
-        this.addAttribute(startColors);
-        this.addAttribute(startIndex);
-        this.addAttribute(endColors);
+        // Add attributes
+        numParticles = this.addAttribute(numParticles);
+        startColors = this.addAttribute(startColors);
+        startIndex = this.addAttribute(startIndex);
+//        this.addAttribute(endColors);
 
+        // Enums
+        emissionType = this.addAttribute(emissionType);
+        emissionShape = this.addAttribute(emissionShape);
 
-        this.addAttribute(emissionType);
-        this.addAttribute(emissionShape);
+        // Buttons
+        playButton = this.addAttribute(playButton);
+        pauseButton = this.addAttribute(pauseButton);
 
-        //Buttons
-        this.addAttribute(playButton);
-        this.addAttribute(pauseButton);
-
-        //Force update
+        // Force update
         this.getAttribute("updateInEditor").setData(true);
 
-        //add subscription to scale
+        // Add subscription to scale
         super.getAttribute("scale").subscribe(new Callback() {
             @Override
             public Object callback(Object... objects) {
@@ -188,7 +189,7 @@ public class ParticleSystem extends Entity {
             }
         });
 
-        //Set system based on initial params
+        // Set system based on initial params
         updateSystem();
     }
 
@@ -362,5 +363,17 @@ public class ParticleSystem extends Entity {
         Renderer.getInstance().drawRing(this.getPosition(), new Vector2f(1), new Vector3f(1, 0, 0), 32, new Vector3f(1));
         Renderer.getInstance().drawRing(this.getPosition(), new Vector2f(1), new Vector3f(0, 1, 0), 32, new Vector3f(1));
         Renderer.getInstance().drawRing(this.getPosition(), new Vector2f(1), new Vector3f(0, 0, 1), 32, new Vector3f(1));
+    }
+
+    @Override
+    public JsonObject serialize(){
+        return super.serialize();
+    }
+
+    @Override
+    public ParticleSystem deserialize(JsonObject data) {
+        super.deserialize(data);
+        this.updateSystem();
+        return this;
     }
 }

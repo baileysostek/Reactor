@@ -24,8 +24,10 @@ import org.joml.*;
 import org.lwjgl.glfw.GLFW;
 import serialization.SerializationHelper;
 import util.Callback;
+import util.StringUtils;
 
 import java.lang.Math;
+import java.security.Key;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -143,11 +145,17 @@ public class EntityEditor extends UIComponet {
                     rayToHit = new Vector3f(0);
                     distanceToCam = 0;
 
+                    if(Keyboard.getInstance().isKeyPressed(Keyboard.CONTROL_LEFT)){
+                        StringUtils.write(this.entity.serialize().toString(), "test.json");
+                    }
+
                     if(Keyboard.getInstance().isKeyPressed(Keyboard.ALT_LEFT)){
                         Entity entity;
 
                         //This has broken attributes, set from parent
                         JsonObject serialziedEntity = this.entity.serialize();
+
+                        System.out.println(serialziedEntity);
 
                         //Deserialize the entity
                         if(this.entity.getClass().equals(Entity.class)) {
@@ -172,6 +180,12 @@ public class EntityEditor extends UIComponet {
                         }
 
                         EntityManager.getInstance().addEntity(entity);
+
+                        this.setTarget(entity);
+
+                        //Need to actually draw the arrows on the screen,
+                        this.preUIRender();
+
                     }
 
                     //Get meta-data for selected entity and see if the entity
@@ -505,14 +519,15 @@ public class EntityEditor extends UIComponet {
                 }
             }
             //List all attributes that go into this entity
-            for(String category : entity.getAttributeCategories()){
-                int nodeFlags_attributes = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.DefaultOpen;
-
-                //Here we loop through all attributes that an entity has. Each attribute should have an ENUM describing what type of Attribute this is, default, constant, locked, hidden
-                if(ImGui.collapsingHeader(category, nodeFlags_attributes)) {
-                    AttributeRenderer.renderAttributes(entity.getAttributesOfCategory(category));
-                }
-            }
+//            for(String category : entity.getAttributeCategories()){
+//                int nodeFlags_attributes = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.DefaultOpen;
+//
+//                //Here we loop through all attributes that an entity has. Each attribute should have an ENUM describing what type of Attribute this is, default, constant, locked, hidden
+//                if(ImGui.collapsingHeader(category, nodeFlags_attributes)) {
+//                    AttributeRenderer.renderAttributes(entity.getAttributesOfCategory(category));
+//                }
+//            }
+            AttributeRenderer.renderAttributes(entity.getAttributes());
 
             //List all components, then all triggers, then all events
             int nodeFlags_components = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.DefaultOpen;

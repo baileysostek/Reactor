@@ -34,7 +34,7 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Attributes are the raw pieces of data that make up an entity;
     private HashMap<String, Attribute> attributes    = new HashMap<>();
-    private HashMap<String, LinkedList<Attribute>> categories = new HashMap<>();
+//    private HashMap<String, LinkedList<Attribute>> categories = new HashMap<>();
     //Components reference and set attributes on an entity, the Attributes are a state and the components are how they are modified.
     private LinkedList<Component> components = new LinkedList<Component>();
 
@@ -93,21 +93,21 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Adds an attribute to this entity, and creates a subscriber that iterates through all components which may subscribe to this event.
     //Attribute interface
-    public final void addAttribute(Attribute attribute){
-        addAttribute("Miscellaneous", attribute);
+    public final Attribute addAttribute(Attribute attribute){
+        return addAttribute("Miscellaneous", attribute);
     }
 
-    public final void addAttribute(String category, Attribute attribute){
+    public final Attribute addAttribute(String category, Attribute attribute){
         String name = attribute.getName();
 
         if(!this.hasAttribute(name)){
-            if(!category.isEmpty()){
-                if(!this.categories.containsKey(category)){
-                    this.categories.put(category, new LinkedList<Attribute>());
-                }
-                this.categories.get(category).addLast(attribute);
-                attribute.setCategory(category);
-            }
+//            if(!category.isEmpty()){
+//                if(!this.categories.containsKey(category)){
+//                    this.categories.put(category, new LinkedList<Attribute>());
+//                }
+//                this.categories.get(category).addLast(attribute);
+//                attribute.setCategory(category);
+//            }
 
             this.attributes.put(attribute.getName(), attribute);
             //Create subscriber to this attribute changing states
@@ -130,13 +130,16 @@ public class Entity implements Transformable, Serializable<Entity> {
             });
         }else{
             //Parent has an attribute with our name
+            //Check if parent value is null if so set parent to our attribute.
             if(AttributeUtils.isEmpty(this.getAttribute(name))){
                 //Parent Value is null, so overwrite parent
                 this.setAttribute(attribute);
             }
-
-            attribute = this.getAttribute(name);
+            //Append new subscribers.
+            this.getAttribute(name).subscribe(attribute);
         }
+
+        return this.getAttribute(name);
     }
 
     //Adds an attribute to this entity, and creates a subscriber that iterates through all components which may subscribe to this event.
@@ -145,24 +148,24 @@ public class Entity implements Transformable, Serializable<Entity> {
         if(this.attributes.containsKey(attribute.getName())) {
             this.attributes.remove(attribute.getName());
         }
-        for(String category : categories.keySet()){
-            if(categories.get(category).contains(attribute)){
-                categories.remove(attribute);
-            }
-        }
+//        for(String category : categories.keySet()){
+//            if(categories.get(category).contains(attribute)){
+//                categories.remove(attribute);
+//            }
+//        }
     }
 
     public final void removeAttribute(String attribute){
         if(this.attributes.containsKey(attribute)) {
             this.attributes.remove(attribute);
         }
-        for(String category : categories.keySet()){
-            for(Attribute att : categories.get(category)){
-                if(att.getName().equals(attribute)){
-                    categories.remove(att);
-                }
-            }
-        }
+//        for(String category : categories.keySet()){
+//            for(Attribute att : categories.get(category)){
+//                if(att.getName().equals(attribute)){
+//                    categories.remove(att);
+//                }
+//            }
+//        }
     }
 
     //Attributes when they update emmit a message, this is where that message is sent.
@@ -529,6 +532,7 @@ public class Entity implements Transformable, Serializable<Entity> {
     //From json to entity.
     @Override
     public Entity deserialize(JsonObject data) {
+        System.out.println(data);
         //If we have a model
         if(data.has("model")) {
             this.model = new Model(ModelManager.getInstance().getNextID()).deserialize(data.get("model").getAsJsonObject());
@@ -616,13 +620,13 @@ public class Entity implements Transformable, Serializable<Entity> {
         return this.parent != null;
     }
 
-    public Collection<String> getAttributeCategories() {
-        return this.categories.keySet();
-    }
-
-    public Collection<Attribute> getAttributesOfCategory(String category) {
-        return this.categories.get(category);
-    }
+//    public Collection<String> getAttributeCategories() {
+//        return this.categories.keySet();
+//    }
+//
+//    public Collection<Attribute> getAttributesOfCategory(String category) {
+//        return this.categories.get(category);
+//    }
 
     public void setAttribute(Attribute attribute) {
         if(this.hasAttribute(attribute.getName())){

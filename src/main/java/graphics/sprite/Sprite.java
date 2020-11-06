@@ -69,7 +69,7 @@ public class Sprite implements Serializable<Sprite> {
         this.flush();
     }
 
-    public int[] getPixels() {
+    protected int[] getPixels() {
         return pixels;
     }
 

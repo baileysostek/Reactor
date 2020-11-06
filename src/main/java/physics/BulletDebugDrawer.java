@@ -1,8 +1,7 @@
 package physics;
 
-import com.bulletphysics.linearmath.DebugDrawModes;
 import com.bulletphysics.linearmath.IDebugDraw;
-import graphics.renderer.*;
+import graphics.renderer.Renderer;
 import org.joml.Vector4f;
 
 import javax.vecmath.Vector3f;

@@ -105,6 +105,7 @@ void main(void){
 
         totalDiffuse  += (lightColor * diffuse);
         totalSpecular += (lightColor * specularStrength * specular);
+
     }
 
     vec3 albedoReflect = mix(albedo.xyz, getReflection(), texture(metallicID, passCoords).r);

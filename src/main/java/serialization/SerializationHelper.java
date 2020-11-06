@@ -1,8 +1,8 @@
 package serialization;
 
 import com.google.gson.*;
-import org.joml.Vector3f;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -119,24 +119,83 @@ public class SerializationHelper {
     }
 
     public static JsonObject addClass(Object object) {
-        JsonObject helperObject = new JsonObject();
-        helperObject.addProperty("class", object.getClass().getName());
-        helperObject.add("value", gson.toJsonTree(object));
-        return helperObject;
+
+        //If this is a collection
+        if(object instanceof Collection) {
+            //Convert to collection
+            Collection data = ((Collection) object);
+            int size = data.size();
+
+            //Store members in json array.
+            JsonArray array = new JsonArray(size);
+            for(Object obj : data){
+                array.add(addClass(obj));
+            }
+
+            //Return array
+            JsonObject helperObject = new JsonObject();
+            helperObject.add("value", array);
+            return helperObject;
+
+        }else{
+            //Not a collection
+            JsonObject helperObject = new JsonObject();
+            helperObject.addProperty("class", object.getClass().getName());
+            if(object.getClass().isEnum()){
+                helperObject.addProperty("value", object.toString());
+            }else{
+                helperObject.add("value", gson.toJsonTree(object));
+            }
+            return helperObject;
+        }
     }
 
     public static Object toClass(JsonObject object) {
-        // Gotta have class and value
-        if(object.has("class") && object.has("value")){
-            Class<?> classType = null;
-            try {
-                classType = Class.forName(object.get("class").getAsString());
-                return SerializationHelper.getGson().fromJson(object.get("value"), classType);
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+        // Gotta have a value
+        if(object.has("value")){
+            //Store Value
+            JsonElement value = object.get("value");
+
+            //Check if is array
+            if(value.isJsonArray()){
+                JsonArray arrayData = value.getAsJsonArray();
+                LinkedList list = new LinkedList();
+                for(int i = 0; i < arrayData.size(); i++){
+                    JsonObject data = arrayData.get(i).getAsJsonObject();
+                    if(data.has("class")) {
+                        list.addLast(toClass(data));
+                    }
+                }
+
+                return list;
+            }
+
+            //If direct single object, determine class.
+            if(object.has("class")) {
+                Class<?> classType = null;
+                try {
+                    classType = Class.forName(object.get("class").getAsString());
+                    //If is Enum
+                    if(classType.isEnum()){
+                        Class<Enum> enumClass  = ((Class<Enum>)classType);
+                        //deserializing Enum
+                        return toEnum(enumClass, object.get("value").getAsString());
+                    }
+
+                    //Not enum
+                    return SerializationHelper.getGson().fromJson(value, classType);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
         return null;
+    }
+
+    //This can take ANY enum and iterate through each element.
+    private static <T extends Enum<T>> T toEnum(Class<T> cls, String name) {
+        T value = T.valueOf(cls, name);
+        return value;
     }
 }

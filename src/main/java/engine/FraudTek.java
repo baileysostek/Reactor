@@ -9,33 +9,38 @@ import com.google.gson.JsonParser;
 import editor.Editor;
 import entity.Entity;
 import entity.EntityManager;
+import entity.EntityUtils;
 import entity.component.Collision;
 import graphics.renderer.*;
+import graphics.sprite.Colors;
+import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import input.MousePicker;
 import lighting.DirectionalLight;
 import lighting.LightingManager;
 import lighting.PointLight;
-import lighting.SpotLight;
 import logging.LogManager;
+import models.AABB;
 import models.Model;
 import models.ModelManager;
+import org.joml.Vector2f;
+import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.opengl.GL46;
 import particle.ParticleManager;
 import particle.ParticleSystem;
 import physics.PhysicsEngine;
 import platform.EnumDevelopment;
 import platform.EnumPlatform;
 import platform.PlatformManager;
-import graphics.renderer.reflection.ReflectionProbe;
-import graphics.renderer.reflection.ReflectionManager;
 import scene.SceneManager;
 import scripting.ScriptingEngine;
-import skybox.Skybox;
-import skybox.SkyboxManager;
+import sound.SoundEngine;
 import util.StopwatchManager;
 import util.StringUtils;
+
+import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -179,8 +184,6 @@ public class FraudTek {
 //                SoundEngine.initialize();
                 PhysicsEngine.initialize();
                 LightingManager.initialize();
-                ReflectionManager.initialize();
-                SkyboxManager.initialize();
 
                 StopwatchManager.initialize();
 
@@ -228,19 +231,17 @@ public class FraudTek {
 
 //                EntityManager.getInstance().addEntity(drag);
                 EntityManager.getInstance().addEntity(new DirectionalLight());
-                EntityManager.getInstance().addEntity(new SpotLight());
+//                EntityManager.getInstance().addEntity(new SpotLight());
                 EntityManager.getInstance().addEntity(new ParticleSystem());
                 EntityManager.getInstance().addEntity(new ParticleSystem());
                 EntityManager.getInstance().addEntity(new PointLight());
-                EntityManager.getInstance().addEntity(new Skybox());
+//                EntityManager.getInstance().addEntity(new Skybox());
 
                 Entity sphere = new Entity();
                 sphere.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
                 sphere.setPosition(new Vector3f(0, 5, 0));
                 sphere.addComponent(new Collision());
                 EntityManager.getInstance().addEntity(sphere);
-
-                EntityManager.getInstance().addEntity(new ReflectionProbe());
 
 
                 StopwatchManager.getInstance().addTimer("tick");
@@ -274,10 +275,12 @@ public class FraudTek {
 
                 tick(frameDelta);
                 if (runningDelta > 1) {
-                    System.out.println("FPS:" + frames + " Entities:" + EntityManager.getInstance().getSize()+" Bodies:"+PhysicsEngine.getInstance().getNumBodies());
+                    System.out.println("FPS:" + frames + " Entities:" + EntityManager.getInstance().getSize());
                     FRAMES = frames;
                     frames = 0;
                     runningDelta -= 1;
+//                    StopwatchManager.getInstance().printAllDeltas();
+//                    StopwatchManager.getInstance().clearAll();
                 }
 
                 render();
@@ -320,10 +323,8 @@ public class FraudTek {
         MousePicker.getInstance().tick(delta);
         SceneManager.getInstance().update(delta);
         LightingManager.getInstance().update(delta);
-        ReflectionManager.getInstance().update(delta);
         EntityManager.getInstance().update(delta);
         ParticleManager.getInstance().update(delta);
-        SkyboxManager.getInstance().update(delta);
 
 
 //        Vector3f pos = MousePicker.rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
@@ -403,8 +404,6 @@ public class FraudTek {
 //        StopwatchManager.getInstance().getTimer("render_editor").stop();
 
         PhysicsEngine.getInstance().render();
-        //Render our Skybox
-        SkyboxManager.getInstance().render();
         Renderer.getInstance().postpare();
 
         //If Dev render UI

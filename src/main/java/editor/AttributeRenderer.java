@@ -48,8 +48,9 @@ public class AttributeRenderer{
 //            ImGui.pushID(Editor.getInstance().getNextID());
             if(attribute.getData() instanceof Collection){
                 if(attribute.getData() instanceof LinkedList){
-                    LinkedList data = (LinkedList)attribute.getData();
-                    ImGui.beginChild("", ImGui.getColumnWidth(), lookupHeight(attribute));
+                    //This can cause direct access of LL members, so we need to create new instance of LL to check for change.
+                    LinkedList data = new LinkedList((LinkedList)attribute.getData());
+                    ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), lookupHeight(attribute));
                     int index = 0;
                     for(Object object : data){
                         Attribute tmp = new Attribute(""+index, object);
@@ -60,7 +61,7 @@ public class AttributeRenderer{
                     }
                 }else{
                     Collection<?> data = (Collection<?>)attribute.getData();
-                    ImGui.beginChild("", ImGui.getColumnWidth(), 16 * data.size());
+                    ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), lookupHeight(attribute));
                     int index = 0;
                     for(Object object : data){
                         Attribute tmp = new Attribute(""+index, object);
@@ -71,10 +72,10 @@ public class AttributeRenderer{
                     }
                 }
             }else if(attribute.getType().equals(EnumAttributeType.COLOR)){
-                ImGui.beginChild(""+Editor.getInstance().getNextID(), ImGui.getColumnWidth(), ImGui.getColumnWidth() + 32);
+                ImGui.beginChild(""+ Editor.getInstance().getNextID(), ImGui.getColumnWidth(), ImGui.getColumnWidth() + 32);
                 renderAttribute(attribute);
             }else{
-                ImGui.beginChild(""+Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16 );
+                ImGui.beginChild(""+ Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16 );
                 renderAttribute(attribute);
             }
             ImGui.endChild();
