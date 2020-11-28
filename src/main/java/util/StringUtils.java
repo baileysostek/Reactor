@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 public class StringUtils {
@@ -40,6 +41,24 @@ public class StringUtils {
         return null;
     }
 
+    public static ByteBuffer loadRaw(String filePath) {
+        try{
+            String path = PATH + filePath;
+            File file = new File(path);
+
+            byte[] bytes = new byte[(int) file.length()];
+            DataInputStream dis = new DataInputStream(new FileInputStream(file));
+            dis.readFully(bytes);
+
+            return ByteBuffer.wrap(bytes);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static JsonObject loadJson(String fileName){
         System.out.println("Loading JSON:"+PATH + fileName);
         String data = load(fileName);
@@ -70,6 +89,7 @@ public class StringUtils {
             e.printStackTrace();
         }
     }
+
 
     //Take a String array and smoosh it into a single string.
     public String unify(String[] data){

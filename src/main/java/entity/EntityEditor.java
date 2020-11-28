@@ -150,38 +150,7 @@ public class EntityEditor extends UIComponet {
                     }
 
                     if(Keyboard.getInstance().isKeyPressed(Keyboard.ALT_LEFT)){
-                        Entity entity;
-
-                        //This has broken attributes, set from parent
-                        JsonObject serialziedEntity = this.entity.serialize();
-
-                        System.out.println(serialziedEntity);
-
-                        //Deserialize the entity
-                        if(this.entity.getClass().equals(Entity.class)) {
-                            //Regula old entity
-                            entity = new Entity().deserialize(serialziedEntity);
-                        }else{
-                            //Fancy entity from another class or namespace :)
-                            try {
-                                Class<?> classType = Class.forName(this.entity.getClass().getName());
-                                entity = ((Entity) SerializationHelper.getGson().fromJson(serialziedEntity, classType)).deserialize(serialziedEntity);
-
-                            } catch (ClassNotFoundException e) {
-                                //TODO play sound that that entity is unknown, maybe show message dialogue too.
-                                e.printStackTrace();
-                                return;
-                            }
-                        }
-
-                        //Check if the moved entity was a child
-                        if(this.entity.hasParent()){
-                            entity.setParent(this.entity.getParent());
-                        }
-
-                        EntityManager.getInstance().addEntity(entity);
-
-                        this.setTarget(entity);
+                        cloneSelected();
 
                         //Need to actually draw the arrows on the screen,
                         this.preUIRender();
@@ -280,8 +249,19 @@ public class EntityEditor extends UIComponet {
                                 //Raycast to plane
                                 Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 1, 0));
 
+                                if(pos == null){
+                                    break;
+                                }
+
+                                Vector3f deltaPos = new Vector3f(pos).add(delta);
+
+                                //Snap to snap res
+                                if(Keyboard.getInstance().isKeyPressed(Keyboard.SHIFT_LEFT)){
+                                    deltaPos = deltaPos.round(new Vector3f(1));
+                                }
+
                                 if(pos != null) {
-                                    entity.setPosition(pos.x + delta.x , entity.getPositionSelf().y() , entity.getPositionSelf().z());
+                                    entity.setPosition(deltaPos.x , entity.getPositionSelf().y() , entity.getPositionSelf().z());
                                 }
                                 break;
                             }
@@ -365,6 +345,47 @@ public class EntityEditor extends UIComponet {
 
         }
 
+    }
+
+    public Entity cloneSelected() {
+        return cloneTarget(this.entity);
+    }
+
+    public Entity cloneTarget(Entity target){
+        Entity entity;
+
+        //This has broken attributes, set from parent
+        JsonObject serialziedEntity = target.serialize();
+
+        System.out.println(serialziedEntity);
+
+        //Deserialize the entity
+        if(target.getClass().equals(Entity.class)) {
+            //Regula old entity
+            entity = new Entity().deserialize(serialziedEntity);
+        }else{
+            //Fancy entity from another class or namespace :)
+            try {
+                Class<?> classType = Class.forName(target.getClass().getName());
+                entity = ((Entity) SerializationHelper.getGson().fromJson(serialziedEntity, classType)).deserialize(serialziedEntity);
+
+            } catch (ClassNotFoundException e) {
+                //TODO play sound that that entity is unknown, maybe show message dialogue too.
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        //Check if the moved entity was a child
+        if(target.hasParent()){
+            entity.setParent(target.getParent());
+        }
+
+        EntityManager.getInstance().addEntity(entity);
+
+        this.setTarget(entity);
+
+        return entity;
     }
 
     public void clearSelected(){
@@ -499,6 +520,13 @@ public class EntityEditor extends UIComponet {
                 this.selectedEntities.get(this.entity).ddd_z = ddd_z;
             }
         }
+
+        //Now render all entities that are not selected
+        for(Entity e : EntityManager.getInstance().getEntities()){
+            if(!selectedEntities.containsKey(e)){
+                e.renderInEditor(false);
+            }
+        }
     }
 
     @Override
@@ -531,8 +559,11 @@ public class EntityEditor extends UIComponet {
 
             //List all components, then all triggers, then all events
             int nodeFlags_components = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.DefaultOpen;
+
+            //Create the components header
             if(ImGui.collapsingHeader("Components", nodeFlags_components)){
                 for (Component component : this.entity.getComponents()) {
+                    //For Each component
                     int nodeFlags_component = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
                     if(ImGui.treeNodeEx(component.getName(), nodeFlags_component)){
                         for(String trigger : component.getTriggers()){
@@ -545,6 +576,7 @@ public class EntityEditor extends UIComponet {
                             }
                         }
                         ImGui.treePop();
+                        component.onRenderUI();
                     }
                 }
             }

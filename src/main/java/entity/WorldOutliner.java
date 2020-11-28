@@ -2,7 +2,9 @@ package entity;
 
 import editor.Editor;
 import editor.components.UIComponet;
+import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
+import imgui.ImString;
 import imgui.enums.ImGuiDragDropFlags;
 import imgui.enums.ImGuiSelectableFlags;
 import imgui.enums.ImGuiTreeNodeFlags;
@@ -19,7 +21,12 @@ public class WorldOutliner extends UIComponet {
     //Editor resources
     EntityEditor editor;
 
+    private final int SEARCH;
+
     public WorldOutliner(EntityEditor editor){
+
+        SEARCH = SpriteBinder.getInstance().loadSVG("engine/svg/search.svg", 1, 1, 240f);
+
         this.editor = editor;
     }
 
@@ -49,6 +56,14 @@ public class WorldOutliner extends UIComponet {
     public void self_render() {
         //World Outliner, list of all entities in the world
         ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight());
+        //Search / filter for a specific type of Entity
+        ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), 32);
+        ImGui.image(SEARCH, 32, 32);
+        ImGui.sameLine();
+        ImString filter = new ImString();
+        ImGui.inputText("Search", filter);
+        ImGui.endChildFrame();
+        //Render all entities in the world.
         renderEntity(new LinkedList<Entity>(EntityManager.getInstance().getEntities()));
         ImGui.endChild();
     }

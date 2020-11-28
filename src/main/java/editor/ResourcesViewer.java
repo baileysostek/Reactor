@@ -35,7 +35,15 @@ public class ResourcesViewer extends UIComponet {
     //Mouse Callback
     private Callback dropFileInWorld;
 
+    //Our SVG images
+    private final int FOLDER_CLOSE;
+    private final int FOLDER_OPEN;
+
     public ResourcesViewer(){
+
+        FOLDER_CLOSE = SpriteBinder.getInstance().loadSVG("engine/svg/folder.svg"     , 1, 1, 96f);
+        FOLDER_OPEN  = SpriteBinder.getInstance().loadSVG("engine/svg/folder-open.svg", 1, 1, 96f);
+
         resources = new FileObject("");
 
         //GLFW callback for dropping an item in the world
@@ -180,6 +188,7 @@ public class ResourcesViewer extends UIComponet {
     private void renderFileObject(FileObject object){
         if(object.isDirectory()){
             int nodeFlags_attributes = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
+            ImGui.image(FOLDER_OPEN, 32, 32);
             if(ImGui.collapsingHeader(object.getName(), nodeFlags_attributes)) {
                 ImGui.indent();
                 for (FileObject fileObject : new LinkedList<FileObject>(object.getChildren())) {

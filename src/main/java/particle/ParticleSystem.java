@@ -3,6 +3,7 @@ package particle;
 import com.google.gson.JsonObject;
 import entity.Entity;
 import entity.component.Attribute;
+import entity.component.AttributeUtils;
 import entity.component.EnumAttributeType;
 import graphics.renderer.Renderer;
 import org.joml.Vector2f;
@@ -69,6 +70,8 @@ public class ParticleSystem extends Entity {
     private boolean paused = false;
 
     private Particle[] particles;
+
+    private final LinkedList<Attribute> additionalAttributes = new LinkedList<Attribute>(){};
 
     public ParticleSystem(){
         //Attribute config
@@ -164,18 +167,18 @@ public class ParticleSystem extends Entity {
         }).setShouldBeSerialized(false);
 
         // Add attributes
-        numParticles = this.addAttribute(numParticles);
-        startColors = this.addAttribute(startColors);
-        startIndex = this.addAttribute(startIndex);
+        this.addAttribute(numParticles);
+        this.addAttribute(startColors);
+        this.addAttribute(startIndex);
 //        this.addAttribute(endColors);
 
         // Enums
-        emissionType = this.addAttribute(emissionType);
-        emissionShape = this.addAttribute(emissionShape);
+        this.addAttribute(emissionType);
+        this.addAttribute(emissionShape);
 
         // Buttons
-        playButton = this.addAttribute(playButton);
-        pauseButton = this.addAttribute(pauseButton);
+        this.addAttribute(playButton);
+        this.addAttribute(pauseButton);
 
         // Force update
         this.getAttribute("updateInEditor").setData(true);
@@ -184,8 +187,8 @@ public class ParticleSystem extends Entity {
         super.getAttribute("scale").subscribe(new Callback() {
             @Override
             public Object callback(Object... objects) {
-                updateSystem();
-                return null;
+            updateSystem();
+            return null;
             }
         });
 
@@ -373,6 +376,12 @@ public class ParticleSystem extends Entity {
     @Override
     public ParticleSystem deserialize(JsonObject data) {
         super.deserialize(data);
+
+        startColors   = AttributeUtils.synchronizeWithParent(startColors  , this);
+        emissionShape = AttributeUtils.synchronizeWithParent(emissionShape, this);
+        emissionType  = AttributeUtils.synchronizeWithParent(emissionType , this);
+        numParticles  = AttributeUtils.synchronizeWithParent(numParticles , this);
+
         this.updateSystem();
         return this;
     }

@@ -236,6 +236,36 @@ public class EntityManager {
         }
     }
 
+    public void removeEntity(Entity[] toRemove) {
+        lock.lock();
+        try {
+            for(Entity e : toRemove){
+                if(this.entities.contains(e)) {
+                    parentRemoveHelper(e);
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void removeEntitySync(Entity toRemove) {
+        removeEntity(toRemove);
+        sync();
+    }
+
+    public void removeEntitySync(Entity[] toRemove) {
+        removeEntity(toRemove);
+        sync();
+    }
+
+    public void removeEntitySync(Collection<Entity> toRemove) {
+        for(Entity e : toRemove){
+            removeEntity(e);
+        }
+        sync();
+    }
+
     private void parentRemoveHelper(Entity parent){
         //Remove parent
         this.toRemove.add(parent);

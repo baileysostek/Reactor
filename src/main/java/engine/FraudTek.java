@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import editor.Editor;
+import editor.EntityRegistry;
 import entity.Entity;
 import entity.EntityManager;
 import entity.EntityUtils;
@@ -16,6 +17,7 @@ import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import input.MousePicker;
+import input.controller.ControllerManager;
 import lighting.DirectionalLight;
 import lighting.LightingManager;
 import lighting.PointLight;
@@ -23,6 +25,7 @@ import logging.LogManager;
 import models.AABB;
 import models.Model;
 import models.ModelManager;
+import org.fmod.FMOD;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -184,8 +187,10 @@ public class FraudTek {
 //                SoundEngine.initialize();
                 PhysicsEngine.initialize();
                 LightingManager.initialize();
+                ControllerManager.initialize();
 
                 StopwatchManager.initialize();
+
 
                 //Add our initialized instances to our ScriptingManager
                 ScriptingEngine.initialize();
@@ -230,18 +235,18 @@ public class FraudTek {
 //                drag.setRotation(new Vector3f(270 , 0 ,0 ));
 
 //                EntityManager.getInstance().addEntity(drag);
-                EntityManager.getInstance().addEntity(new DirectionalLight());
+//                EntityManager.getInstance().addEntity(new DirectionalLight());
 //                EntityManager.getInstance().addEntity(new SpotLight());
-                EntityManager.getInstance().addEntity(new ParticleSystem());
-                EntityManager.getInstance().addEntity(new ParticleSystem());
-                EntityManager.getInstance().addEntity(new PointLight());
+//                EntityManager.getInstance().addEntity(new ParticleSystem());
+//                EntityManager.getInstance().addEntity(new ParticleSystem());
+//                EntityManager.getInstance().addEntity(new PointLight());
 //                EntityManager.getInstance().addEntity(new Skybox());
 
-                Entity sphere = new Entity();
-                sphere.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
-                sphere.setPosition(new Vector3f(0, 5, 0));
-                sphere.addComponent(new Collision());
-                EntityManager.getInstance().addEntity(sphere);
+//                Entity sphere = new Entity();
+//                sphere.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
+//                sphere.setPosition(new Vector3f(0, 5, 0));
+//                sphere.addComponent(new Collision());
+//                EntityManager.getInstance().addEntity(sphere);
 
 
                 StopwatchManager.getInstance().addTimer("tick");
@@ -325,6 +330,7 @@ public class FraudTek {
         LightingManager.getInstance().update(delta);
         EntityManager.getInstance().update(delta);
         ParticleManager.getInstance().update(delta);
+        ControllerManager.getInstance().update(delta);
 
 
 //        Vector3f pos = MousePicker.rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));

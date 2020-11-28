@@ -7,6 +7,8 @@ import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL46;
 import org.lwjgl.opengl.GL46;
+import org.lwjgl.stb.STBImageResize;
+import org.lwjgl.system.MemoryUtil;
 import serialization.Serializable;
 
 import java.nio.ByteBuffer;
@@ -272,6 +274,49 @@ public class Sprite implements Serializable<Sprite> {
 //        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MAX_LEVEL, 7);
 
         GL46.glTexImage2D(GL46.GL_TEXTURE_2D, 0, GL46.GL_RGBA, width, height, 0, GL46.GL_RGBA, GL46.GL_UNSIGNED_BYTE, buffer);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, 0);
+
+        SpriteBinder.getInstance().map(this.textureID, this);
+    }
+
+    public void setFromBuffer(ByteBuffer img) {
+
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureID);
+
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_WRAP_S, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_WRAP_T, GL46.GL_CLAMP_TO_EDGE);
+
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_NEAREST);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_NEAREST);
+
+        ByteBuffer input_pixels = img;
+        int        input_w      = width;
+        int        input_h      = height;
+        int        mipmapLevel  = 0;
+        while (1 < input_w || 1 < input_h) {
+            int output_w = Math.max(1, input_w >> 1);
+            int output_h = Math.max(1, input_h >> 1);
+
+            ByteBuffer output_pixels = MemoryUtil.memAlloc(output_w * output_h * 4);
+            STBImageResize.stbir_resize_uint8_generic(
+                    input_pixels, input_w, input_h, input_w * 4,
+                    output_pixels, output_w, output_h, output_w * 4,
+                    4, 3, STBImageResize.STBIR_FLAG_ALPHA_PREMULTIPLIED,
+                    STBImageResize.STBIR_EDGE_CLAMP,
+                    STBImageResize.STBIR_FILTER_MITCHELL,
+                    STBImageResize.STBIR_COLORSPACE_SRGB
+            );
+
+            MemoryUtil.memFree(input_pixels);
+
+            GL46.glTexImage2D(GL46.GL_TEXTURE_2D, ++mipmapLevel, GL46.GL_RGBA, output_w, output_h, 0, GL46.GL_RGBA, GL46.GL_UNSIGNED_BYTE, output_pixels);
+
+            input_pixels = output_pixels;
+            input_w = output_w;
+            input_h = output_h;
+        }
+        MemoryUtil.memFree(input_pixels);
+
         GL46.glBindTexture(GL46.GL_TEXTURE_2D, 0);
 
         SpriteBinder.getInstance().map(this.textureID, this);

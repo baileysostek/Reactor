@@ -2,9 +2,7 @@ package entity;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import entity.component.Attribute;
-import entity.component.Component;
-import entity.component.EnumAttributeType;
+import entity.component.*;
 import entity.interfaces.Transformable;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
@@ -79,6 +77,9 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.addAttribute(new Attribute<Boolean>("visible"      , true));
         this.addAttribute(new Attribute<Float>("mat_m", 0.5f));
         this.addAttribute(new Attribute<Float>("mat_r", 0.5f));
+
+//        this.addComponent(new ComponentShader());
+
     }
 
     //Type
@@ -131,7 +132,7 @@ public class Entity implements Transformable, Serializable<Entity> {
         }else{
             //Parent has an attribute with our name
             //Check if parent value is null if so set parent to our attribute.
-            if(AttributeUtils.isEmpty(this.getAttribute(name))){
+            if(AttributeUtils.differ(this.getAttribute(name), attribute)){
                 //Parent Value is null, so overwrite parent
                 this.setAttribute(attribute);
             }
@@ -633,6 +634,14 @@ public class Entity implements Transformable, Serializable<Entity> {
             this.attributes.put(attribute.getName(), attribute);
         }
     }
+
+    public Attribute overrideFromChild(Attribute attribute) {
+        if(this.hasAttribute(attribute.getName())){
+            return attributes.get(attribute.getName());
+        }
+        return attribute;
+    }
+
 
     protected final void cleanup(){
         for(Component c : components){

@@ -211,4 +211,7 @@ public abstract class Component implements Serializable<Component>{
         return this.ID;
     }
 
+    public void onRenderUI(){
+        return;
+    }
 }

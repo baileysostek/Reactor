@@ -57,9 +57,10 @@ public class ShaderManager {
             GL46.glGetShaderiv(vertexShader, GL46.GL_INFO_LOG_LENGTH, compileBuffer);
             //Check that log exists
             if (compileBuffer[0] > 0) {
+                System.out.println("[ERROR] Vertex Shader Compilation | " + name + " : " + GL46.glGetShaderInfoLog(vertexShader));
                 //Cleanup our broken shader
                 GL46.glDeleteShader(vertexShader);
-                System.out.println("Vertex Status:" + GL46.glGetShaderInfoLog(vertexShader));
+                System.exit(0);
                 return -1;
             }
         }else{
@@ -78,9 +79,10 @@ public class ShaderManager {
             GL46.glGetShaderiv(fragmentShader, GL46.GL_INFO_LOG_LENGTH, compileBuffer);
             //Check that log exists
             if (compileBuffer[0] > 0) {
+                System.out.println("Fragment Status:" + GL46.glGetShaderInfoLog(fragmentShader));
                 //Cleanup our broken shader
                 GL46.glDeleteShader(vertexShader);
-                System.out.println("Fragment Status:" + GL46.glGetShaderInfoLog(fragmentShader));
+                System.exit(0);
                 return -1;
             }
         }else{

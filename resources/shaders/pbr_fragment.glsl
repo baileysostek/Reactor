@@ -8,7 +8,7 @@ precision highp int;
 precision highp float;
 precision highp sampler2D;
 
-#define maxLights 1
+#define maxLights 8
 #define maxPointLights 4
 #define specularStrength 0.1
 #define PI 3.14159265359

@@ -22,6 +22,7 @@ import org.joml.Vector2f;
 import org.lwjgl.glfw.GLFW;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
+import serialization.SerializationHelper;
 import util.Callback;
 import util.Debouncer;
 import util.StringUtils;
@@ -219,6 +220,8 @@ public class Editor {
         addComponent(EnumEditorLocation.LEFT_TAB, worldOutliner);
 //        LevelEditor levelEditor = new LevelEditor();
 //        addComponent(EnumEditorLocation.LEFT_TAB, levelEditor);
+        EntityRegistry registry = new EntityRegistry(entityEditor);
+        addComponent(EnumEditorLocation.LEFT_TAB, registry);
         Settings settings = new Settings();
         addComponent(EnumEditorLocation.LEFT_TAB, settings);
         resourcesViewer = new ResourcesViewer();
@@ -228,13 +231,31 @@ public class Editor {
             @Override
             public Object callback(Object... objects) {
                 if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+//                    saveProject();
                     PlatformManager.getInstance().setDevelopmentLevel(EnumDevelopment.PRODUCTION);
                     onPlay();
                 }else{
+//                    loadProject();
                     PlatformManager.getInstance().setDevelopmentLevel(EnumDevelopment.DEVELOPMENT);
                     onExitPlay();
                 }
                 System.out.println("Pressed new state is:"+ PlatformManager.getInstance().getDevelopmentStatus());
+                return null;
+            }
+        });
+
+        Keyboard.getInstance().addPressCallback(Keyboard.B, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                System.out.println("Building");
+                return null;
+            }
+        });
+
+        Keyboard.getInstance().addPressCallback(Keyboard.O, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                saveProject();
                 return null;
             }
         });
@@ -258,30 +279,6 @@ public class Editor {
                 return null;
             }
         });
-
-
-        //Load the project
-//        JsonObject project = StringUtils.loadJson("/scenes/project.tek");
-//        if(project != null) {
-//            if (project.has("camera")) {
-//                CameraManager.getInstance().setActiveCamera(new Camera3D().deserialize(project.getAsJsonObject("camera")));
-//            }
-//            if (project.has("entities")) {
-//                JsonArray entities = project.getAsJsonArray("entities");
-//                for (int i = 0; i < entities.size(); i++) {
-//                    if (entities.get(i).getAsJsonObject().has("class")) {
-//                        try {
-//                            Class<?> classType = Class.forName(entities.get(i).getAsJsonObject().get("class").getAsString());
-//                            Entity entity = ((Entity) SerializationHelper.getGson().fromJson(entities.get(i).getAsJsonObject().get("value"), classType)).deserialize(entities.get(i).getAsJsonObject().get("value").getAsJsonObject());
-//
-//                            EntityManager.getInstance().addEntity(entity);
-//                        } catch (ClassNotFoundException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }
-//            }
-//        }
 
         this.onExitPlay();
 
@@ -478,6 +475,13 @@ public class Editor {
             }
         }
 
+        saveProject();
+
+        IMGUIGL.dispose();
+        ImGui.destroyContext();
+    }
+
+    public void saveProject(){
         //Update our Project file
         JsonObject projectFile = new JsonObject();
         projectFile.addProperty("type", "project");
@@ -497,9 +501,32 @@ public class Editor {
         projectFile.add("camera", CameraManager.getInstance().getActiveCamera().serialize());
 
         StringUtils.write(projectFile.toString(), "/scenes/project.tek");
+    }
 
-        IMGUIGL.dispose();
-        ImGui.destroyContext();
+    public void loadProject(){
+        EntityManager.getInstance().clearEntities();
+        //Load the project
+        JsonObject project = StringUtils.loadJson("/scenes/project.tek");
+        if(project != null) {
+            if (project.has("camera")) {
+                CameraManager.getInstance().setActiveCamera(new Camera3D().deserialize(project.getAsJsonObject("camera")));
+            }
+            if (project.has("entities")) {
+                JsonArray entities = project.getAsJsonArray("entities");
+                for (int i = 0; i < entities.size(); i++) {
+                    if (entities.get(i).getAsJsonObject().has("class")) {
+                        try {
+                            Class<?> classType = Class.forName(entities.get(i).getAsJsonObject().get("class").getAsString());
+                            Entity entity = ((Entity) SerializationHelper.getGson().fromJson(entities.get(i).getAsJsonObject().get("value"), classType)).deserialize(entities.get(i).getAsJsonObject().get("value").getAsJsonObject());
+
+                            EntityManager.getInstance().addEntity(entity);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     //Singleton methods
