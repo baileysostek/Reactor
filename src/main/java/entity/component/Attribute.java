@@ -1,21 +1,17 @@
 package entity.component;
 
 import com.google.gson.JsonObject;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 import serialization.Serializable;
 import serialization.SerializationHelper;
 import util.Callback;
 
-import java.awt.*;
-import java.util.Collection;
 import java.util.LinkedList;
 
 public class Attribute<T> implements Serializable<Attribute<T>> {
 
     private String name;
     private T attribute;
-    private LinkedList<Callback> subscribers = new LinkedList<Callback>(){};
+    protected LinkedList<Callback> subscribers = new LinkedList<Callback>(){};
 
     //Rendering helpers
     private String category = "";
@@ -54,7 +50,7 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
     }
 
     public boolean setData(T newData){
-        if(differ(newData, attribute)) {
+        if(AttributeUtils.differ(newData, attribute)) {
             this.attribute = newData;
 
             if(subscribers == null){
@@ -66,45 +62,6 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
             return true;
         }
         return false;
-    }
-
-    private boolean differ(Object newData, Object existingData){
-        if(newData instanceof String){
-            return !existingData.equals(newData);
-        }if(newData instanceof Vector3f){
-            Vector3f newVec = ((Vector3f) newData);
-            Vector3f oldData = ((Vector3f) existingData);
-
-            return (newVec.x != oldData.x) || (newVec.y != oldData.y) || (newVec.z != oldData.z);
-        }else if(newData instanceof Vector4f){
-            Vector4f newVec = ((Vector4f) newData);
-            Vector4f oldData = ((Vector4f) existingData);
-
-            return (newVec.x != oldData.x) || (newVec.y != oldData.y) || (newVec.z != oldData.z) || (newVec.w != oldData.w);
-        }else{
-            if(newData instanceof Collection){
-                Collection newCollection = ((Collection)newData);
-                Collection currentData   = ((Collection) existingData);
-                Object[] currentDataBuffer = currentData.toArray();
-                //Quick Compare if size of elements are different return true.
-                if(currentData.size() != newCollection.size()){
-                    return true;
-                }
-
-                //Deep compare. Element size did not change, lets do a deep compare on each object.
-                int index = 0;
-                for(Object obj : newCollection){
-                    if(this.differ(obj, currentDataBuffer[index])){
-                        System.out.println("Changed!");
-                        return true;
-                    }
-                    index++;
-                }
-                return false;
-            }
-
-            return existingData != newData;
-        }
     }
 
     protected void setDataUnsafe(T newData){

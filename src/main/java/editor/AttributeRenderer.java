@@ -59,6 +59,7 @@ public class AttributeRenderer{
                         data.set(index, tmp.getData());
                         index++;
                     }
+                    System.out.println("Update:"+attribute.setData(data));
                 }else{
                     Collection<?> data = (Collection<?>)attribute.getData();
                     ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), lookupHeight(attribute));
@@ -72,10 +73,10 @@ public class AttributeRenderer{
                     }
                 }
             }else if(attribute.getType().equals(EnumAttributeType.COLOR)){
-                ImGui.beginChild(""+ Editor.getInstance().getNextID(), ImGui.getColumnWidth(), ImGui.getColumnWidth() + 32);
+                ImGui.beginChild(""+Editor.getInstance().getNextID(), ImGui.getColumnWidth(), ImGui.getColumnWidth() + 32);
                 renderAttribute(attribute);
             }else{
-                ImGui.beginChild(""+ Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16 );
+                ImGui.beginChild(""+Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16 );
                 renderAttribute(attribute);
             }
             ImGui.endChild();
@@ -225,7 +226,7 @@ public class AttributeRenderer{
 
                     attribute.setData(new Vector3f(x.get(), y.get(), z.get()));
                 }
-               return;
+                return;
             }
 
             if (attribute.getData() instanceof Vector2f) {

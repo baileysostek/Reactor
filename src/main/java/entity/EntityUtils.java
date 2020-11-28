@@ -3,6 +3,9 @@ package entity;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import graphics.renderer.FBO;
+import graphics.renderer.Renderer;
+import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -11,6 +14,12 @@ import serialization.SerializationHelper;
 import java.util.Collection;
 
 public class EntityUtils {
+
+    private static FBO buffer;
+
+    static {
+        buffer = new FBO(128, 128);
+    }
 
     public static Entity group(Collection<Entity> entities){
         //Out save object. This will be a .tek file eventually.
@@ -77,6 +86,11 @@ public class EntityUtils {
         out.add("image", SpriteBinder.getInstance().getSprite(SpriteBinder.getInstance().getFileNotFoundID()).serialize());
 
         return new Entity().deserialize(out);
+    }
+
+    //TODO make SPRITE Preview LOD a setting.
+    public static Sprite takePicture(Entity Entity){
+        return new Sprite(128, 128);
     }
 
 }

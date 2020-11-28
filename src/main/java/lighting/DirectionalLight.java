@@ -5,13 +5,17 @@ import entity.component.Attribute;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
+import util.Callback;
 
 public class DirectionalLight extends Light {
 
     private FBO depthBuffer;
     private Matrix4f viewMatrix = new Matrix4f();
+
+    private Callback resize;
 
     public DirectionalLight(){
         super();
@@ -21,6 +25,26 @@ public class DirectionalLight extends Light {
 
         this.getAttribute("castsShadows").setShouldBeSerialized(false).setData(true);
         this.getAttribute("textureID").setShouldBeSerialized(false);
+
+        resize = new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                depthBuffer.resize((int)objects[0], (int)objects[1]);
+                return null;
+            }
+        };
+    }
+
+    @Override
+    public void onAdd(){
+        Renderer.getInstance().addResizeCallback(resize);
+        super.onAdd();
+    }
+
+    @Override
+    public void onRemove(){
+        Renderer.getInstance().removeResizeCallback(resize);
+        super.onRemove();
     }
 
     @Override
@@ -32,27 +56,32 @@ public class DirectionalLight extends Light {
     @Override
     public void renderInEditor(boolean selected){
         Renderer.getInstance().drawArrow(new Vector3f(this.getPosition()), new Vector3f(0, 0, 0).sub(this.getPosition()).normalize().add(this.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, (Vector3f) this.getAttribute("color").getData());
-        Vector3f frustum = (Vector3f) this.getAttribute("frustum").getData();
 
-        Vector3f CYAN = new Vector3f(0, 1, 1);
+        Renderer.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), 0);
 
-        //Rays into space
-        Renderer.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, -frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-        Renderer.getInstance().drawLine(new Vector3f( frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f( frustum.x, -frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-        Renderer.getInstance().drawLine(new Vector3f(-frustum.x,  frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x,  frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-        Renderer.getInstance().drawLine(new Vector3f( frustum.x,  frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f( frustum.x,  frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+        if(selected) {
+            Vector3f frustum = (Vector3f) this.getAttribute("frustum").getData();
 
-        //Front Face
-        Renderer.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f( frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-        Renderer.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x,  frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-        Renderer.getInstance().drawLine(new Vector3f(-frustum.x,  frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f( frustum.x,  frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-        Renderer.getInstance().drawLine(new Vector3f( frustum.x,  frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f( frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            Vector3f CYAN = new Vector3f(0, 1, 1);
 
-        //Back Face
-        Renderer.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f( frustum.x, -frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-        Renderer.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x,  frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-        Renderer.getInstance().drawLine(new Vector3f(-frustum.x,  frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f( frustum.x,  frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-        Renderer.getInstance().drawLine(new Vector3f( frustum.x,  frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f( frustum.x, -frustum.x, -frustum.y -frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            //Rays into space
+            Renderer.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            Renderer.getInstance().drawLine(new Vector3f(frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            Renderer.getInstance().drawLine(new Vector3f(-frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            Renderer.getInstance().drawLine(new Vector3f(frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+
+            //Front Face
+            Renderer.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            Renderer.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            Renderer.getInstance().drawLine(new Vector3f(-frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            Renderer.getInstance().drawLine(new Vector3f(frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+
+            //Back Face
+            Renderer.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            Renderer.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            Renderer.getInstance().drawLine(new Vector3f(-frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            Renderer.getInstance().drawLine(new Vector3f(frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+        }
     }
 
     public float[] getLightspaceTransform() {
