@@ -3,6 +3,8 @@ package input;
 import editor.Editor;
 import engine.Engine;
 import engine.FraudTek;
+import imgui.ImGui;
+import input.Chroma.ChromaManager;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import platform.EnumDevelopment;
@@ -89,7 +91,7 @@ public class Keyboard extends Engine {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
 //                System.out.println(key);
-//                if(!ImGui.getIO().getWantCaptureKeyboard()) {
+                if(!ImGui.getIO().getWantTextInput()) {
                     if (key < keys.length && key >= 0) {
                         if (action == GLFW.GLFW_RELEASE) {
                             keys[key] = false;
@@ -98,13 +100,13 @@ public class Keyboard extends Engine {
                             }
                         } else {
                             keys[key] = true;
-//                    ChromaManager.getInstance().setKeyColor(key, 0, 0, 255);
+                    ChromaManager.getInstance().setKeyColor(key, 0, 0, 255);
                             for (Callback c : pressedCallbacks[key]) {
                                 c.callback();
                             }
                         }
                     }
-//                }
+                }
 
                 if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
                     Editor.getInstance().sendKeyEvent(window, key, scancode, action, mods);

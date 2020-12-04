@@ -57,6 +57,7 @@ public class Editor {
 
     //Our Components
     ResourcesViewer resourcesViewer;
+    EntityEditor entityEditor;
 
     //Play Pause
     Debouncer playPause = new Debouncer(false);
@@ -67,6 +68,9 @@ public class Editor {
     //If this is the first time the window is rendering, we can set the window sizing information
     private final int COLUMN_WIDTHS = 256;
     private boolean firstDraw = true;
+
+    //Entity Registry
+    private EntityRegistry registry;
 
     private Editor(){
         //Create imgui context
@@ -214,13 +218,13 @@ public class Editor {
         }
 
         //populate our editor
-        EntityEditor entityEditor = new EntityEditor();
+        entityEditor = new EntityEditor();
         addComponent(EnumEditorLocation.RIGHT, entityEditor);
         WorldOutliner worldOutliner = new WorldOutliner(entityEditor);
         addComponent(EnumEditorLocation.LEFT_TAB, worldOutliner);
 //        LevelEditor levelEditor = new LevelEditor();
 //        addComponent(EnumEditorLocation.LEFT_TAB, levelEditor);
-        EntityRegistry registry = new EntityRegistry(entityEditor);
+        registry = new EntityRegistry(entityEditor);
         addComponent(EnumEditorLocation.LEFT_TAB, registry);
         Settings settings = new Settings();
         addComponent(EnumEditorLocation.LEFT_TAB, settings);
@@ -460,6 +464,15 @@ public class Editor {
         IMGUIGL.render(ImGui.getDrawData());
     }
 
+    //Register Entities
+    public void registerEntity(String category, Entity entity){
+        registry.addEntity(category, entity);
+    }
+
+//    public void unregisterEntity(String category, Entity entity){
+//        registry.addEntity(category, entity);
+//    }
+
     private void renderComponentSet(EnumEditorLocation enumEditorLocation){
         LinkedList<UIComponet> safeItterate = new LinkedList<>(UIComponets.get(enumEditorLocation));
         for(editor.components.UIComponet UIComponet : safeItterate){
@@ -538,6 +551,7 @@ public class Editor {
 
     public void onPlay(){
         //restore the camera
+        Renderer.getInstance().resize(Renderer.getWIDTH(), Renderer.getHEIGHT());
 //        if(this.gameCamera != null) {
 //            CameraManager.getInstance().setActiveCamera(this.gameCamera);
 //            this.gameCamera = null;
@@ -575,4 +589,19 @@ public class Editor {
         io.setKeyAlt(io.getKeysDown(GLFW_KEY_LEFT_ALT) || io.getKeysDown(GLFW_KEY_RIGHT_ALT));
         io.setKeySuper(io.getKeysDown(GLFW_KEY_LEFT_SUPER) || io.getKeysDown(GLFW_KEY_RIGHT_SUPER));
     }
+
+    //Callback registry
+    public void onTryDragEntityToWorld(Callback c){
+        resourcesViewer.onTryPlaceInWorld(c);
+        registry.onTryPlaceInWorld(c);
+    }
+
+    public void onActionStart(Callback c){
+        this.entityEditor.addOnActionStart(c);
+    }
+
+    public void onActionStop(Callback c){
+        this.entityEditor.addOnActionStop(c);
+    }
+
 }

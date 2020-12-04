@@ -35,7 +35,7 @@ public class ChromaManager extends Engine implements Runnable{
         //Init chroma effect
         try {
             effect = new CustomKeyboardEffect();
-            setBackgroundColor(255, 0, 0);
+//            setBackgroundColor(255, 0, 0);
             chroma.createKeyboardEffect(effect);
             //For some reason this is needed..?.
             Thread.sleep(0);
@@ -107,6 +107,12 @@ public class ChromaManager extends Engine implements Runnable{
         //Special keys
         keyMapping.put(GLFW.GLFW_KEY_ESCAPE, KeyboardKeys.RZKEY_ESC);
         keyMapping.put(GLFW.GLFW_KEY_SPACE, KeyboardKeys.RZKEY_SPACE);
+        keyMapping.put(GLFW.GLFW_KEY_LEFT_ALT, KeyboardKeys.RZKEY_LALT);
+        keyMapping.put(GLFW.GLFW_KEY_RIGHT_ALT, KeyboardKeys.RZKEY_RALT);
+        keyMapping.put(GLFW.GLFW_KEY_LEFT_SHIFT, KeyboardKeys.RZKEY_LSHIFT);
+        keyMapping.put(GLFW.GLFW_KEY_RIGHT_SHIFT, KeyboardKeys.RZKEY_RSHIFT);
+        keyMapping.put(GLFW.GLFW_KEY_LEFT_CONTROL, KeyboardKeys.RZKEY_LCTRL);
+        keyMapping.put(GLFW.GLFW_KEY_RIGHT_CONTROL, KeyboardKeys.RZKEY_RCTRL);
 
         //Function Keys
         keyMapping.put(GLFW.GLFW_KEY_F1, KeyboardKeys.RZKEY_F1);

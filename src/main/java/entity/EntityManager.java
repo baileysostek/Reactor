@@ -184,6 +184,34 @@ public class EntityManager {
         return hits;
     }
 
+    public LinkedList<Entity> raycastFromEntity(Entity entity, Vector3f dir){
+        // Get the world position
+        Vector3f pos = new Vector3f(entity.getPosition());
+        //Invert Pos
+        pos = new Vector3f(pos).mul(-1, -1, -1);
+
+        LinkedList<Entity> hits  = new LinkedList<Entity>();
+
+        for(Entity e : this.entities){
+            if(!e.equals(entity)){
+                Vector3f[] aabb = e.getAABB();
+                if(MousePicker.rayHitsAABB(pos, dir, aabb[0], aabb[1]) != null){
+                    hits.add(e);
+                }
+            }
+        }
+
+        Vector3f finalPos = pos;
+        Collections.sort(hits, new Comparator<Entity>() {
+            @Override
+            public int compare(Entity o1, Entity o2) {
+                return -1 * (int) (o1.getPosition().distance(finalPos) - o2.getPosition().distance(finalPos));
+            }
+        });
+
+        return hits;
+    }
+
     private void sync() {
         if(toAdd.size() > 0 || toRemove.size() > 0) {
             lock.lock();
@@ -202,6 +230,13 @@ public class EntityManager {
                 }
                 toAdd.clear();
                 for (Entity e : new LinkedList<>(toRemove)) {
+                    //Skip over null entities.
+                    if(e == null){
+                        //e is null so skip.
+                        continue;
+                    }
+
+                    //Now do the remove
                     this.entities.remove(e);
                     this.typedEntities.get(e.getClass()).remove(e);
                     e.onRemove();
@@ -278,6 +313,18 @@ public class EntityManager {
                 parentRemoveHelper(child);
             }
             this.links.remove(parent);
+        }
+    }
+
+    public void unlink(Entity parent, Entity child) {
+        //if this parent does not have any registered children, allow this parent to have children because if we are trying to unlink, we assumed that this entity had children and it is probably important.
+        if(!this.links.containsKey(parent)){
+            this.links.put(parent, new LinkedList<Entity>());
+        }
+
+        //Do a check to see if this parent has an entry for this child.
+        if(this.links.get(parent).contains(child)){
+            this.links.get(parent).remove(child);
         }
     }
 

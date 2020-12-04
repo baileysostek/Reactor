@@ -1,10 +1,14 @@
 package graphics.renderer;
 
+import camera.Camera;
+import camera.Camera3D;
 import camera.CameraManager;
+import camera.DynamicCamera;
 import engine.Engine;
 import engine.FraudTek;
 import entity.Entity;
 import entity.EntityManager;
+import graphics.sprite.SpriteBinder;
 import lighting.DirectionalLight;
 import lighting.Light;
 import lighting.LightingManager;
@@ -60,6 +64,10 @@ public class Renderer extends Engine {
 
     private LinkedList<Callback> resizeCallbacks = new LinkedList<>();
 
+    //Used for entity Previews
+    private HashMap<Entity, FBO> snapshotFBOS = new HashMap<>();
+    private DirectionalLight light;
+
     private Renderer(int width, int height){
         //init
         // Set the clear color
@@ -90,6 +98,8 @@ public class Renderer extends Engine {
         drawTriangle = new ImmediateDrawTriangle();
         drawSprite = new ImmediateDrawSprite();
 
+        //INIT our light.
+        light = new DirectionalLight();
     }
 
     public static void initialize(int width, int height){
@@ -475,6 +485,107 @@ public class Renderer extends Engine {
         return out;
     }
 
+    public DirectDrawData drawRing(Vector3f origin, Vector3f scale, Vector3f normal, Vector2i resolution, float arc, float offset, Vector3f color) {
+        DirectDrawData out = new DirectDrawData();
+        AABB aabb = new AABB();
+
+        float angle_spacing = arc / (float)resolution.x;
+
+        Vector3f usableRay = new Vector3f(normal);
+
+        Vector3f up = new Vector3f(0, (float) Math.cos(usableRay.z * Math.PI), (float) Math.cos(usableRay.y * Math.PI));
+
+        Vector3f xAxis = new Vector3f(up).cross(usableRay).normalize();
+        Vector3f yAxis = new Vector3f(usableRay).cross(xAxis).normalize();
+
+        Matrix3f rotationMatrix = new Matrix3f().set(new float[]{
+                xAxis.x, xAxis.y, xAxis.z,
+                yAxis.x, yAxis.y, yAxis.z,
+                usableRay.x, usableRay.y, usableRay.z,
+        });
+
+        Vector3f tangent = new Vector3f((float) (Math.cos(0)) * scale.x, (float) (Math.sin(0)) * scale.y, 0).mul(rotationMatrix).normalize();
+        Vector3f biTangent = new Vector3f(tangent).cross(new Vector3f(normal));
+
+//        rotationMatrix.rotate(new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), offset));
+
+        Vector3f lastPoint = null;
+        Vector3f[] lastRing = new Vector3f[resolution.y];
+        Vector3f firstPoint = null;
+        Vector3f[] firstRing = new Vector3f[resolution.y];
+        for(int i = 0; i < resolution.x; i++){
+            float angleDegrees = (i * angle_spacing) + offset;
+            float angle = (float) Math.toRadians(angleDegrees);
+
+            float x = (float) (Math.cos(angle));
+            float y = (float) (Math.sin(angle));
+
+            Vector3f thisPoint = new Vector3f(x * scale.x, y * scale.y, 0);
+            thisPoint = thisPoint.mul(rotationMatrix);
+            thisPoint.add(origin);
+
+            Vector3f[] thisRing = calculateRingPoints(thisPoint, new Vector2f(scale.z), new Vector3f(biTangent).rotate(new Quaternionf().fromAxisAngleDeg(normal, angleDegrees)), resolution.y, new Vector3f(0, 0, 1));
+
+            if(lastPoint == null) {
+                firstRing = thisRing;
+                firstPoint = thisPoint;
+            }else{
+                //We can tessellate between the last ring and this ring.
+                for(int j = 0; j < resolution.y; j++){
+                    int negativeIndex = j - 1;
+                    if(negativeIndex < 0){
+                        negativeIndex = resolution.y -1;
+                    }
+                    Vector3f p1 = thisRing[negativeIndex];
+                    Vector3f p2 = thisRing[j];
+                    Vector3f p3 = lastRing[negativeIndex];
+                    Vector3f p4 = lastRing[j];
+
+                    aabb.recalculateFromPoint(p1);
+                    aabb.recalculateFromPoint(p2);
+                    aabb.recalculateFromPoint(p3);
+                    aabb.recalculateFromPoint(p4);
+
+                    out.addDrawData(drawTriangle.drawTriangle(p1, p2, p3, color));
+                    out.addDrawData(drawTriangle.drawTriangle(p3, p2, p4, color));
+
+                }
+            }
+
+            lastPoint = thisPoint;
+            lastRing = thisRing;
+        }
+
+        //Connect arc.
+        if(arc >= 360) {
+            if (lastPoint != null && firstPoint != null) {
+                //We can tessellate between the last ring and this ring.
+                for (int j = 0; j < resolution.y; j++) {
+                    int negativeIndex = j - 1;
+                    if (negativeIndex < 0) {
+                        negativeIndex = resolution.y - 1;
+                    }
+                    Vector3f p1 = firstRing[negativeIndex];
+                    Vector3f p2 = firstRing[j];
+                    Vector3f p3 = lastRing[negativeIndex];
+                    Vector3f p4 = lastRing[j];
+
+                    aabb.recalculateFromPoint(p1);
+                    aabb.recalculateFromPoint(p2);
+                    aabb.recalculateFromPoint(p3);
+                    aabb.recalculateFromPoint(p4);
+
+                    out.addDrawData(drawTriangle.drawTriangle(p1, p2, p3, color));
+                    out.addDrawData(drawTriangle.drawTriangle(p3, p2, p4, color));
+                }
+            }
+        }
+
+        out.setAABB(aabb);
+
+        return out;
+    }
+
     private Vector3f[] calculateRingPoints(Vector3f origin, Vector2f radius, Vector3f normal, int points, Vector3f color) {
         Vector3f[] out = new Vector3f[points];
         float angle_spacing = 360.0f / (float)points;
@@ -700,5 +811,141 @@ public class Renderer extends Engine {
 
     public static Renderer getInstance(){
         return renderer;
+    }
+
+    public int generateRenderedPreview(Entity entity) {
+
+        if(entity == null){
+            return SpriteBinder.getInstance().getFileNotFoundID();
+        }
+
+        //TODO lookup table for FBOS
+        FBO preview;
+        if(snapshotFBOS.containsKey(entity)){
+            preview = snapshotFBOS.get(entity);
+        }else{
+            preview = new FBO(512, 512);
+            snapshotFBOS.put(entity, preview);
+        }
+
+        DynamicCamera cam = new DynamicCamera();
+        Vector3f[] aabb = entity.getAABB();
+        Vector3f distance = new Vector3f(aabb[1]).sub(aabb[0]);
+
+        float max = Math.max(Math.max(distance.x, distance.y), distance.z);
+        distance = new Vector3f(max);
+
+        cam.setPosition(distance);
+        cam.setRotation(new Quaternionf().lookAlong(new Vector3f(distance).normalize(), new Vector3f(0, 1, 0)));
+
+        preview.bindFrameBuffer();
+
+        GL46.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+        ShaderManager.getInstance().useShader(shaderID);
+        GL46.glEnable(GL46.GL_DEPTH_TEST);
+        GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT);
+
+        GL46.glEnable(GL46.GL_BLEND);
+        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
+
+        ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", cam.getPosition());
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, cam.getTransform());
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"),false, new Matrix4f().ortho(-max, max, -max, max, 0.1f, 1024).get(new float[16]));
+
+        //Pos -2 is skybox
+        GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, skyboxRenderer.getTextureID());
+        GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
+
+        light.setPosition(new Vector3f(max/2f, max, max));
+
+        //Bind and allocate this texture unit.
+        int textureUnit = TEXTURE_OFFSET + 0;
+        GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
+        int textureIndex = light.getDepthBuffer().getDepthTexture();
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
+
+        //Upload our uniforms.
+        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", 0, new Vector3f(0).sub(light.getPosition()).normalize());
+        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", 0, light.getColor());
+        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", 0, light.getLightspaceTransform());
+        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", 0, textureUnit);
+
+        if(entity.getModel() != null) {
+//                StopwatchManager.getInstance().getTimer("uploadUniforms").lapStart();
+            ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
+
+            GL46.glActiveTexture(GL46.GL_TEXTURE0);
+            GL46.glBindTexture(GL46.GL_TEXTURE_2D, entity.getTextureID());
+            GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "textureID"), 0);
+
+            if(entity.hasAttribute("normalID")){
+                GL46.glActiveTexture(GL46.GL_TEXTURE0 + 1);
+                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("normalID").getData());
+                GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "normalID"), 1);
+            }
+
+            if(entity.hasAttribute("metallicID")){
+                GL46.glActiveTexture(GL46.GL_TEXTURE0 + 2);
+                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("metallicID").getData());
+                GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "metallicID"), 2);
+            }
+
+            if(entity.hasAttribute("roughnessID")){
+                GL46.glActiveTexture(GL46.GL_TEXTURE0 + 3);
+                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("roughnessID").getData());
+                GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "roughnessID"), 3);
+            }
+
+            if(entity.hasAttribute("aoID")){
+                GL46.glActiveTexture(GL46.GL_TEXTURE0 + 4);
+                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("aoID").getData());
+                GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "aoID"), 4);
+            }
+
+            if (entity.hasAttribute("t_scale")) {
+                ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", entity.getAttribute("t_scale").getData());
+            } else {
+                ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", new org.joml.Vector2f(1.0f));
+            }
+
+            if (entity.hasAttribute("t_offset")) {
+                ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", entity.getAttribute("t_offset").getData());
+            } else {
+                ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", new org.joml.Vector2f(0.0f));
+            }
+
+            if (entity.hasAttribute("mat_m")) {
+                ShaderManager.getInstance().loadUniformIntoActiveShader("mat_m", entity.getAttribute("mat_m").getData());
+            } else {
+                ShaderManager.getInstance().loadUniformIntoActiveShader("mat_m", 0.5f);
+            }
+
+            if (entity.hasAttribute("mat_r")) {
+                ShaderManager.getInstance().loadUniformIntoActiveShader("mat_r", entity.getAttribute("mat_r").getData());
+            } else {
+                ShaderManager.getInstance().loadUniformIntoActiveShader("mat_r", 0.5f);
+            }
+//                StopwatchManager.getInstance().getTimer("uploadUniforms").stop();
+
+            //Mess with uniforms
+            GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "transformation"), false, entity.getTransform().get(new float[16]));
+//                StopwatchManager.getInstance().getTimer("drawCalls").lapStart();
+            GL46.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
+//                StopwatchManager.getInstance().getTimer("drawCalls").stop();
+
+        }
+
+        //Render our Skybox
+        skyboxRenderer.render();
+
+        GL46.glDisableVertexAttribArray(0);
+        GL46.glDisableVertexAttribArray(1);
+        GL46.glDisable(GL46.GL_DEPTH_TEST);
+        GL46.glDisable(GL46.GL_BLEND);
+
+        preview.unbindFrameBuffer();
+
+        return preview.getTextureID();
     }
 }

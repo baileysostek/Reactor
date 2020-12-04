@@ -19,6 +19,13 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
     private boolean visible = true;
     private EnumAttributeType type = EnumAttributeType.NONE;
     private boolean shouldBeSerialized = true;
+    private Callback onAdd = new Callback() {
+        @Override
+        public Object callback(Object... objects) {
+            System.out.println("On Add.");
+            return null;
+        }
+    };
 
     public Attribute(Attribute att){
         this.name = att.getName();
@@ -161,11 +168,20 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
         return this;
     }
 
+    //These methods are used for the Editor only
+    public void setOnAdd(Callback c){
+        this.onAdd = c;
+    }
+
     public void setCategory(String category) {
         this.category = category;
     }
 
     public String getCategory(){
         return this.category;
+    }
+
+    public Callback getOnAdd() {
+        return this.onAdd;
     }
 }

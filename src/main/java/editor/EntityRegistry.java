@@ -6,6 +6,7 @@ import entity.Entity;
 import entity.EntityEditor;
 import entity.EntityManager;
 import entity.component.Attribute;
+import graphics.renderer.Renderer;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
@@ -39,9 +40,14 @@ public class EntityRegistry extends UIComponet {
     private boolean isDraggingTemplate = false;
 
     private static HashMap<String, LinkedList<Entity>> registeredEntities = new HashMap<>();
-    private final HashMap<Entity, Sprite> snapshots = new HashMap<Entity, Sprite>();
+    private final HashMap<Entity, Integer> snapshots = new HashMap<Entity, Integer>();
 
     private final int svgTest;
+
+    //Callback hooks
+    private LinkedList<Callback> onTryPlaceInWorld = new LinkedList<>();
+
+    private int scale = 64;
 
     public EntityRegistry(EntityEditor editor){
 
@@ -50,15 +56,29 @@ public class EntityRegistry extends UIComponet {
         this.editor = editor;
         Entity whiteCube = new Entity();
         whiteCube.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
+        whiteCube.getAttribute("name").setData("Cube");
         addEntity("Geometry", whiteCube);
 
         Entity sphere = new Entity();
         sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
+        sphere.getAttribute("name").setData("Sphere");
         addEntity("Geometry", sphere);
 
         Entity quad = new Entity();
         quad.setModel(ModelManager.getInstance().loadModel("quad.obj").getFirst());
+        quad.getAttribute("name").setData("Quad");
         addEntity("Geometry", quad);
+
+//        Entity dragon = new Entity();
+//        dragon.setModel(ModelManager.getInstance().loadModel("dragon.obj").getFirst());
+//        dragon.getAttribute("name").setData("Dragon");
+//        addEntity("Geometry", dragon);
+//
+//        Entity garden = new Entity();
+//        garden.setModel(ModelManager.getInstance().loadModel("garden.obj").getFirst());
+//        garden.getAttribute("name").setData("Garden");
+//        garden.setTexture(SpriteBinder.getInstance().load("Garden_BaseColor.png"));
+//        addEntity("Geometry", garden);
 
         DirectionalLight directionalLight = new DirectionalLight();
         directionalLight.getAttribute("name").setData("Directional Light");
@@ -92,7 +112,24 @@ public class EntityRegistry extends UIComponet {
                         }
 
                         if(pos != null) {
-                            editor.cloneTarget(dragged).setPosition(pos);
+                            Entity clone = editor.cloneTarget(dragged).setPosition(pos);
+
+                            //Raycast for hit entities.
+                            LinkedList<Entity> hitEntities = EntityManager.getInstance().getHitEntities(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()));
+                            for(Callback c : onTryPlaceInWorld){
+                                //First param is the list of hit entities.
+                                //We pass the object that we are trying to add as the second param
+                                Object result = c.callback(clone, hitEntities);
+                                if(result instanceof Boolean){
+                                    boolean shouldBreak = (boolean)result;
+                                    if(shouldBreak){
+                                        return null;
+                                    }
+                                }
+                            }
+
+                            //Add too world
+                            EntityManager.getInstance().addEntity(clone);
                         }
                     }
                 }
@@ -107,6 +144,8 @@ public class EntityRegistry extends UIComponet {
             registeredEntities.put(category, new LinkedList<Entity>());
         }
         registeredEntities.get(category).addLast(entity);
+        int textureID = Renderer.getInstance().generateRenderedPreview(entity);
+        this.snapshots.put(entity, textureID);
     }
 
 
@@ -142,9 +181,15 @@ public class EntityRegistry extends UIComponet {
     public void renderEntity(LinkedList<Entity> entities){
         for(Entity templateEntity : entities) {
             //Drag container
-            ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 32);
+            ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), scale);
             int selected = ImGuiSelectableFlags.AllowDoubleClick;
-            ImGui.image(svgTest, 32, 32);
+
+            int textureID = svgTest;
+            if(snapshots.containsKey(templateEntity)){
+                textureID = snapshots.get(templateEntity);
+            }
+
+            ImGui.image(textureID, scale, scale, 0, 1, 1, 0);
             ImGui.sameLine();
 
             if (ImGui.selectable(templateEntity.getName(), templateEntity.equals(this.entity), selected)) {
@@ -174,5 +219,10 @@ public class EntityRegistry extends UIComponet {
     @Override
     public String getName() {
         return "Entity Registry";
+    }
+
+    //Callback registries
+    public void onTryPlaceInWorld(Callback c){
+        this.onTryPlaceInWorld.addLast(c);
     }
 }

@@ -57,6 +57,8 @@ public class Sprite implements Serializable<Sprite> {
 
     public Sprite(Sprite sprite){
         this.textureID = SpriteBinder.getInstance().genTexture();
+        SpriteBinder.getInstance().map(textureID, this);
+
         this.width = sprite.getWidth();
         this.height = sprite.getHeight();
 

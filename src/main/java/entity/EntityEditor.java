@@ -20,10 +20,12 @@ import imgui.enums.ImGuiTreeNodeFlags;
 import imgui.enums.ImGuiWindowFlags;
 import input.Keyboard;
 import input.MousePicker;
+import math.VectorUtils;
 import org.joml.*;
 import org.lwjgl.glfw.GLFW;
 import serialization.SerializationHelper;
 import util.Callback;
+import util.Debouncer;
 import util.StringUtils;
 
 import java.lang.Math;
@@ -45,7 +47,10 @@ public class EntityEditor extends UIComponet {
     private Vector3f delta = new Vector3f(0);
     private Vector3f initialCastHit = new Vector3f(0);
     private Vector3f rayToHit = new Vector3f(0);
+    private Vector3f initialRotationPoint = new Vector3f(0);
     private float distanceToCam = 0;
+
+    private Debouncer shiftClick = new Debouncer(false);
 
     //Tools
     private EditorMode toolType = EditorMode.NONE;
@@ -53,6 +58,24 @@ public class EntityEditor extends UIComponet {
 
     //Debouncer boolean used to prevent entity modification right when clicking on an entity.
     private boolean hasReleased = true;
+
+    //Callbacks for Different Actions that a user could want to do. Like on entity Select, Deselect, TryPlace in world, Place in World, Delete from world.
+
+    //Select-Deselect
+    private LinkedList<Callback> onSelect          = new LinkedList<>();
+    private LinkedList<Callback> onDeselect        = new LinkedList<>();
+    private LinkedList<Callback> onDelete          = new LinkedList<>();
+
+    //translations
+    private LinkedList<Callback> onMove            = new LinkedList<>();
+    private LinkedList<Callback> onRotate          = new LinkedList<>();
+    private LinkedList<Callback> onScale           = new LinkedList<>();
+
+    //transactions
+    private LinkedList<Callback> onActionStart     = new LinkedList<>();
+    private LinkedList<Callback> onActionStop      = new LinkedList<>();
+
+
 
     //Editor resources
     Sprite entityNotFound;
@@ -72,6 +95,11 @@ public class EntityEditor extends UIComponet {
                     if(button == MousePicker.MOUSE_LEFT) {
                         //On Release Set selected to none
                         if (action == GLFW.GLFW_RELEASE) {
+                            //Call the callbacks
+                            for(Callback c : onActionStop){
+                                c.callback(selectedTool, selectedEntities.keySet());
+                            }
+                            //Deselect the tool
                             selectedTool = NONE;
                             hasReleased = true;
                         }
@@ -79,6 +107,9 @@ public class EntityEditor extends UIComponet {
                         pressed = (action == GLFW.GLFW_PRESS);
                         if (pressed) {
                             raycastToWorld();
+                            for(Callback c : onActionStart){
+                                c.callback(selectedTool, selectedEntities.keySet());
+                            }
                         }
                     }
                 }
@@ -120,6 +151,15 @@ public class EntityEditor extends UIComponet {
                 return null;
             }
         });
+
+        Keyboard.getInstance().addPressCallback(Keyboard.ESCAPE, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                clearSelected();
+                return null;
+            }
+        });
+
     }
 
     public void setTarget(Entity target){
@@ -142,6 +182,7 @@ public class EntityEditor extends UIComponet {
                     //Reset our delta
                     delta = new Vector3f(0);
                     initialCastHit = new Vector3f(0);
+                    initialRotationPoint = null;
                     rayToHit = new Vector3f(0);
                     distanceToCam = 0;
 
@@ -163,13 +204,23 @@ public class EntityEditor extends UIComponet {
                     //Store our hits in this vector.
                     Vector3f hits = new Vector3f(0);
 
+                    float closest = Float.MAX_VALUE;
+
                     if(metaData.ddd_x != null) {
                         Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_x.getAABB());
                         if (pos != null) {
                             delta = new Vector3f(entity.getPositionSelf()).sub(pos);
                             initialCastHit = new Vector3f(pos);
                             rayToHit = new Vector3f(pos).sub(entity.getPositionSelf()).normalize();
-                            hits.x = 1;
+                            if(toolType.equals(EditorMode.ROTATE)){
+                                float hitPoint = pos.distance(CameraManager.getInstance().getActiveCamera().getPosition());
+                                if(hitPoint < closest){
+                                    closest = hitPoint;
+                                    hits = new Vector3f(1, 0, 0);
+                                }
+                            }else {
+                                hits.x = 1;
+                            }
                         }
                     }
                     if(metaData.ddd_y != null) {
@@ -178,7 +229,15 @@ public class EntityEditor extends UIComponet {
                             delta = new Vector3f(entity.getPositionSelf()).sub(pos);
                             initialCastHit = new Vector3f(pos);
                             rayToHit = new Vector3f(pos).sub(entity.getPositionSelf()).normalize();
-                            hits.y = 1;
+                            if(toolType.equals(EditorMode.ROTATE)){
+                                float hitPoint = pos.distance(CameraManager.getInstance().getActiveCamera().getPosition());
+                                if(hitPoint < closest){
+                                    closest = hitPoint;
+                                    hits = new Vector3f(0, 1, 0);
+                                }
+                            }else {
+                                hits.y = 1;
+                            }
                         }
                     }
                     if(metaData.ddd_z != null) {
@@ -187,7 +246,15 @@ public class EntityEditor extends UIComponet {
                             delta = new Vector3f(entity.getPosition()).sub(pos);
                             initialCastHit = new Vector3f(pos);
                             rayToHit = new Vector3f(pos).sub(entity.getPositionSelf()).normalize();
-                            hits.z = 1;
+                            if(toolType.equals(EditorMode.ROTATE)){
+                                float hitPoint = pos.distance(CameraManager.getInstance().getActiveCamera().getPosition());
+                                if(hitPoint < closest){
+                                    closest = hitPoint;
+                                    hits = new Vector3f(0, 0, 1);
+                                }
+                            }else {
+                                hits.x = 1;
+                            }
 
                             //TODO this may be needed for other casts, its only used in XYZ pos now, so just do the check once in here. May need to be added to the X and Y checks later if other Tools use distanceToCam var.
                             distanceToCam = new Vector3f(entity.getPosition()).distance(CameraManager.getInstance().getActiveCamera().getPosition());
@@ -261,12 +328,54 @@ public class EntityEditor extends UIComponet {
                                 }
 
                                 if(pos != null) {
-                                    entity.setPosition(deltaPos.x , entity.getPositionSelf().y() , entity.getPositionSelf().z());
+                                    for(Entity e : selectedEntities.keySet()){
+                                        e.setPosition(deltaPos.x , e.getPositionSelf().y() , e.getPositionSelf().z());
+                                    }
                                 }
                                 break;
                             }
                             case ROTATE:{
+                                Quaternionf rotation = new Matrix4f(entity.getTransform()).getNormalizedRotation(new Quaternionf());
+
+                                Vector4f rotx = new Vector4f(1, 0, 0, 1).mul(new Matrix4f().identity().rotate(rotation));
+                                Vector3f planeNormal = new Vector3f(rotx.x, rotx.y, rotx.z);
+
                                 //Raycast to plane
+                                Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(planeNormal));
+
+                                if(this.initialRotationPoint == null){
+                                    this.initialRotationPoint = new Vector3f(pos);
+                                }
+
+                                Renderer.getInstance().drawLine(new Vector3f(planeNormal).add(entity.getPosition()), entity.getPosition(), new Vector3f(1, 0, 0));
+
+                                float angle = new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).angleSigned(new Vector3f(pos).sub(entity.getPosition()), planeNormal);
+                                float offsetAngle = new Vector3f(0, 0, -1).angleSigned(new Vector3f(this.initialRotationPoint).sub(entity.getPosition()), planeNormal);
+
+                                //Draw arch
+                                float biggestDimension = VectorUtils.maxComponent(new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]));
+                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(1, 0, 0));
+                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(1, 0, 0));
+
+                                float offset = (float) Math.toDegrees(angle);
+
+                                if(Keyboard.getInstance().isKeyPressed(Keyboard.EIGHT)){
+                                    offset = 45;
+                                }
+
+                                if(Keyboard.getInstance().isKeyPressed(Keyboard.NINE)){
+                                    offset = 90;
+                                }
+
+                                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 45f, new Vector3f(1, 0, 0));
+
+                                System.out.println(Math.toDegrees(offsetAngle));
+
+                                Vector3f rot = entity.getRotation();
+
+                                rot.x = (float) Math.toDegrees(angle);
+
+                                this.entity.setRotation(rot);
 
                                 break;
                             }
@@ -332,9 +441,15 @@ public class EntityEditor extends UIComponet {
                 if (hits.size() > 0) {
                     if (this.entity != hits.getFirst()) {
                         hasReleased = false;
-                        if(Keyboard.getInstance().isKeyPressed(Keyboard.SHIFT_LEFT, Keyboard.SHIFT_RIGHT)) {
+                        if (Keyboard.getInstance().isKeyPressed(Keyboard.SHIFT_LEFT, Keyboard.SHIFT_RIGHT)) {
+                            //TODO add debouncer
+//                            if (this.selectedEntities.containsKey(hits.getFirst())) {
+//                                this.selectedEntities.remove(hits.getFirst());
+//                            } else {
+//                                this.addTarget(hits.getFirst());
+//                            }
                             this.addTarget(hits.getFirst());
-                        }else{
+                        } else {
                             this.setTarget(hits.getFirst());
                         }
                     }
@@ -348,7 +463,9 @@ public class EntityEditor extends UIComponet {
     }
 
     public Entity cloneSelected() {
-        return cloneTarget(this.entity);
+        Entity clone = cloneTarget(this.entity);
+        EntityManager.getInstance().addEntity(clone);
+        return clone;
     }
 
     public Entity cloneTarget(Entity target){
@@ -381,8 +498,6 @@ public class EntityEditor extends UIComponet {
             entity.setParent(target.getParent());
         }
 
-        EntityManager.getInstance().addEntity(entity);
-
         this.setTarget(entity);
 
         return entity;
@@ -396,6 +511,7 @@ public class EntityEditor extends UIComponet {
         //Reset our distance and delta
         delta = new Vector3f(0);
         initialCastHit = new Vector3f(0);
+        initialRotationPoint = null;
         distanceToCam = 0;
         //Clear entity
         this.entity = null;
@@ -416,7 +532,6 @@ public class EntityEditor extends UIComponet {
     @Override
     public void self_update(double delta) {
         raycastToWorld();
-
     }
 
     public void getTexture(){
@@ -441,9 +556,9 @@ public class EntityEditor extends UIComponet {
             }
 
             //Rotate
-            if(toolType.equals(EditorMode.ROTATE)) {
-                Vector3f size = new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]);
-                float biggestDimension = Math.max(Math.max(size.x, size.y), size.z) / 2f;
+            if(toolType.equals(EditorMode.ROTATE) && selectedTool.equals(NONE)) {
+
+                float biggestDimension = VectorUtils.maxComponent(new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]));
 
                 Quaternionf rotation = new Matrix4f(entity.getTransform()).getNormalizedRotation(new Quaternionf());
 
@@ -451,17 +566,40 @@ public class EntityEditor extends UIComponet {
                 Vector4f roty = new Vector4f(0, 1, 0, 1).mul(new Matrix4f().identity().rotate(rotation));
                 Vector4f rotz = new Vector4f(0, 0, 1, 1).mul(new Matrix4f().identity().rotate(rotation));
 
-                DirectDrawData ddd_x = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(rotx.x, rotx.y, rotx.z), new Vector2i(32, 9), 360f, new Vector3f(1, 0, 0));
-                if(MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_x.getAABB()) != null){
-                    Renderer.getInstance().redrawTriangleColor(ddd_x, drawColor);
+                float closest = Float.MAX_VALUE;
+                DirectDrawData closestVolume = null;
+
+                DirectDrawData ddd_x = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 1, biggestDimension + 1, 0.0625f), new Vector3f(rotx.x, rotx.y, rotx.z), new Vector2i(32, 9), 360f, new Vector3f(1, 0, 0));
+                Vector3f xTest = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_x.getAABB());
+                if(xTest != null){
+                    float distance = xTest.distance(CameraManager.getInstance().getActiveCamera().getPosition());
+                    if(distance < closest){
+                        closest = distance;
+                        closestVolume = ddd_x;
+                    }
                 }
-                DirectDrawData ddd_y = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(roty.x, roty.y, roty.z), new Vector2i(32, 9), 360f, new Vector3f(0, 1, 0));
-                if(MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_y.getAABB()) != null){
-                    Renderer.getInstance().redrawTriangleColor(ddd_y, drawColor);
+                DirectDrawData ddd_y = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 1, biggestDimension + 1, 0.0625f), new Vector3f(roty.x, roty.y, roty.z), new Vector2i(32, 9), 360f, new Vector3f(0, 1, 0));
+                Vector3f yTest = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_y.getAABB());
+                if(yTest != null){
+                    float distance = yTest.distance(CameraManager.getInstance().getActiveCamera().getPosition());
+                    if(distance < closest){
+                        closest = distance;
+                        closestVolume = ddd_y;
+                    }
                 }
-                DirectDrawData ddd_z = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension, biggestDimension, 0.0625f), new Vector3f(rotz.x, rotz.y, rotz.z), new Vector2i(32, 9), 360f, new Vector3f(0, 0, 1));
-                if(MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_z.getAABB()) != null){
-                    Renderer.getInstance().redrawTriangleColor(ddd_z, drawColor);
+                DirectDrawData ddd_z = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 1, biggestDimension + 1, 0.0625f), new Vector3f(rotz.x, rotz.y, rotz.z), new Vector2i(32, 9), 360f, new Vector3f(0, 0, 1));
+                Vector3f zTest = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_z.getAABB());
+                if(zTest != null){
+                    float distance = zTest.distance(CameraManager.getInstance().getActiveCamera().getPosition());
+                    if(distance < closest){
+                        closest = distance;
+                        closestVolume = ddd_z;
+                    }
+                }
+
+                //Draw closest in yellow
+                if(closestVolume != null) {
+                    Renderer.getInstance().redrawTriangleColor(closestVolume, drawColor);
                 }
 
                 //Set our direct draw volumes
@@ -593,6 +731,16 @@ public class EntityEditor extends UIComponet {
     public String getName(){
         return "Properties";
     }
+
+    //Hook entrypoints
+    public void addOnActionStart(Callback callback){
+        this.onActionStart.addLast(callback);
+    }
+
+    public void addOnActionStop(Callback callback){
+        this.onActionStop.addLast(callback);
+    }
+
 }
 
 enum EditorAxis {
