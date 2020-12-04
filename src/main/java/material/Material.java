@@ -6,8 +6,11 @@ import graphics.sprite.SpriteBinder;
 import serialization.Serializable;
 
 public class Material implements Serializable<Material> {
-    private int id;
+    //Properties of Material
     private String name;
+
+    //Texture ID representing the screenshot of this material rendered in world.
+    private int textureID;
 
     //Different Texture Channels
     private int albedoID;
@@ -16,9 +19,23 @@ public class Material implements Serializable<Material> {
     private int normalID;
     private int roughnessID;
 
+    public Material(){
+        initialize();
+    }
+
     public Material(Sprite sprite){
         initialize();
         albedoID = sprite.getTextureID();
+    }
+
+    public Material(Material clone){
+        initialize();
+        Material copy = clone.newInstance();
+        this.albedoID = copy.albedoID;
+        this.metallicID = copy.metallicID;
+        this.ambientOcclusionID = copy.ambientOcclusionID;
+        this.normalID = copy.normalID;
+        this.roughnessID = copy.roughnessID;
     }
 
     private void initialize(){
@@ -29,11 +46,29 @@ public class Material implements Serializable<Material> {
         roughnessID = SpriteBinder.getInstance().getDefaultRoughnessMap();
     }
 
+    public Material newInstance(){
+        //Template for new material instance.
+        Material material = new Material();
+
+        //Register the sprite copies
+        material.albedoID = SpriteBinder.getInstance().copySprite(albedoID).getTextureID();
+        material.metallicID = SpriteBinder.getInstance().copySprite(metallicID).getTextureID();
+        material.ambientOcclusionID = SpriteBinder.getInstance().copySprite(ambientOcclusionID).getTextureID();
+        material.normalID = SpriteBinder.getInstance().copySprite(normalID).getTextureID();
+        material.roughnessID = SpriteBinder.getInstance().copySprite(roughnessID).getTextureID();
+
+        //Return the copy
+        return material;
+    }
+
+    public void refreshTexture(){
+        //Logic to take a new snapshot.
+    }
+
     @Override
     public JsonObject serialize() {
         JsonObject out = new JsonObject();
         out.addProperty("name", name);
-        out.addProperty("id", id);
         return null;
     }
 

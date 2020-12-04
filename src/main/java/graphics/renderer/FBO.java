@@ -5,6 +5,7 @@ import graphics.sprite.SpriteBinder;
 import org.lwjgl.opengl.*;
 
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
 
 import static org.lwjgl.opengl.GL46.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL46.GL_TEXTURE_BORDER_COLOR;
@@ -20,6 +21,11 @@ public class FBO {
 
     private int WIDTH;
     private int HEIGHT;
+    private int originalWidth;
+    private int originalHeight;
+
+    //If we unbind a frame buffer from within a framebuffer, we want to return the last item on the stack, not just 0
+    private static LinkedList<Integer> bufferStack = new LinkedList<>();
 
     public FBO(){
         this.WIDTH = Renderer.getInstance().getWIDTH();
@@ -28,6 +34,7 @@ public class FBO {
         if(GL.getCapabilities().GL_EXT_framebuffer_object){
             id = GL46.glGenFramebuffers();
             GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, id);
+            bufferStack.push(id);
             GL46.glDrawBuffer(GL46.GL_COLOR_ATTACHMENT0);
 
             textureID = SpriteBinder.getInstance().genTexture();
@@ -46,6 +53,7 @@ public class FBO {
         if(GL.getCapabilities().GL_EXT_framebuffer_object){
             id = GL46.glGenFramebuffers();
             GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, id);
+            bufferStack.push(id);
             GL46.glDrawBuffer(GL46.GL_COLOR_ATTACHMENT0);
 
             textureID = SpriteBinder.getInstance().genTexture();
@@ -60,13 +68,25 @@ public class FBO {
     public void bindFrameBuffer(){
         GL46.glBindTexture(GL46.GL_TEXTURE_2D, 0);
         GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, id);
+        bufferStack.push(id);
         GL46.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         GL46.glClear(GL46.GL_COLOR_BUFFER_BIT | GL46.GL_DEPTH_BUFFER_BIT);
+        double[] buffer = new double[4];
+        GL46.glGetDoublev(GL46.GL_VIEWPORT, buffer);
+        originalWidth  = (int) buffer[2];
+        originalHeight = (int) buffer[3];
+        GL46.glViewport(0, 0, WIDTH, HEIGHT);
     }
 
     public void unbindFrameBuffer(){
+        bufferStack.pop();
+        GL46.glViewport(0, 0, originalWidth, originalHeight);
         GL46.glFlush();
-        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
+        int newBufferID = 0;
+        if(bufferStack.size() > 0){
+            newBufferID = bufferStack.peek();
+        }
+        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, newBufferID);
     }
 
     public final void resize(int width, int height){

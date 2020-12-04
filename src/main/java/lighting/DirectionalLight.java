@@ -4,6 +4,7 @@ import engine.FraudTek;
 import entity.component.Attribute;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
+import graphics.sprite.SpriteBinder;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -24,7 +25,7 @@ public class DirectionalLight extends Light {
         addAttribute(new Attribute<Vector3f>("targetPoint", new Vector3f(0)));
 
         this.getAttribute("castsShadows").setShouldBeSerialized(false).setData(true);
-        this.getAttribute("textureID").setShouldBeSerialized(false);
+        super.setTexture(SpriteBinder.getInstance().loadSVG("engine/svg/sun.svg", 1, 1, 96f));
 
         resize = new Callback() {
             @Override
@@ -33,6 +34,8 @@ public class DirectionalLight extends Light {
                 return null;
             }
         };
+
+        updateViewMatrix();
     }
 
     @Override
@@ -50,6 +53,10 @@ public class DirectionalLight extends Light {
     @Override
     public void update(double delta){
         LightingManager.getInstance().drawFromMyPerspective(this);
+        updateViewMatrix();
+    }
+
+    public void updateViewMatrix(){
         viewMatrix = new Matrix4f().lookAt(new Vector3f(this.getPosition()), new Vector3f((Vector3f) this.getAttribute("targetPoint").getData()), new Vector3f(0, 1, 0));
     }
 

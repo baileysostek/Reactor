@@ -47,8 +47,8 @@ public class SpriteBinder extends Engine {
     }
 
     public Sprite load(String image){
-        if(sprites.containsKey(image)){
-            return sprites.get(image);
+        if(spriteNames.containsKey(image)){
+            return sprites.get(spriteNames.get(image));
         }else{
             String path = new File("").getAbsolutePath() + "\\resources\\textures\\" + image;
             File imageFile = new File(path);
@@ -402,6 +402,10 @@ public class SpriteBinder extends Engine {
             return -1;
         }
         return this.aoDefault.getTextureID();
+    }
+
+    public Sprite copySprite(int albedoID) {
+        return new Sprite( this.sprites.get(albedoID));
     }
 
 //    public void addExternallyGeneratedSprite(int id, Sprite sprite){

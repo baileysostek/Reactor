@@ -459,7 +459,23 @@ public class Entity implements Transformable, Serializable<Entity> {
     }
 
     public final void setParent(Entity parent){
+
+        //Check to make sure that we are not already parented to a child
+        if(this.parent != null){
+            if(this.parent.equals(parent)){
+                //We are setting the parent to our current parent, this is redundant and results in a noop
+                return;
+            }
+        }
+
+        //If we have a parent, lets unlink
+        if(this.parent != null){
+            EntityManager.getInstance().unlink(this.parent, this);
+        }
+        //Link to new parent
         EntityManager.getInstance().link(parent, this);
+
+        //Set our parent to this new parent.
         this.parent = parent;
     }
 

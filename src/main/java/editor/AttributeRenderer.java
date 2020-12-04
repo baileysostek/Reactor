@@ -59,7 +59,10 @@ public class AttributeRenderer{
                         data.set(index, tmp.getData());
                         index++;
                     }
-                    System.out.println("Update:"+attribute.setData(data));
+                    //Render an add button
+                    if(ImGui.button("Add", ImGui.getColumnWidth(), 32)){
+                        attribute.getOnAdd().callback(attribute);
+                    }
                 }else{
                     Collection<?> data = (Collection<?>)attribute.getData();
                     ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), lookupHeight(attribute));

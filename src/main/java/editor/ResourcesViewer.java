@@ -39,6 +39,10 @@ public class ResourcesViewer extends UIComponet {
     private final int FOLDER_CLOSE;
     private final int FOLDER_OPEN;
 
+    //Callback actions that can be hooked into through EDITOR.
+    private LinkedList<Callback> onTryPlaceInWorld = new LinkedList<>();
+    private LinkedList<Callback> onPlaceInWorld    = new LinkedList<>();
+
     public ResourcesViewer(){
 
         FOLDER_CLOSE = SpriteBinder.getInstance().loadSVG("engine/svg/folder.svg"     , 1, 1, 96f);
@@ -72,8 +76,11 @@ public class ResourcesViewer extends UIComponet {
                 //If we have been dragging a file
                 if(isDraggingFile()) {
                     if(action == GLFW.GLFW_RELEASE) {
-                        //Raycast for pos
-                        //TODO maybe change?
+                        //Template Entity to be built out
+                        Entity newEntity = new Entity();
+
+                        //Pos in world
+                        //TODO take closest Point, POS or EPOS to CAM
                         Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
 
                         if(pos == null){
@@ -86,19 +93,15 @@ public class ResourcesViewer extends UIComponet {
                                     //If the file is a TEK file
                                     if(draggedFile.getRelativePath().contains("/models/")) {
                                         String filename = draggedFile.getRelativePath().replace("/models/", "");
-                                        Entity newEntity = new Entity();
                                         newEntity.setModel(ModelManager.getInstance().loadModel(filename).getFirst());
                                         newEntity.setPosition(pos);
                                         newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
                                         newEntity.addAttribute(new Attribute<String>("name", filename));
                                         newEntity.addAttribute(new Attribute<Boolean>("autoScale", false));
-                                        EntityManager.getInstance().addEntity(newEntity);
                                         break;
                                     }else{
-                                        Entity newEntity = new Entity(draggedFile.getRelativePath());
                                         newEntity.addAttribute(new Attribute<Boolean>("autoScale", false));
                                         newEntity.setPosition(pos);
-                                        EntityManager.getInstance().addEntity(newEntity);
                                         break;
                                     }
                                 }
@@ -111,19 +114,16 @@ public class ResourcesViewer extends UIComponet {
                                         hits.getFirst().setTexture(newSprite);
                                     } else {
                                         //We hit nothing
-                                        Entity newEntity = new Entity();
                                         newEntity.setModel(ModelManager.getInstance().loadModel("quad.tek").getFirst());
                                         newEntity.setTexture(newSprite);
                                         newEntity.setPosition(pos);
                                         newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
                                         newEntity.addAttribute(new Attribute<String>("name", filename));
-                                        EntityManager.getInstance().addEntity(newEntity);
                                     }
                                     break;
                                 }
                                 default: {
                                     String filename = draggedFile.getRelativePath().replace("/models/", "");
-                                    Entity newEntity = new Entity();
                                     LinkedList<Model> models = ModelManager.getInstance().loadModel(filename);
                                     if(models.size() >= 2) {
                                         for (Model model : models) {
@@ -139,10 +139,26 @@ public class ResourcesViewer extends UIComponet {
                                     newEntity.setPosition(pos);
                                     newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
                                     newEntity.addAttribute(new Attribute<String>("name", filename));
-                                    EntityManager.getInstance().addEntity(newEntity);
                                     break;
                                 }
                             }
+
+                            //Raycast for hit entities.
+                            LinkedList<Entity> hitEntities = EntityManager.getInstance().getHitEntities(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()));
+                            for(Callback c : onTryPlaceInWorld){
+                                //First param is the list of hit entities.
+                                //We pass the object that we are trying to add as the second param
+                                Object result = c.callback(newEntity, hitEntities);
+                                if(result instanceof Boolean){
+                                    boolean shouldBreak = (boolean)result;
+                                    if(shouldBreak){
+                                        return null;
+                                    }
+                                }
+                            }
+
+                            //Add to world
+                            EntityManager.getInstance().addEntity(newEntity);
                         }
                     }
                 }
@@ -243,9 +259,10 @@ public class ResourcesViewer extends UIComponet {
         return this.IS_DRAGGING_FILE;
     }
 
-//    public boolean getSelectedFile() {
-//
-//    }
+    //Callback registries
+    public void onTryPlaceInWorld(Callback c){
+        this.onTryPlaceInWorld.addLast(c);
+    }
 
     public FileObject getDraggedFile() {
         return this.draggedFile;
