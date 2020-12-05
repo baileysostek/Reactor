@@ -6,6 +6,8 @@ import entity.component.*;
 import entity.interfaces.Transformable;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
+import material.Material;
+import material.MaterialManager;
 import models.AABB;
 import models.Model;
 import models.ModelManager;
@@ -68,6 +70,9 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.addAttribute("Material",  new Attribute<Integer> ("metallicID"   , SpriteBinder.getInstance().getDefaultMetallicMap()));
         this.addAttribute("Material",  new Attribute<Integer> ("roughnessID"  , SpriteBinder.getInstance().getDefaultRoughnessMap()));
         this.addAttribute("Material",  new Attribute<Integer> ("aoID"         , SpriteBinder.getInstance().getDefaultAmbientOcclusionMap()));
+        LinkedList<Material> materials = new LinkedList<>();
+//        materials.add(new Material());
+        this.addAttribute("Material",  new Attribute<LinkedList<Material>> ("materials"    , materials));
         this.addAttribute("2D",        new Attribute<Integer> ("zIndex"       , 0));
         this.addAttribute("2D",        new Attribute<Boolean> ("autoScale"    , false));
         this.addAttribute("Title",     new Attribute<String>  ("name"         , "Undefined"));
@@ -644,6 +649,29 @@ public class Entity implements Transformable, Serializable<Entity> {
 //    public Collection<Attribute> getAttributesOfCategory(String category) {
 //        return this.categories.get(category);
 //    }
+
+    public void addMaterial(Material material){
+        if(this.hasAttribute("materials")){
+            ((LinkedList<Material>)this.getAttribute("materials").getData()).addLast(material);
+        }
+    }
+
+    public void setMaterial(Material material){
+        if(this.hasAttribute("materials")){
+            LinkedList<Material> materials = ((LinkedList<Material>)this.getAttribute("materials").getData());
+            materials.clear();
+            materials.add(material);
+        }
+    }
+
+    public Material getMaterial(){
+        LinkedList<Material> materials = ((LinkedList<Material>)this.getAttribute("materials").getData());
+        if(materials.size() > 0){
+            return materials.getFirst();
+        }else{
+            return MaterialManager.getInstance().getDefaultMaterial();
+        }
+    }
 
     public void setAttribute(Attribute attribute) {
         if(this.hasAttribute(attribute.getName())){

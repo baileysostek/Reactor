@@ -12,6 +12,8 @@ import graphics.sprite.SpriteBinder;
 import lighting.DirectionalLight;
 import lighting.Light;
 import lighting.LightingManager;
+import material.Material;
+import material.MaterialManager;
 import math.MatrixUtils;
 import models.AABB;
 import models.Joint;
@@ -206,34 +208,36 @@ public class Renderer extends Engine {
                     loads++;
                 }
 
+                Material material = entity.getMaterial();
+
                 if (lastTexture != entity.getTextureID()) {
                     GL46.glActiveTexture(GL46.GL_TEXTURE0);
-                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, entity.getTextureID());
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, material.getAlbedoID());
                     GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "textureID"), 0);
                     lastTexture = entity.getTextureID();
                 }
 
                 if(entity.hasAttribute("normalID")){
                     GL46.glActiveTexture(GL46.GL_TEXTURE0 + 1);
-                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("normalID").getData());
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) material.getNormalID());
                     GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "normalID"), 1);
                 }
 
                 if(entity.hasAttribute("metallicID")){
                     GL46.glActiveTexture(GL46.GL_TEXTURE0 + 2);
-                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("metallicID").getData());
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) material.getMetallicID());
                     GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "metallicID"), 2);
                 }
 
                 if(entity.hasAttribute("roughnessID")){
                     GL46.glActiveTexture(GL46.GL_TEXTURE0 + 3);
-                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("roughnessID").getData());
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) material.getRoughnessID());
                     GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "roughnessID"), 3);
                 }
 
                 if(entity.hasAttribute("aoID")){
                     GL46.glActiveTexture(GL46.GL_TEXTURE0 + 4);
-                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("aoID").getData());
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) material.getAmbientOcclusionID());
                     GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "aoID"), 4);
                 }
 
@@ -875,31 +879,33 @@ public class Renderer extends Engine {
 //                StopwatchManager.getInstance().getTimer("uploadUniforms").lapStart();
             ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
 
+            Material material = entity.getMaterial();
+
             GL46.glActiveTexture(GL46.GL_TEXTURE0);
-            GL46.glBindTexture(GL46.GL_TEXTURE_2D, entity.getTextureID());
+            GL46.glBindTexture(GL46.GL_TEXTURE_2D, material.getAlbedoID());
             GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "textureID"), 0);
 
             if(entity.hasAttribute("normalID")){
                 GL46.glActiveTexture(GL46.GL_TEXTURE0 + 1);
-                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("normalID").getData());
+                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) material.getNormalID());
                 GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "normalID"), 1);
             }
 
             if(entity.hasAttribute("metallicID")){
                 GL46.glActiveTexture(GL46.GL_TEXTURE0 + 2);
-                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("metallicID").getData());
+                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) material.getMetallicID());
                 GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "metallicID"), 2);
             }
 
             if(entity.hasAttribute("roughnessID")){
                 GL46.glActiveTexture(GL46.GL_TEXTURE0 + 3);
-                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("roughnessID").getData());
+                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) material.getRoughnessID());
                 GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "roughnessID"), 3);
             }
 
             if(entity.hasAttribute("aoID")){
                 GL46.glActiveTexture(GL46.GL_TEXTURE0 + 4);
-                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) entity.getAttribute("aoID").getData());
+                GL46.glBindTexture(GL46.GL_TEXTURE_2D, (Integer) material.getAmbientOcclusionID());
                 GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "aoID"), 4);
             }
 

@@ -22,6 +22,7 @@ import lighting.DirectionalLight;
 import lighting.LightingManager;
 import lighting.PointLight;
 import logging.LogManager;
+import material.MaterialManager;
 import models.AABB;
 import models.Model;
 import models.ModelManager;
@@ -181,6 +182,7 @@ public class FraudTek {
                 LogManager.initialize();
                 ModelManager.initialize();
                 CameraManager.initialize();
+                MaterialManager.initialize();
                 ParticleManager.initialize();
                 EntityManager.initialize();
                 SceneManager.initialize();
