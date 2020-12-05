@@ -75,6 +75,10 @@ public class EntityEditor extends UIComponet {
     private LinkedList<Callback> onActionStart     = new LinkedList<>();
     private LinkedList<Callback> onActionStop      = new LinkedList<>();
 
+    //Settings
+    private Vector3f moveToNearest   = new Vector3f(1);
+    private Vector3f rotateToNearest = new Vector3f(5);
+    private Vector3f scaleToNearest  = new Vector3f(0.1f);
 
 
     //Editor resources
@@ -253,7 +257,7 @@ public class EntityEditor extends UIComponet {
                                     hits = new Vector3f(0, 0, 1);
                                 }
                             }else {
-                                hits.x = 1;
+                                hits.z = 1;
                             }
 
                             //TODO this may be needed for other casts, its only used in XYZ pos now, so just do the check once in here. May need to be added to the X and Y checks later if other Tools use distanceToCam var.
@@ -324,10 +328,11 @@ public class EntityEditor extends UIComponet {
 
                                 //Snap to snap res
                                 if(Keyboard.getInstance().isKeyPressed(Keyboard.SHIFT_LEFT)){
-                                    deltaPos = deltaPos.round(new Vector3f(1));
+                                    deltaPos = deltaPos.round(moveToNearest);
                                 }
 
                                 if(pos != null) {
+                                    //TODO add delta from select.
                                     for(Entity e : selectedEntities.keySet()){
                                         e.setPosition(deltaPos.x , e.getPositionSelf().y() , e.getPositionSelf().z());
                                     }
@@ -343,6 +348,10 @@ public class EntityEditor extends UIComponet {
                                 //Raycast to plane
                                 Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(planeNormal));
 
+                                if(pos == null){
+                                    break;
+                                }
+
                                 if(this.initialRotationPoint == null){
                                     this.initialRotationPoint = new Vector3f(pos);
                                 }
@@ -356,20 +365,7 @@ public class EntityEditor extends UIComponet {
                                 float biggestDimension = VectorUtils.maxComponent(new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]));
                                 Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(1, 0, 0));
                                 Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(1, 0, 0));
-
-                                float offset = (float) Math.toDegrees(angle);
-
-                                if(Keyboard.getInstance().isKeyPressed(Keyboard.EIGHT)){
-                                    offset = 45;
-                                }
-
-                                if(Keyboard.getInstance().isKeyPressed(Keyboard.NINE)){
-                                    offset = 90;
-                                }
-
                                 Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 45f, new Vector3f(1, 0, 0));
-
-                                System.out.println(Math.toDegrees(offsetAngle));
 
                                 Vector3f rot = entity.getRotation();
 
@@ -387,17 +383,137 @@ public class EntityEditor extends UIComponet {
                         break;
                     }
                     case MOVE_Y: {
-                        Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(CameraManager.getInstance().getActiveCamera().getLookingDirection()).mul(-1));
-                        if(pos != null) {
-                            entity.setPosition(entity.getPositionSelf().x() , pos.y + delta.y , entity.getPositionSelf().z());
+                        switch(toolType){
+                            case TRANSLATE:{
+                                //Raycast to plane
+                                Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(CameraManager.getInstance().getActiveCamera().getLookingDirection()).mul(-1));
+
+                                if(pos == null){
+                                    break;
+                                }
+
+                                Vector3f deltaPos = new Vector3f(pos).add(delta);
+
+                                //Snap to snap res
+                                if(Keyboard.getInstance().isKeyPressed(Keyboard.SHIFT_LEFT)){
+                                    deltaPos = deltaPos.round(moveToNearest);
+                                }
+
+                                if(pos != null) {
+                                    for(Entity e : selectedEntities.keySet()){
+                                        e.setPosition(e.getPositionSelf().x() , deltaPos.y , e.getPositionSelf().z());
+                                    }
+                                }
+                                break;
+                            }
+                            case ROTATE:{
+                                Quaternionf rotation = new Matrix4f(entity.getTransform()).getNormalizedRotation(new Quaternionf());
+
+                                Vector4f roty = new Vector4f(0, 1, 0, 1).mul(new Matrix4f().identity().rotate(rotation));
+                                Vector3f planeNormal = new Vector3f(roty.x, roty.y, roty.z);
+
+                                //Raycast to plane
+                                Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(planeNormal));
+
+                                if(pos == null){
+                                    break;
+                                }
+
+                                if(this.initialRotationPoint == null){
+                                    this.initialRotationPoint = new Vector3f(pos);
+                                }
+
+                                Renderer.getInstance().drawLine(new Vector3f(planeNormal).add(entity.getPosition()), entity.getPosition(), new Vector3f(0, 1, 0));
+
+                                float angle = new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).angleSigned(new Vector3f(pos).sub(entity.getPosition()), planeNormal);
+                                float offsetAngle = new Vector3f(0, 0, 1).angleSigned(new Vector3f(this.initialRotationPoint).sub(entity.getPosition()), planeNormal);
+
+                                //Draw arch
+                                float biggestDimension = VectorUtils.maxComponent(new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]));
+                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 1, 0));
+                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 1, 0));
+                                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 33f, new Vector3f(0, 1, 0));
+
+                                Vector3f rot = entity.getRotation();
+
+                                rot.y = (float) Math.toDegrees(angle);
+
+                                this.entity.setRotation(rot);
+
+                                break;
+                            }
+                            case SCALE:{
+                                break;
+                            }
+
                         }
                         break;
                     }
                     case MOVE_Z: {
                         //Raycast to plane
-                        Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 1, 0));
-                        if (pos != null) {
-                            entity.setPosition(entity.getPositionSelf().x() , entity.getPositionSelf().y() , pos.z);
+                        switch(toolType){
+                            case TRANSLATE:{
+                                //Raycast to plane
+                                Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(1, 0, 0));
+
+                                if(pos == null){
+                                    break;
+                                }
+
+                                Vector3f deltaPos = new Vector3f(pos).add(new Vector3f(delta).mul(1, 1, 0));
+
+                                //Snap to snap res
+                                if(Keyboard.getInstance().isKeyPressed(Keyboard.SHIFT_LEFT)){
+                                    deltaPos = deltaPos.round(moveToNearest);
+                                }
+
+                                if(pos != null) {
+                                    for(Entity e : selectedEntities.keySet()){
+                                        e.setPosition(e.getPositionSelf().x() , e.getPositionSelf().y() , deltaPos.z);
+                                    }
+                                }
+                                break;
+                            }
+                            case ROTATE:{
+                                Quaternionf rotation = new Matrix4f(entity.getTransform()).getNormalizedRotation(new Quaternionf());
+
+                                Vector4f rotz = new Vector4f(0, 0, 1, 1).mul(new Matrix4f().identity().rotate(rotation));
+                                Vector3f planeNormal = new Vector3f(rotz.x, rotz.y, rotz.z);
+
+                                //Raycast to plane
+                                Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(planeNormal));
+
+                                if(pos == null){
+                                    break;
+                                }
+
+                                if(this.initialRotationPoint == null){
+                                    this.initialRotationPoint = new Vector3f(pos);
+                                }
+
+                                Renderer.getInstance().drawLine(new Vector3f(planeNormal).add(entity.getPosition()), entity.getPosition(), new Vector3f(0, 0, 1));
+
+                                float angle = new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).angleSigned(new Vector3f(pos).sub(entity.getPosition()), planeNormal);
+                                float offsetAngle = new Vector3f(0, 0, 1).angleSigned(new Vector3f(this.initialRotationPoint).sub(entity.getPosition()), planeNormal);
+
+                                //Draw arch
+                                float biggestDimension = VectorUtils.maxComponent(new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]));
+                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 0, 1));
+                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 0, 1));
+                                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 33f, new Vector3f(0, 0, 1));
+
+                                Vector3f rot = entity.getRotation();
+
+                                rot.z = (float) Math.toDegrees(angle);
+
+                                this.entity.setRotation(rot);
+
+                                break;
+                            }
+                            case SCALE:{
+                                break;
+                            }
+
                         }
                         break;
                     }

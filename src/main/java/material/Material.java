@@ -1,6 +1,7 @@
 package material;
 
 import com.google.gson.JsonObject;
+import graphics.renderer.Renderer;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import serialization.Serializable;
@@ -44,6 +45,10 @@ public class Material implements Serializable<Material> {
         ambientOcclusionID = SpriteBinder.getInstance().getDefaultAmbientOcclusionMap();
         normalID = SpriteBinder.getInstance().getDefaultNormalMap();
         roughnessID = SpriteBinder.getInstance().getDefaultRoughnessMap();
+
+        textureID = MaterialManager.getInstance().generatePreview(this);
+
+        System.out.println("Material texture:" + textureID  );
     }
 
     public Material newInstance(){
@@ -76,5 +81,25 @@ public class Material implements Serializable<Material> {
     public Material deserialize(JsonObject data) {
 
         return this;
+    }
+
+    public int getAlbedoID() {
+        return albedoID;
+    }
+
+    public int getMetallicID() {
+        return metallicID;
+    }
+
+    public int getAmbientOcclusionID() {
+        return ambientOcclusionID;
+    }
+
+    public int getNormalID() {
+        return normalID;
+    }
+
+    public int getRoughnessID() {
+        return roughnessID;
     }
 }
