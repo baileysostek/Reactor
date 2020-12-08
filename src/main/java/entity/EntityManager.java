@@ -238,7 +238,10 @@ public class EntityManager {
 
                     //Now do the remove
                     this.entities.remove(e);
-                    this.typedEntities.get(e.getClass()).remove(e);
+                    //If we have a registered type for this entity
+                    if(this.typedEntities.containsKey(e.getClass())){
+                        this.typedEntities.get(e.getClass()).remove(e);
+                    }
                     e.onRemove();
                     //TODO refactor maybe?
                     e.cleanup();

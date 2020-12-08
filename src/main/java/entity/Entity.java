@@ -22,21 +22,23 @@ import java.util.LinkedList;
 
 public class Entity implements Transformable, Serializable<Entity> {
 
+    //Entity Transform in world.
     private Matrix4f transform = new Matrix4f().identity();
 
-    //Model data for this entity
-    private Model model;
-
+    //Parent entity
     private Entity parent = null;
-
-//    private EnumEntityType type = EnumEntityType.UNKNOWN;
-
 
     //Attributes are the raw pieces of data that make up an entity;
     private HashMap<String, Attribute> attributes    = new HashMap<>();
 //    private HashMap<String, LinkedList<Attribute>> categories = new HashMap<>();
     //Components reference and set attributes on an entity, the Attributes are a state and the components are how they are modified.
     private LinkedList<Component> components = new LinkedList<Component>();
+
+    //Model data for this entity
+    private Model model;
+
+    //Materials
+    private Attribute<LinkedList<Material>> materials = new  Attribute<LinkedList<Material>>("materials", new LinkedList<>());
 
     //New entity template.
     public Entity(){
@@ -65,14 +67,13 @@ public class Entity implements Transformable, Serializable<Entity> {
         this.addAttribute("Transform", new Attribute<Vector3f>("position"     , new Vector3f(0f)));
         this.addAttribute("Transform", new Attribute<Vector3f>("rotation"     , new Vector3f(0f)).setType(EnumAttributeType.SLIDERS));
         this.addAttribute("Transform", new Attribute<Vector3f>("scale"        , new Vector3f(1f)));
-        this.addAttribute("Material",  new Attribute<Integer> ("textureID"    , SpriteBinder.getInstance().getFileNotFoundID()));
-        this.addAttribute("Material",  new Attribute<Integer> ("normalID"     , SpriteBinder.getInstance().getDefaultNormalMap()));
-        this.addAttribute("Material",  new Attribute<Integer> ("metallicID"   , SpriteBinder.getInstance().getDefaultMetallicMap()));
-        this.addAttribute("Material",  new Attribute<Integer> ("roughnessID"  , SpriteBinder.getInstance().getDefaultRoughnessMap()));
-        this.addAttribute("Material",  new Attribute<Integer> ("aoID"         , SpriteBinder.getInstance().getDefaultAmbientOcclusionMap()));
-        LinkedList<Material> materials = new LinkedList<>();
+//        this.addAttribute("Material",  new Attribute<Integer> ("textureID"    , SpriteBinder.getInstance().getFileNotFoundID()));
+//        this.addAttribute("Material",  new Attribute<Integer> ("normalID"     , SpriteBinder.getInstance().getDefaultNormalMap()));
+//        this.addAttribute("Material",  new Attribute<Integer> ("metallicID"   , SpriteBinder.getInstance().getDefaultMetallicMap()));
+//        this.addAttribute("Material",  new Attribute<Integer> ("roughnessID"  , SpriteBinder.getInstance().getDefaultRoughnessMap()));
+//        this.addAttribute("Material",  new Attribute<Integer> ("aoID"         , SpriteBinder.getInstance().getDefaultAmbientOcclusionMap()));
 //        materials.add(new Material());
-        this.addAttribute("Material",  new Attribute<LinkedList<Material>> ("materials"    , materials));
+        this.addAttribute("Material",  materials);
         this.addAttribute("2D",        new Attribute<Integer> ("zIndex"       , 0));
         this.addAttribute("2D",        new Attribute<Boolean> ("autoScale"    , false));
         this.addAttribute("Title",     new Attribute<String>  ("name"         , "Undefined"));
@@ -85,16 +86,6 @@ public class Entity implements Transformable, Serializable<Entity> {
 
 //        this.addComponent(new ComponentShader());
 
-    }
-
-    //Type
-//    public final EnumEntityType getType() {
-//        return this.type;
-//    }
-
-    public final Entity setType(EnumEntityType type) {
-//        this.type = type;
-        return this;
     }
 
     //Adds an attribute to this entity, and creates a subscriber that iterates through all components which may subscribe to this event.
@@ -189,10 +180,6 @@ public class Entity implements Transformable, Serializable<Entity> {
                 }
             }
         }
-    }
-
-    public void onAttributeChanged(Attribute observed){
-        return;
     }
 
     public final boolean hasAttribute(String attributeName) {
@@ -301,16 +288,27 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Get transform
     public final Matrix4f getTransform(){
+
+        //Null check
+        if(transform == null){
+            transform = new Matrix4f();
+        }
+
+        //Reset our transform
         transform = transform.identity();
 
+        //Check to see if we have a parent.
         if(this.parent != null){
+            //Recursive function to determine absolute transofrm as a sum of parent transforms.
             Matrix4f parent = new Matrix4f(this.parent.getTransform());
             transform.mul(parent, transform);
         }
 
+        //Get local rotation
         Object rotationData = this.attributes.get("rotation").getData();
         Quaternionf orientation = new Quaternionf();
 
+        //apply rotation from Vector or Quaternion.
         if(rotationData instanceof Vector3f) {
             Vector3f rotation = (Vector3f) rotationData;
             Quaternionf qPitch = new Quaternionf().fromAxisAngleDeg(new Vector3f(1, 0, 0), rotation.x);
@@ -324,10 +322,12 @@ public class Entity implements Transformable, Serializable<Entity> {
             orientation = (Quaternionf) rotationData;
         }
 
+        //apply local translation rotation and scale, in that order.
         transform.translate((Vector3f) this.attributes.get("position").getData(), transform);
         transform.rotate(orientation);
         transform.scale(getScale(), transform);
 
+        //Return transform.
         return this.transform;
     }
 
@@ -346,7 +346,7 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Update Method
     public void update(double delta){
-
+        return;
     }
 
     public final Vector3f[] getAABB(){
@@ -382,10 +382,10 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Texture
     public final int getTextureID(){
-        if(!this.hasAttribute("textureID")){
-            this.addAttribute(new Attribute("textureID", -1));
+        if(this.materials.getData().size() > 0){
+            return this.materials.getData().getFirst().getAlbedoID();
         }
-        return (int) this.getAttribute("textureID").getData();
+        return SpriteBinder.getInstance().getFileNotFoundID();
     }
 
     //TODO unify setTexture
@@ -401,26 +401,6 @@ public class Entity implements Transformable, Serializable<Entity> {
     public final void setTexture(Sprite sprite){
         setTextureHelper("textureID", sprite);
         autoScaleSprite();
-    }
-
-    public final void setNormal(Sprite sprite){
-        setTextureHelper("normalID", sprite);
-    }
-
-    public final void setMetallic(Sprite sprite){
-        setTextureHelper("metallicID", sprite);
-    }
-
-    public final void setMetallic(int spriteId){
-        this.getAttribute("metallicID").setData(spriteId);
-    }
-
-    public final void setRoughness(Sprite sprite){
-        setTextureHelper("roughnessID", sprite);
-    }
-
-    public final void setAO(Sprite sprite){
-        setTextureHelper("aoID", sprite);
     }
 
     private final void setTextureHelper(String attributeName, Sprite sprite){
@@ -642,27 +622,28 @@ public class Entity implements Transformable, Serializable<Entity> {
         return this.parent != null;
     }
 
-//    public Collection<String> getAttributeCategories() {
-//        return this.categories.keySet();
+    public void addMaterial(Material material){
+        materials.getData().addLast(material);
+    }
+
+    public Material setMaterial(Material material){
+        materials.getData().clear();
+        materials.getData().add(material);
+        return material;
+    }
+
+//    public Material setMaterial(Sprite sprite){
+//        materials.getData().clear();
+//        materials.getData().add(MaterialManager.getInstance().getMaterial(sprite.getTextureID()));
+//        return material;
 //    }
 //
-//    public Collection<Attribute> getAttributesOfCategory(String category) {
-//        return this.categories.get(category);
+//    public Material setMaterial(int textureID){
+//        materials.getData().clear();
+//        Material material = new Material(textureID);
+//        materials.getData().add(material);
+//        return material;
 //    }
-
-    public void addMaterial(Material material){
-        if(this.hasAttribute("materials")){
-            ((LinkedList<Material>)this.getAttribute("materials").getData()).addLast(material);
-        }
-    }
-
-    public void setMaterial(Material material){
-        if(this.hasAttribute("materials")){
-            LinkedList<Material> materials = ((LinkedList<Material>)this.getAttribute("materials").getData());
-            materials.clear();
-            materials.add(material);
-        }
-    }
 
     public Material getMaterial(){
         LinkedList<Material> materials = ((LinkedList<Material>)this.getAttribute("materials").getData());

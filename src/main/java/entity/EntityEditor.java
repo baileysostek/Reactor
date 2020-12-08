@@ -432,7 +432,7 @@ public class EntityEditor extends UIComponet {
                                 float biggestDimension = VectorUtils.maxComponent(new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]));
                                 Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 1, 0));
                                 Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 1, 0));
-                                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 33f, new Vector3f(0, 1, 0));
+                                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 90f, new Vector3f(0, 1, 0));
 
                                 Vector3f rot = entity.getRotation();
 
@@ -500,7 +500,7 @@ public class EntityEditor extends UIComponet {
                                 float biggestDimension = VectorUtils.maxComponent(new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]));
                                 Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 0, 1));
                                 Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 0, 1));
-                                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 33f, new Vector3f(0, 0, 1));
+                                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 150f, new Vector3f(0, 0, 1));
 
                                 Vector3f rot = entity.getRotation();
 

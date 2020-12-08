@@ -17,6 +17,7 @@ import input.MousePicker;
 import lighting.DirectionalLight;
 import lighting.PointLight;
 import material.Material;
+import material.MaterialManager;
 import models.Model;
 import models.ModelManager;
 import org.joml.Vector3f;
@@ -58,7 +59,7 @@ public class EntityRegistry extends UIComponet {
         Entity whiteCube = new Entity();
         whiteCube.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
         whiteCube.getAttribute("name").setData("Cube");
-        whiteCube.setMaterial(new Material(SpriteBinder.getInstance().load("water.png")));
+        whiteCube.setMaterial(MaterialManager.getInstance().generateMaterial(SpriteBinder.getInstance().load("water.png").getTextureID()));
         addEntity("Geometry", whiteCube);
 
         Entity sphere = new Entity();

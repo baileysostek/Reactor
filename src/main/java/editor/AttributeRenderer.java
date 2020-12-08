@@ -7,6 +7,7 @@ import imgui.enums.ImGuiCol;
 import imgui.enums.ImGuiColorEditFlags;
 import imgui.enums.ImGuiInputTextFlags;
 import imgui.enums.ImGuiSelectableFlags;
+import material.Material;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -19,6 +20,8 @@ import java.util.LinkedList;
 public class AttributeRenderer{
 
     private static boolean initialized = false;
+
+    private static final int MATERIAL_PREVIEW_SIZE = 64;
 
     public static void renderAttributes(Collection<Attribute> attributes){
         //Loop through each attribute in the list.
@@ -59,10 +62,10 @@ public class AttributeRenderer{
                         data.set(index, tmp.getData());
                         index++;
                     }
-                    //Render an add button
-                    if(ImGui.button("Add", ImGui.getColumnWidth(), 32)){
-                        attribute.getOnAdd().callback(attribute);
-                    }
+//                    //Render an add button
+//                    if(ImGui.button("Add", ImGui.getColumnWidth(), 32)){
+//                        attribute.getOnAdd().callback(attribute);
+//                    }
                 }else{
                     Collection<?> data = (Collection<?>)attribute.getData();
                     ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), lookupHeight(attribute));
@@ -103,6 +106,11 @@ public class AttributeRenderer{
                 ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
                 renderEnum(attribute, ((Enum) attribute.getData()).getDeclaringClass());
                 ImGui.popItemWidth();
+                return;
+            }
+            if(attribute.getData() instanceof Material){
+                Material material = (Material) attribute.getData();
+                ImGui.image(material.getMaterialPreview(), ImGui.getColumnWidth(), ImGui.getColumnWidth(), 0, 1, 1, 0);
                 return;
             }
             if (attribute.getData() instanceof Vector4f) {
@@ -319,6 +327,13 @@ public class AttributeRenderer{
 
         if(attribute.getData() instanceof Collection){
             modifier = (float)((Collection) attribute.getData()).size();
+            if(modifier > 0){
+                //Could be an issue with large arrays.
+                Object element = ((Collection) attribute.getData()).toArray()[0];
+                if(element instanceof Material){
+                    return ImGui.getColumnWidth() * modifier;
+                }
+            }
         }
 
         switch (attribute.getType()){
