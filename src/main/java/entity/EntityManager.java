@@ -345,6 +345,13 @@ public class EntityManager {
         return new LinkedList<>();
     }
 
+    public boolean entityHasChildren(Entity parent){
+        if(this.links.containsKey(parent)){
+            return this.links.get(parent).size() > 0;
+        }
+        return false;
+    }
+
     public int getSize(){
         return this.entities.size();
     }

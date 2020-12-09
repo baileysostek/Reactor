@@ -31,7 +31,7 @@ public class Material implements Serializable<Material> {
 
     //String representing the shader that is used to render this material.
     private Attribute<String> shaderName;
-    private Shader shader;
+    private int shaderID;
     private boolean shaderValid = false;
 
     protected Material(){
@@ -59,6 +59,7 @@ public class Material implements Serializable<Material> {
         this.ambientOcclusionID = copy.ambientOcclusionID;
         this.normalID = copy.normalID;
         this.roughnessID = copy.roughnessID;
+        redrawPreview();
     }
 
     public Material setName(String name){
@@ -67,6 +68,9 @@ public class Material implements Serializable<Material> {
     }
 
     private void initialize(){
+        //Get the default shader
+        shaderID = ShaderManager.getInstance().getDefaultShader();
+
         //Get references for all of our textures.
         albedoID            = SpriteBinder.getInstance().getFileNotFoundID();
         metallicID          = SpriteBinder.getInstance().getDefaultMetallicMap();
@@ -92,8 +96,12 @@ public class Material implements Serializable<Material> {
         shaderName.subscribe(new Callback() {
             @Override
             public Object callback(Object... objects) {
-                System.out.println("Objects:" + objects);
-//                shader = ShaderManager.getInstance().hasShader();
+                if(shaderName.getData().equals("default")) {
+                    shaderID = ShaderManager.getInstance().getDefaultShader();
+                }else{
+                    shaderID = ShaderManager.getInstance().loadShader(shaderName.getData());
+                }
+                redrawPreview();
                 return null;
             }
         });
@@ -120,6 +128,12 @@ public class Material implements Serializable<Material> {
 
     public void setShader(String name){
         this.shaderName.setData(name);
+    }
+
+    public void setShader(int id){
+        shaderID = id;
+        //NOTE setData no update is unsafe and breaks the observer pattern. No subscribers will be notified by this change.
+        this.shaderName.setDataNoUpdate(ShaderManager.getInstance().lookupName(id));
     }
 
     public Material newInstance(){
@@ -202,4 +216,7 @@ public class Material implements Serializable<Material> {
     }
 
 
+    public int getShaderID() {
+        return shaderID;
+    }
 }

@@ -590,8 +590,6 @@ public class EntityEditor extends UIComponet {
         //This has broken attributes, set from parent
         JsonObject serialziedEntity = target.serialize();
 
-        System.out.println(serialziedEntity);
-
         //Deserialize the entity
         if(target.getClass().equals(Entity.class)) {
             //Regula old entity
@@ -660,7 +658,7 @@ public class EntityEditor extends UIComponet {
             //Direct draw AABB
             for(Entity e: selectedEntities.keySet()){
                 e.renderInEditor(true);
-                Renderer.getInstance().drawAABB(e);
+                Renderer.getInstance().drawAABB(e, new Vector3f(1));
             }
 
             Vector3f YELLOW = new Vector3f(1, 1, 0);
@@ -857,6 +855,9 @@ public class EntityEditor extends UIComponet {
         this.onActionStop.addLast(callback);
     }
 
+    public Collection<Entity> getSelected() {
+        return this.selectedEntities.keySet();
+    }
 }
 
 enum EditorAxis {

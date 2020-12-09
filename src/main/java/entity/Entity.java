@@ -37,9 +37,6 @@ public class Entity implements Transformable, Serializable<Entity> {
     //Model data for this entity
     private Model model;
 
-    //Materials
-    private Attribute<LinkedList<Material>> materials = new  Attribute<LinkedList<Material>>("materials", new LinkedList<>());
-
     //New entity template.
     public Entity(){
         //Every entity has some default attributes
@@ -73,7 +70,7 @@ public class Entity implements Transformable, Serializable<Entity> {
 //        this.addAttribute("Material",  new Attribute<Integer> ("roughnessID"  , SpriteBinder.getInstance().getDefaultRoughnessMap()));
 //        this.addAttribute("Material",  new Attribute<Integer> ("aoID"         , SpriteBinder.getInstance().getDefaultAmbientOcclusionMap()));
 //        materials.add(new Material());
-        this.addAttribute("Material",  materials);
+        this.addAttribute("Material",  new  Attribute<LinkedList<Material>>("materials", new LinkedList<>()));
         this.addAttribute("2D",        new Attribute<Integer> ("zIndex"       , 0));
         this.addAttribute("2D",        new Attribute<Boolean> ("autoScale"    , false));
         this.addAttribute("Title",     new Attribute<String>  ("name"         , "Undefined"));
@@ -367,8 +364,30 @@ public class Entity implements Transformable, Serializable<Entity> {
 
             return new Vector3f[]{tmp.getMIN(), tmp.getMAX()};
         }else{
-            AABB defaultShape = new AABB(new Vector3f(-1).mul(this.getScale()), new Vector3f(1).mul(this.getScale()));
-            return new Vector3f[]{defaultShape.getMIN().add(this.getPosition()), defaultShape.getMAX().add(this.getPosition())};
+            //This entity does not have an AABB, check if it has children.
+            if(EntityManager.getInstance().entityHasChildren(this)) {
+                //Create our out AABB
+                AABB tmp = new AABB();
+
+                //This entity has children, lets recursive get their AABB
+                LinkedList<Entity> childBuffer = EntityManager.getInstance().getEntitiesChildren(this);
+                //For each child
+                for(Entity child : childBuffer){
+                    //get their AABB
+                    Vector3f[] childAABB = child.getAABB();
+
+                    //Recalculate TMP based of each child's bounds.
+                    tmp.recalculateFromPoint(childAABB[0]);
+                    tmp.recalculateFromPoint(childAABB[1]);
+                }
+
+                //Return our AABB
+                return new Vector3f[]{tmp.getMIN(), tmp.getMAX()};
+            }else{
+                //No children, just return default shape.
+                AABB defaultShape = new AABB(new Vector3f(-1).mul(this.getScale()), new Vector3f(1).mul(this.getScale()));
+                return new Vector3f[]{defaultShape.getMIN().add(this.getPosition()), defaultShape.getMAX().add(this.getPosition())};
+            }
         }
     }
 
@@ -382,10 +401,17 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Texture
     public final int getTextureID(){
-        if(this.materials.getData().size() > 0){
-            return this.materials.getData().getFirst().getAlbedoID();
+        if(this.getMaterials().getData().size() > 0){
+            return this.getMaterials().getData().getFirst().getAlbedoID();
         }
         return SpriteBinder.getInstance().getFileNotFoundID();
+    }
+
+    public Attribute<LinkedList<Material>> getMaterials(){
+        if(this.hasAttribute("materials")){
+            return (Attribute<LinkedList<Material>>) this.getAttribute("materials");
+        }
+        return null;
     }
 
     //TODO unify setTexture
@@ -623,12 +649,14 @@ public class Entity implements Transformable, Serializable<Entity> {
     }
 
     public void addMaterial(Material material){
-        materials.getData().addLast(material);
+        this.getMaterials().getData().addLast(material);
     }
 
     public Material setMaterial(Material material){
-        materials.getData().clear();
-        materials.getData().add(material);
+        LinkedList<Material> materials = this.getMaterials().getData();
+        materials.clear();
+        materials.add(material);
+        this.getMaterials().setData(materials);
         return material;
     }
 

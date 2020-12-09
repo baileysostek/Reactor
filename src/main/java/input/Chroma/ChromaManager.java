@@ -113,6 +113,9 @@ public class ChromaManager extends Engine implements Runnable{
         keyMapping.put(GLFW.GLFW_KEY_RIGHT_SHIFT, KeyboardKeys.RZKEY_RSHIFT);
         keyMapping.put(GLFW.GLFW_KEY_LEFT_CONTROL, KeyboardKeys.RZKEY_LCTRL);
         keyMapping.put(GLFW.GLFW_KEY_RIGHT_CONTROL, KeyboardKeys.RZKEY_RCTRL);
+        keyMapping.put(GLFW.GLFW_KEY_CAPS_LOCK, KeyboardKeys.RZKEY_CAPSLOCK);
+        keyMapping.put(GLFW.GLFW_KEY_TAB, KeyboardKeys.RZKEY_TAB);
+//        keyMapping.put(GLFW.GLFW_KEY_GRAVE_ACCENT, KeyboardKeys.);
 
         //Function Keys
         keyMapping.put(GLFW.GLFW_KEY_F1, KeyboardKeys.RZKEY_F1);

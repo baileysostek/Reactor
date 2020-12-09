@@ -31,6 +31,7 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL46;
 import particle.ParticleManager;
 import particle.ParticleSystem;
@@ -171,6 +172,10 @@ public class FraudTek {
                 WINDOW_POINTER = WINDOW.getWindow_p();
 
                 //We have a GL context after this call
+                //init
+                // Set the clear color
+                GL.createCapabilities();
+
                 SpriteManager.initialize();
 
                 //We can load shaders

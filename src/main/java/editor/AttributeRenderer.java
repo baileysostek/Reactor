@@ -1,16 +1,18 @@
 package editor;
 
+import entity.Entity;
+import entity.EntityEditor;
 import entity.component.Attribute;
 import entity.component.EnumAttributeType;
 import imgui.*;
-import imgui.enums.ImGuiCol;
-import imgui.enums.ImGuiColorEditFlags;
-import imgui.enums.ImGuiInputTextFlags;
-import imgui.enums.ImGuiSelectableFlags;
+import imgui.enums.*;
+import input.MousePicker;
 import material.Material;
+import material.MaterialManager;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.glfw.GLFW;
 import util.Callback;
 
 import java.util.Collection;
@@ -110,7 +112,34 @@ public class AttributeRenderer{
             }
             if(attribute.getData() instanceof Material){
                 Material material = (Material) attribute.getData();
-                ImGui.image(material.getMaterialPreview(), ImGui.getColumnWidth(), ImGui.getColumnWidth(), 0, 1, 1, 0);
+
+                ImGui.imageButton(material.getMaterialPreview(), ImGui.getColumnWidth(), ImGui.getColumnWidth(), 0, 1, 1, 0);
+
+                boolean open = false;
+                if (ImGui.isItemHovered() && ImGui.getIO().getMouseDown(1)) {
+                    open = true;
+                }
+
+                if (open) {
+                    ImGui.openPopup("OpenPopup");
+                }
+
+                ImGui.setNextWindowSize(ImGui.getColumnWidth(), ImGui.getColumnWidth());
+                ImVec2 vec2 = new ImVec2();
+                ImGui.getWindowPos(vec2);
+                ImGui.setNextWindowPos(vec2.x, vec2.y);
+                if (ImGui.beginPopup("OpenPopup")) {
+                    for(Material mat : MaterialManager.getInstance().getAllMaterials()){
+                        if(ImGui.imageButton(mat.getMaterialPreview(), 128, 128, 0, 1, 1, 0)){
+                            for(Entity e : Editor.getInstance().getSelectedEntities()){
+                                e.setMaterial(mat);
+                            }
+                            ImGui.closeCurrentPopup();
+                        }
+                    }
+                    ImGui.endPopup();
+                }
+
                 return;
             }
             if (attribute.getData() instanceof Vector4f) {

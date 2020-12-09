@@ -27,6 +27,7 @@ import util.Callback;
 import util.Debouncer;
 import util.StringUtils;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -604,4 +605,7 @@ public class Editor {
         this.entityEditor.addOnActionStop(c);
     }
 
+    public Collection<Entity> getSelectedEntities() {
+        return entityEditor.getSelected();
+    }
 }
