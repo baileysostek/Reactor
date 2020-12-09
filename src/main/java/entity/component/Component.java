@@ -5,7 +5,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import entity.Entity;
 import serialization.Serializable;
-import util.Callback;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -111,7 +110,7 @@ public abstract class Component implements Serializable<Component>{
 //            public Object callback(Object... objects) {
 //                LinkedList<Component> closedList = new LinkedList<Component>();
 //                closedList.add(Component.this);
-////                parent.getAttribute(attribute.getName()).setDataUnsafe(attribute.getData());
+////                parent.getAttribute(attribute.getName()).setDataNoUpdate(attribute.getData());
 //                //Sync with all other attributes
 ////                parent.syncAttributes(attribute, closedList);
 //                return null;
@@ -126,7 +125,7 @@ public abstract class Component implements Serializable<Component>{
     public void setAttribute(Attribute observed, LinkedList<Component> components) {
         if(hasAttribute(observed.getName())){
             //Set data unsafe because we dont want this to recurse
-            this.attributes.get(observed.getName()).setDataUnsafe(observed.getData());
+            this.attributes.get(observed.getName()).setDataNoUpdate(observed.getData());
             this.attributes.get(observed.getName()).setData(observed.getData());
             if(!components.contains(this)){
                 components.add(this);

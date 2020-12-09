@@ -1,6 +1,7 @@
 package graphics.renderer;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import imgui.ImGui;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
@@ -26,6 +27,8 @@ public class ShaderManager {
 
     private GLTarget target = GLTarget.GL40;
 
+    //The default shader
+    private static int defaultShader;
 
     private ShaderManager(){
 
@@ -292,6 +295,7 @@ public class ShaderManager {
     public static void initialize(){
         if(shaderManager == null){
             shaderManager = new ShaderManager();
+            defaultShader = shaderManager.loadShader("main");
         }
     }
 
@@ -306,5 +310,16 @@ public class ShaderManager {
     //Singleton Design Pattern
     public static ShaderManager getInstance(){
         return shaderManager;
+    }
+
+    public int getDefaultShader() {
+        return defaultShader;
+    }
+
+    public String lookupName(int id) {
+        if(shaderInstances_prime.containsKey(id)){
+            return shaderInstances_prime.get(id);
+        }
+        return "unknown";
     }
 }

@@ -14,6 +14,7 @@ import util.Callback;
 
 import java.lang.Math;
 import java.nio.DoubleBuffer;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class MousePicker extends Engine {
@@ -39,6 +40,8 @@ public class MousePicker extends Engine {
 
     public LinkedList<Callback> callbacks = new LinkedList<Callback>();
 
+    private HashMap<Integer, Boolean> mouseKeys = new HashMap<>();
+
     public boolean mousePressed = false;
 
     private MousePicker(){
@@ -48,11 +51,13 @@ public class MousePicker extends Engine {
             //Check for Intersection
             if(!ImGui.getIO().getWantCaptureMouse()){
                 if(action == GLFW.GLFW_PRESS){
+                    mouseKeys.put(button, true);
                     if(button == GLFW.GLFW_MOUSE_BUTTON_1){
                         mousePressed = true;
                     }
                 }
                 if(action == GLFW.GLFW_RELEASE){
+                    mouseKeys.put(button, false);
                     if(button == GLFW.GLFW_MOUSE_BUTTON_1){
                         mousePressed = false;
                     }
@@ -62,6 +67,10 @@ public class MousePicker extends Engine {
                         c.callback(button, action);
                     }
                 }
+
+                //Only for debug.
+                System.out.println("Mouse Pressed:" + button);
+
             }
         });
     }
@@ -224,6 +233,13 @@ public class MousePicker extends Engine {
         if(this.lockMouse){
             this.lockMouse = false;
         }
+    }
+
+    public boolean isMousePressed(int mouseKey){
+        if(mouseKeys.containsKey(mouseKey)){
+            return mouseKeys.get(mouseKey);
+        }
+        return false;
     }
 
     //TODO move to intersection class

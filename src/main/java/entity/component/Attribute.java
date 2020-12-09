@@ -72,7 +72,7 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
         return false;
     }
 
-    protected void setDataUnsafe(T newData){
+    public void setDataNoUpdate(T newData){
         this.attribute = newData;
     }
 

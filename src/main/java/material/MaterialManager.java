@@ -2,9 +2,11 @@ package material;
 
 import entity.Entity;
 import graphics.renderer.Renderer;
+import graphics.renderer.ShaderManager;
 import graphics.sprite.Sprite;
 import models.ModelManager;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 public class MaterialManager {
@@ -48,6 +50,14 @@ public class MaterialManager {
         return material;
     }
 
+    public Material generateMaterial(Material mat){
+        Material material = new Material(mat);
+
+        addMaterial(material);
+
+        return material;
+    }
+
     public Material getMaterial(String name){
         if(materials.containsKey(name)){
             return materials.get(name);
@@ -80,7 +90,7 @@ public class MaterialManager {
         }
 
         //Ask the renderer to draw our material nicely.
-        return Renderer.getInstance().generateRenderedPreview(preview);
+        return Renderer.getInstance().generateRenderedPreview(material.getShaderID(), preview);
     }
 
     public void updateMapping(String oldName, String newName){
@@ -110,7 +120,7 @@ public class MaterialManager {
             materialManager = new MaterialManager();
             defaultMaterial = new Material();
 
-            defaultMaterial.setShader("pbr");
+            defaultMaterial.setShader(ShaderManager.getInstance().getDefaultShader());
 
         }
     }
@@ -119,4 +129,7 @@ public class MaterialManager {
         return materialManager;
     }
 
+    public Collection<Material> getAllMaterials() {
+        return materials.values();
+    }
 }

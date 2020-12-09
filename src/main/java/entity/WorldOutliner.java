@@ -8,6 +8,7 @@ import imgui.ImString;
 import imgui.enums.ImGuiDragDropFlags;
 import imgui.enums.ImGuiSelectableFlags;
 import imgui.enums.ImGuiTreeNodeFlags;
+import org.joml.Vector3f;
 
 import java.util.LinkedList;
 
@@ -109,6 +110,7 @@ public class WorldOutliner extends UIComponet {
                         System.out.println("Drop:" + dragged.getName());
                         LinkedList<Entity> grandChildren = EntityManager.getInstance().getEntitiesChildren(dragged);
                         if(!grandChildren.contains(parent)) {
+                            dragged.translate(new Vector3f(parent.getPosition()).mul(-1));
                             dragged.setParent(parent);
                         }
                         dragged = null;

@@ -59,12 +59,16 @@ public class EntityRegistry extends UIComponet {
         Entity whiteCube = new Entity();
         whiteCube.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
         whiteCube.getAttribute("name").setData("Cube");
-        whiteCube.setMaterial(MaterialManager.getInstance().generateMaterial(SpriteBinder.getInstance().load("water.png").getTextureID()));
+        whiteCube.setMaterial(MaterialManager.getInstance().generateMaterial(SpriteBinder.getInstance().load("white.png").getTextureID()));
         addEntity("Geometry", whiteCube);
 
         Entity sphere = new Entity();
         sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
         sphere.getAttribute("name").setData("Sphere");
+        Material mat = MaterialManager.getInstance().generateMaterial(MaterialManager.getInstance().getDefaultMaterial());
+        mat.setShader("normal");
+        sphere.setMaterial(mat);
+
         addEntity("Geometry", sphere);
 
         Entity quad = new Entity();
@@ -72,11 +76,14 @@ public class EntityRegistry extends UIComponet {
         quad.getAttribute("name").setData("Quad");
         addEntity("Geometry", quad);
 
-//        Entity dragon = new Entity();
-//        dragon.setModel(ModelManager.getInstance().loadModel("dragon.obj").getFirst());
-//        dragon.getAttribute("name").setData("Dragon");
-//        addEntity("Geometry", dragon);
-//
+        Entity dragon = new Entity();
+        dragon.setModel(ModelManager.getInstance().loadModel("dragon.obj").getFirst());
+        dragon.getAttribute("name").setData("Dragon");
+        Material mat2 = MaterialManager.getInstance().generateMaterial(MaterialManager.getInstance().getDefaultMaterial());
+        mat2.setShader("main");
+        dragon.setMaterial(mat2);
+        addEntity("Geometry", dragon);
+
 //        Entity garden = new Entity();
 //        garden.setModel(ModelManager.getInstance().loadModel("garden.obj").getFirst());
 //        garden.getAttribute("name").setData("Garden");

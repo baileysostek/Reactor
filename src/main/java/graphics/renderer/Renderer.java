@@ -50,8 +50,6 @@ public class Renderer extends Engine {
 
     private static int RENDER_TYPE = GL46.GL_TRIANGLES;
 
-    private int shaderID = 0;
-
     private FBO frameBuffer;
 
     private static float[] projectionMatrix = new float[16];
@@ -71,17 +69,12 @@ public class Renderer extends Engine {
     private DirectionalLight light;
 
     private Renderer(int width, int height){
-        //init
-        // Set the clear color
-        GL.createCapabilities();
-
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 //            GLUtil.setupDebugMessageCallback();
         }
 
-        shaderID = ShaderManager.getInstance().loadShader("main");
-        ShaderManager.getInstance().useShader(shaderID);
+        ShaderManager.getInstance().useShader(ShaderManager.getInstance().getDefaultShader());
 
         WIDTH = width;
         HEIGHT = height;
@@ -89,8 +82,6 @@ public class Renderer extends Engine {
         //Overall GL config
         GL46.glEnable(GL46.GL_CULL_FACE);
         GL46.glCullFace(GL46.GL_BACK);
-
-        System.out.println("Shader ID:"+shaderID);
 
         frameBuffer = new FBO(width, height);
 
@@ -108,7 +99,7 @@ public class Renderer extends Engine {
         if(renderer == null){
             renderer = new Renderer(width, height);
             projectionMatrix = MatrixUtils.createProjectionMatrix();
-            GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(renderer.shaderID, "perspective"),false, projectionMatrix);
+            GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(ShaderManager.getInstance().getDefaultShader(), "perspective"),false, projectionMatrix);
             renderer.resize(width, height);
         }
     }
@@ -142,7 +133,6 @@ public class Renderer extends Engine {
         }
 
         GL46.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-        ShaderManager.getInstance().useShader(shaderID);
         GL46.glEnable(GL46.GL_DEPTH_TEST);
         GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT);
 
@@ -151,40 +141,7 @@ public class Renderer extends Engine {
 
 //        StopwatchManager.getInstance().getTimer("uploadUniforms").start();
 
-        ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", CameraManager.getInstance().getActiveCamera().getPosition());
-        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
-        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
 
-        //Pos -2 is skybox
-        GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
-        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, skyboxRenderer.getTextureID());
-        GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
-
-        //-1 is closest probe to entity
-
-        //Compute per frame, refactor to per entity eventually
-        LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
-        for(int directionalLightIndex = 0; directionalLightIndex < Math.min(shadowCasters.size(), GL46.glGetInteger(GL46.GL_MAX_TEXTURE_IMAGE_UNITS) - TEXTURE_OFFSET); directionalLightIndex++){
-            DirectionalLight shadowCaster = shadowCasters.get(directionalLightIndex);
-            //Bind and allocate this texture unit.
-            int textureUnit = TEXTURE_OFFSET + directionalLightIndex;
-            GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
-            int textureIndex = shadowCaster.getDepthBuffer().getDepthTexture();
-            GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
-
-            //Upload our uniforms.
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getPosition()).normalize());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getColor());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", directionalLightIndex, shadowCaster.getLightspaceTransform());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", directionalLightIndex, textureUnit);
-        }
-
-        int index = 0;
-        for(Light l : LightingManager.getInstance().getClosestPointLights(4, new Vector3f(0))){
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightPosition", index, l.getPosition());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightColor", index, l.getColor());
-            index++;
-        }
 //        StopwatchManager.getInstance().getTimer("uploadUniforms").stop();
 
 //        StopwatchManager.getInstance().getTimer("sort").start();
@@ -194,19 +151,52 @@ public class Renderer extends Engine {
 
         //Render all entities
 //        StopwatchManager.getInstance().getTimer("drawCalls").start();
-        int lastID = -1;
-        int lastTexture = -1;
-        int loads = 0;
+//        int lastID = -1;
+//        int lastTexture = -1;
+//        int loads = 0;
         for(Entity entity : EntityManager.getInstance().getEntities()){
             if(entity.getModel() != null) {
-//                StopwatchManager.getInstance().getTimer("uploadUniforms").lapStart();
-                if (entity.getModel().getID() != lastID) {
-                    ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
 
-                    drawBones(entity);
+                int shaderID = entity.getMaterial().getShaderID();
 
-                    loads++;
+                ShaderManager.getInstance().useShader(shaderID);
+
+                ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", CameraManager.getInstance().getActiveCamera().getPosition());
+                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
+                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
+
+                //Pos -2 is skybox
+                GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
+                GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, skyboxRenderer.getTextureID());
+                GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
+
+                //-1 is closest probe to entity
+
+                //Compute per frame, refactor to per entity eventually
+                LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
+                for(int directionalLightIndex = 0; directionalLightIndex < Math.min(shadowCasters.size(), GL46.glGetInteger(GL46.GL_MAX_TEXTURE_IMAGE_UNITS) - TEXTURE_OFFSET); directionalLightIndex++){
+                    DirectionalLight shadowCaster = shadowCasters.get(directionalLightIndex);
+                    //Bind and allocate this texture unit.
+                    int textureUnit = TEXTURE_OFFSET + directionalLightIndex;
+                    GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
+                    int textureIndex = shadowCaster.getDepthBuffer().getDepthTexture();
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
+
+                    //Upload our uniforms.
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getPosition()).normalize());
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getColor());
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", directionalLightIndex, shadowCaster.getLightspaceTransform());
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", directionalLightIndex, textureUnit);
                 }
+
+                int index = 0;
+                for(Light l : LightingManager.getInstance().getClosestPointLights(4, new Vector3f(0))){
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightPosition", index, l.getPosition());
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightColor", index, l.getColor());
+                    index++;
+                }
+
+                ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
 
                 Material material = entity.getMaterial();
 
@@ -243,7 +233,6 @@ public class Renderer extends Engine {
                 GL46.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
 //                StopwatchManager.getInstance().getTimer("drawCalls").stop();
 
-                lastID = entity.getModel().getID();
             }
         }
     }
@@ -290,36 +279,44 @@ public class Renderer extends Engine {
 
 
     public void drawAABB(AABB aabb) {
-        this.drawAABB(aabb.getMIN(), aabb.getMAX());
+        this.drawAABB(aabb.getMIN(), aabb.getMAX(), new Vector3f(1));
     }
 
-    public void drawAABB(Entity entity) {
+    public void drawAABB(Entity entity, Vector3f color) {
         org.joml.Vector3f[] aabb = entity.getAABB();
         org.joml.Vector3f min = aabb[0];
         org.joml.Vector3f max = aabb[1];
 
-        this.drawAABB(min, max);
+        //Check for children.
+        if(EntityManager.getInstance().entityHasChildren(entity)) {
+            LinkedList<Entity> children = EntityManager.getInstance().getEntitiesChildren(entity);
+            for (Entity child : children) {
+                this.drawAABB(child, new Vector3f(0, 1, 1));
+            }
+        }
+
+        this.drawAABB(min, max, color);
     }
 
-    public void drawAABB(Vector3f min, Vector3f max) {
+    public void drawAABB(Vector3f min, Vector3f max, Vector3f color) {
         //6 draw calls...
-        this.drawLine(min, new Vector3f(max.x, min.y, min.z) , new Vector3f(1));
-        this.drawLine(min, new Vector3f(min.x, max.y, min.z) , new Vector3f(1));
-        this.drawLine(min, new Vector3f(min.x, min.y, max.z) , new Vector3f(1));
+        this.drawLine(min, new Vector3f(max.x, min.y, min.z) , color);
+        this.drawLine(min, new Vector3f(min.x, max.y, min.z) , color);
+        this.drawLine(min, new Vector3f(min.x, min.y, max.z) , color);
 
-        this.drawLine(max, new Vector3f(min.x, max.y, max.z) , new Vector3f(1));
-        this.drawLine(max, new Vector3f(max.x, min.y, max.z) , new Vector3f(1));
-        this.drawLine(max, new Vector3f(max.x, max.y, min.z) , new Vector3f(1));
+        this.drawLine(max, new Vector3f(min.x, max.y, max.z) , color);
+        this.drawLine(max, new Vector3f(max.x, min.y, max.z) , color);
+        this.drawLine(max, new Vector3f(max.x, max.y, min.z) , color);
 
         //Bottom
-        this.drawLine(new Vector3f(min.x, max.y, min.z), new Vector3f(max.x, max.y, min.z) , new Vector3f(1));
-        this.drawLine(new Vector3f(min.x, max.y, min.z), new Vector3f(min.x, max.y, max.z) , new Vector3f(1));
+        this.drawLine(new Vector3f(min.x, max.y, min.z), new Vector3f(max.x, max.y, min.z) , color);
+        this.drawLine(new Vector3f(min.x, max.y, min.z), new Vector3f(min.x, max.y, max.z) , color);
 
-        this.drawLine(new Vector3f(max.x, min.y, max.z), new Vector3f(max.x, min.y, min.z) , new Vector3f(1));
-        this.drawLine(new Vector3f(max.x, min.y, max.z), new Vector3f(min.x, min.y, max.z) , new Vector3f(1));
+        this.drawLine(new Vector3f(max.x, min.y, max.z), new Vector3f(max.x, min.y, min.z) , color);
+        this.drawLine(new Vector3f(max.x, min.y, max.z), new Vector3f(min.x, min.y, max.z) , color);
 
-        this.drawLine(new Vector3f(max.x, min.y, min.z), new Vector3f(max.x, max.y, min.z) , new Vector3f(1));
-        this.drawLine(new Vector3f(min.x, min.y, max.z), new Vector3f(min.x, max.y, max.z) , new Vector3f(1));
+        this.drawLine(new Vector3f(max.x, min.y, min.z), new Vector3f(max.x, max.y, min.z) , color);
+        this.drawLine(new Vector3f(min.x, min.y, max.z), new Vector3f(min.x, max.y, max.z) , color);
 
     }
 
@@ -790,7 +787,7 @@ public class Renderer extends Engine {
 
     //Preview with default shader
     public int generateRenderedPreview(Entity entity) {
-        return generateRenderedPreview(shaderID, entity);
+        return generateRenderedPreview(entity.getMaterial().getShaderID(), entity);
     }
 
     public int generateRenderedPreview(int shaderID, Entity entity) {
