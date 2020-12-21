@@ -1,11 +1,8 @@
 package graphics.renderer;
 
-import camera.Camera;
-import camera.Camera3D;
 import camera.CameraManager;
 import camera.DynamicCamera;
 import engine.Engine;
-import engine.FraudTek;
 import entity.Entity;
 import entity.EntityManager;
 import graphics.sprite.SpriteBinder;
@@ -13,20 +10,17 @@ import lighting.DirectionalLight;
 import lighting.Light;
 import lighting.LightingManager;
 import material.Material;
-import material.MaterialManager;
 import math.MatrixUtils;
 import models.AABB;
 import models.Joint;
-import models.Model;
 import org.joml.*;
-import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.GL46;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
+import skybox.SkyboxManager;
 import util.Callback;
-import util.StopwatchManager;
 
 import java.lang.Math;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -35,8 +29,11 @@ import static org.lwjgl.glfw.GLFW.*;
 public class Renderer extends Engine {
 
     private static Renderer renderer;
+
     private static int WIDTH;
     private static int HEIGHT;
+    //Screen size as vec2
+    private static Vector2f screenSize = new Vector2f();
 
     public static final float FOV = 70;
     public static final float NEAR_PLANE = 0.1f;
@@ -53,9 +50,6 @@ public class Renderer extends Engine {
     private FBO frameBuffer;
 
     private static float[] projectionMatrix = new float[16];
-
-    //Skybox
-    private SkyboxRenderer skyboxRenderer;
 
     //ImmediateDraw
     private ImmediateDrawLine     drawerLine;
@@ -79,13 +73,14 @@ public class Renderer extends Engine {
         WIDTH = width;
         HEIGHT = height;
 
+        screenSize.x = WIDTH;
+        screenSize.y = HEIGHT;
+
         //Overall GL config
         GL46.glEnable(GL46.GL_CULL_FACE);
         GL46.glCullFace(GL46.GL_BACK);
 
         frameBuffer = new FBO(width, height);
-
-        skyboxRenderer = new SkyboxRenderer();
 
         drawerLine = new ImmediateDrawLine();
         drawTriangle = new ImmediateDrawTriangle();
@@ -113,6 +108,10 @@ public class Renderer extends Engine {
 
         WIDTH = width;
         HEIGHT = height;
+
+        screenSize.x = WIDTH;
+        screenSize.y = HEIGHT;
+
         aspectRatio = (float)width / (float)height;
         frameBuffer.resize(width, height);
 
@@ -127,17 +126,19 @@ public class Renderer extends Engine {
     }
 
     public void render(){
-        //TODO Cleanup, This code should live in the Shader class, and also the  PRojection Matrix should be beuffered on resize and not regenerated per frame, only regen on screen resize.
+        //TODO Cleanup, This code should live in the Shader class, and also the  Projection Matrix should be buffered on resize and not regenerated per frame, only regen on screen resize.
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             frameBuffer.bindFrameBuffer();
+        }else{
+            GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
         }
 
-        GL46.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+        GL46.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
         GL46.glEnable(GL46.GL_DEPTH_TEST);
         GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT);
 
-        GL46.glEnable(GL46.GL_BLEND);
-        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
+//        GL46.glEnable(GL46.GL_BLEND);
+//        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
 
 //        StopwatchManager.getInstance().getTimer("uploadUniforms").start();
 
@@ -167,7 +168,7 @@ public class Renderer extends Engine {
 
                 //Pos -2 is skybox
                 GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
-                GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, skyboxRenderer.getTextureID());
+                GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, SkyboxManager.getInstance().getSkyboxTexture());
                 GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
 
                 //-1 is closest probe to entity
@@ -731,14 +732,17 @@ public class Renderer extends Engine {
 
     public void postpare(){
         //Render our Skybox
-        skyboxRenderer.render();
+        SkyboxManager.getInstance().render();
 
         //Render our lines!
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
-//            GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
+//            GL46.glDisable(GL11.GL_DEPTH_TEST);
             drawerLine.render();
+
+            GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
             drawTriangle.render();
             drawSprite.render();
+//            GL46.glEnable(GL11.GL_DEPTH_TEST);
             frameBuffer.unbindFrameBuffer();
         }
 
@@ -831,7 +835,7 @@ public class Renderer extends Engine {
 
         //Pos -2 is skybox
         GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
-        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, skyboxRenderer.getTextureID());
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, SkyboxManager.getInstance().getSkyboxTexture());
         GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
 
         light.setPosition(new Vector3f(max/2f, max, max));
@@ -890,7 +894,7 @@ public class Renderer extends Engine {
         }
 
         //Render our Skybox
-        skyboxRenderer.render();
+        SkyboxManager.getInstance().render();
 
         GL46.glDisableVertexAttribArray(0);
         GL46.glDisableVertexAttribArray(1);
@@ -911,7 +915,6 @@ public class Renderer extends Engine {
         GL46.glBindTexture(GL46.GL_TEXTURE_2D, material.getNormalID());
         GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "normalID"), 1);
 
-
         GL46.glActiveTexture(GL46.GL_TEXTURE0 + 2);
         GL46.glBindTexture(GL46.GL_TEXTURE_2D, material.getMetallicID());
         GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "metallicID"), 2);
@@ -923,5 +926,9 @@ public class Renderer extends Engine {
         GL46.glActiveTexture(GL46.GL_TEXTURE0 + 4);
         GL46.glBindTexture(GL46.GL_TEXTURE_2D, material.getAmbientOcclusionID());
         GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "aoID"), 4);
+    }
+
+    public Vector2f getScreenSize(){
+        return screenSize;
     }
 }

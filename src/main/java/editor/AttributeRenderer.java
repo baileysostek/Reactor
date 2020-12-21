@@ -2,6 +2,7 @@ package editor;
 
 import entity.Entity;
 import entity.EntityEditor;
+import entity.EntityManager;
 import entity.component.Attribute;
 import entity.component.EnumAttributeType;
 import imgui.*;
@@ -64,6 +65,7 @@ public class AttributeRenderer{
                         data.set(index, tmp.getData());
                         index++;
                     }
+                    attribute.setData(data);
 //                    //Render an add button
 //                    if(ImGui.button("Add", ImGui.getColumnWidth(), 32)){
 //                        attribute.getOnAdd().callback(attribute);
@@ -115,23 +117,37 @@ public class AttributeRenderer{
 
                 ImGui.imageButton(material.getMaterialPreview(), ImGui.getColumnWidth(), ImGui.getColumnWidth(), 0, 1, 1, 0);
 
-                boolean open = false;
+                boolean rightClick = false;
+                boolean leftClick  = false;
+                if (ImGui.isItemHovered() && ImGui.getIO().getMouseDown(0)) {
+                    leftClick = true;
+                }
+
                 if (ImGui.isItemHovered() && ImGui.getIO().getMouseDown(1)) {
-                    open = true;
+                    rightClick = true;
                 }
 
-                if (open) {
-                    ImGui.openPopup("OpenPopup");
+                String popupIDLeft  = Editor.getInstance().getNextID()+"";
+                String popupIDRight = Editor.getInstance().getNextID()+"";
+
+
+                if (leftClick) {
+                    ImGui.openPopup(popupIDLeft);
                 }
 
+                if (rightClick) {
+                    ImGui.openPopup(popupIDRight);
+                }
+
+                //POPUP for left click
                 ImGui.setNextWindowSize(ImGui.getColumnWidth(), ImGui.getColumnWidth());
                 ImVec2 vec2 = new ImVec2();
                 ImGui.getWindowPos(vec2);
                 ImGui.setNextWindowPos(vec2.x, vec2.y);
-                if (ImGui.beginPopup("OpenPopup")) {
-                    for(Material mat : MaterialManager.getInstance().getAllMaterials()){
-                        if(ImGui.imageButton(mat.getMaterialPreview(), 128, 128, 0, 1, 1, 0)){
-                            for(Entity e : Editor.getInstance().getSelectedEntities()){
+                if (ImGui.beginPopup(popupIDLeft)) {
+                    for (Material mat : MaterialManager.getInstance().getAllMaterials()) {
+                        if (ImGui.imageButton(mat.getMaterialPreview(), ImGui.getColumnWidth(), ImGui.getColumnWidth(), 0, 1, 1, 0)) {
+                            for (Entity e : Editor.getInstance().getSelectedEntities()) {
                                 e.setMaterial(mat);
                             }
                             ImGui.closeCurrentPopup();
@@ -140,16 +156,38 @@ public class AttributeRenderer{
                     ImGui.endPopup();
                 }
 
+                //Popup for right click
+                ImGui.setNextWindowSize(ImGui.getColumnWidth(), ImGui.getColumnWidth());
+                vec2 = new ImVec2();
+                ImGui.getWindowPos(vec2);
+                ImGui.setNextWindowPos(vec2.x, vec2.y);
+                if (ImGui.beginPopup(popupIDRight)) {
+                    if(ImGui.button("Edit Material", ImGui.getWindowWidth(), 32)){
+
+                    }
+                    if(ImGui.button("New Instance", ImGui.getWindowWidth(), 32)){
+                        Collection<Entity> entities = Editor.getInstance().getSelectedEntities();
+                        if(entities.size() > 0){
+                            Entity selected = (Entity) entities.toArray()[0];
+                            Material matCopy = MaterialManager.getInstance().generateMaterial(selected.getMaterial());
+                            selected.setMaterial(matCopy);
+                        }
+                    }
+                    ImGui.endPopup();
+                }
+
+
                 return;
             }
             if (attribute.getData() instanceof Vector4f) {
                 Vector4f data = (Vector4f) attribute.getData();
 
                 if(attribute.getType().equals(EnumAttributeType.COLOR)){
-                    float[] color = new float[]{data.x, data.y, data.z};
+                    float[] color = new float[]{data.x, data.y, data.z, data.w};
                     ImGui.pushID(Editor.getInstance().getNextID());
-                    ImGui.colorPicker3(attribute.getName(), color, ImGuiColorEditFlags.PickerHueWheel | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoSidePreview | ImGuiColorEditFlags.NoSmallPreview | ImGuiColorEditFlags.NoTooltip | ImGuiColorEditFlags.NoLabel);
-                    attribute.setData(new Vector3f(color[0], color[1], color[2]));
+                    if(ImGui.colorPicker4(attribute.getName(), color, ImGuiColorEditFlags.PickerHueWheel | ImGuiColorEditFlags.NoAlpha | ImGuiColorEditFlags.NoSidePreview | ImGuiColorEditFlags.NoSmallPreview | ImGuiColorEditFlags.NoTooltip | ImGuiColorEditFlags.NoLabel)){
+                        attribute.setData(new Vector4f(color[0], color[1], color[2], color[3]));
+                    }
                     ImGui.popID();
                 }else {
                     ImFloat x = new ImFloat(data.x);

@@ -144,7 +144,13 @@ public class SerializationHelper {
             if(object.getClass().isEnum()){
                 helperObject.addProperty("value", object.toString());
             }else{
-                helperObject.add("value", gson.toJsonTree(object));
+                try {
+                    helperObject.add("value", gson.toJsonTree(object));
+                }catch (IllegalArgumentException argument) {
+                    System.out.println("[Error] could not serialize member of object:" + object);
+                    argument.printStackTrace();
+                    return helperObject;
+                }
             }
             return helperObject;
         }

@@ -35,14 +35,17 @@ public class MousePicker extends Engine {
     private boolean lockMouse = false;
 
     //Mouse Buttons
-    public static final int MOUSE_LEFT  = GLFW.GLFW_MOUSE_BUTTON_LEFT;
-    public static final int MOUSE_RIGHT = GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+    public static final int MOUSE_LEFT   = GLFW.GLFW_MOUSE_BUTTON_LEFT;
+    public static final int MOUSE_RIGHT  = GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+    public static final int MOUSE_MIDDLE = GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
 
     public LinkedList<Callback> callbacks = new LinkedList<Callback>();
 
     private HashMap<Integer, Boolean> mouseKeys = new HashMap<>();
 
     public boolean mousePressed = false;
+
+    public float scrollDelta = 0;
 
     private MousePicker(){
         GLFW.glfwSetMouseButtonCallback(FraudTek.WINDOW_POINTER, (long window, int button, int action, int mods) -> {
@@ -117,6 +120,8 @@ public class MousePicker extends Engine {
         MouseY -= MouseOffsetY;
 
         resetOffset();
+
+
     }
 
     public Vector3f calculateMouseRay() {
@@ -242,6 +247,13 @@ public class MousePicker extends Engine {
         return false;
     }
 
+    /**
+     * @param pos Position the ray is cast from in 3D worldspace.
+     * @param dir Direction the ray is looking from the {pos} point into the world.
+     * @param planeOrigin The origin point for the plane that this ray is being cast towards.
+     * @param planeNormal The normal vector tangent to the surface of the plane.
+     * @return Vector3f representing the point in space that is hit.
+     */
     //TODO move to intersection class
     public static Vector3f rayHitsPlane(Vector3f pos, Vector3f dir, Vector3f planeOrigin, Vector3f planeNormal){
         //Invert the plane normal
@@ -275,7 +287,7 @@ public class MousePicker extends Engine {
         boolean hit = Intersectionf.intersectRayAab(pos, dir, aabbMin, aabbMax, result);
 
         if(hit){
-            return new Vector3f(dir).mul(new Vector3f(result.x, result.y, 1)).add(pos);
+            return new Vector3f(dir).mul(new Vector3f(result.x)).add(pos);
         }else{
             return null;
         }

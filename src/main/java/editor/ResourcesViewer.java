@@ -11,6 +11,8 @@ import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
 import imgui.enums.ImGuiTreeNodeFlags;
 import input.MousePicker;
+import material.Material;
+import material.MaterialManager;
 import models.Model;
 import models.ModelManager;
 import org.joml.Vector3f;
@@ -111,14 +113,17 @@ public class ResourcesViewer extends UIComponet {
                                     Sprite newSprite = SpriteBinder.getInstance().load(filename);
                                     if (hits.size() > 0) {
                                         //We hit an entity(s) get the closest entity to the camera.
-                                        hits.getFirst().setTexture(newSprite);
+                                        Material mat = MaterialManager.getInstance().generateMaterial(newSprite);
+                                        hits.getFirst().setMaterial(mat);
                                     } else {
                                         //We hit nothing
                                         newEntity.setModel(ModelManager.getInstance().loadModel("quad.tek").getFirst());
-                                        newEntity.setTexture(newSprite);
+                                        Material mat = MaterialManager.getInstance().generateMaterial(newSprite);
+                                        newEntity.setMaterial(mat);
                                         newEntity.setPosition(pos);
                                         newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
                                         newEntity.addAttribute(new Attribute<String>("name", filename));
+
                                     }
                                     break;
                                 }
@@ -130,6 +135,7 @@ public class ResourcesViewer extends UIComponet {
                                             Entity child = new Entity();
                                             child.setParent(newEntity);
                                             child.setModel(model);
+                                            child.setMaterial(MaterialManager.getInstance().getDefaultMaterial());
                                             EntityManager.getInstance().addEntity(child);
                                         }
                                     }else{
@@ -139,6 +145,7 @@ public class ResourcesViewer extends UIComponet {
                                     newEntity.setPosition(pos);
                                     newEntity.addAttribute(new Attribute<Integer>("zIndex", 1));
                                     newEntity.addAttribute(new Attribute<String>("name", filename));
+                                    newEntity.setMaterial(MaterialManager.getInstance().getDefaultMaterial());
                                     break;
                                 }
                             }

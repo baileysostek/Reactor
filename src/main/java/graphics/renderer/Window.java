@@ -90,7 +90,7 @@ public class Window {
     }
 
     //Taken from:https://gamedev.stackexchange.com/questions/105555/setting-window-icon-using-glfw-lwjgl-3
-    public void setWindowIcon(String path) throws Exception{
+    public void setWindowIcon(String path){
         IntBuffer w = memAllocInt(1);
         IntBuffer h = memAllocInt(1);
         IntBuffer comp = memAllocInt(1);
@@ -102,12 +102,13 @@ public class Window {
             try {
                 String stringPath = (StringUtils.getRelativePath() + path);
 
-                System.out.println("Path!"+stringPath);
+                System.out.println("Loading Icon for window:" + stringPath);
 
                 icon16 = ioResourceToByteBuffer(stringPath, 2048);
                 icon32 = ioResourceToByteBuffer(stringPath, 4096);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
+                return;
             }
 
             try ( GLFWImage.Buffer icons = GLFWImage.malloc(2) ) {

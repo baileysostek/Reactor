@@ -1,6 +1,7 @@
 package graphics.renderer;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import entity.component.Attribute;
 import imgui.ImGui;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -8,6 +9,7 @@ import org.lwjgl.opengl.GL46;
 import util.StringUtils;
 
 import java.nio.FloatBuffer;
+import java.util.Collection;
 import java.util.HashMap;
 
 public class ShaderManager {
@@ -169,6 +171,10 @@ public class ShaderManager {
 
         //Return the program ID, and store this shader's name hashed to its program id. That way we can skip loading in the future
         return programID;
+    }
+
+    public void loadAttributesIntoShader(Collection<Attribute> attributes){
+        
     }
 
     public boolean hasShader(String name){

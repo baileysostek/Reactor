@@ -39,6 +39,12 @@ public class EntityManager {
             return;
         }
 
+        //Make sure we haven't added this object already.
+        //The same entity cant exist in the list twice.
+        if(toAdd.contains(entity) || entities.contains(entity)){
+            return;
+        }
+
         //if not null, lock the array and add an entity, then unlock.
         lock.lock();
         try {
@@ -102,11 +108,11 @@ public class EntityManager {
     public void update(double delta){
         sync();
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.PRODUCTION)) {
-            for (Entity e : entities) {
+            for (Entity e : new LinkedList<>(entities)) {
                 e.selfUpdate(delta);
             }
         }else{
-            for (Entity e : entities) {
+            for (Entity e : new LinkedList<>(entities)) {
                 if(e.hasAttribute("updateInEditor")) {
                     if((boolean)e.getAttribute("updateInEditor").getData()) {
                         e.selfUpdate(delta);

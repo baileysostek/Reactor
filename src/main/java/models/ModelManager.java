@@ -81,9 +81,11 @@ public class ModelManager {
 //                                Assimp.aiProcess_GenSmoothNormals|
                                 Assimp.aiProcess_FlipUVs |
                                 Assimp.aiProcess_CalcTangentSpace |
+                                Assimp.aiProcess_GenNormals |
+                                Assimp.aiProcess_GenUVCoords |
 //                                Assimp.aiProcess_LimitBoneWeights |
-                                 Assimp.aiProcess_FixInfacingNormals |
-                                 Assimp.aiProcess_GenBoundingBoxes,
+                                Assimp.aiProcess_FixInfacingNormals |
+                                Assimp.aiProcess_GenBoundingBoxes,
                         null,
                         store
                 );
@@ -252,9 +254,11 @@ public class ModelManager {
             AIMesh mesh = AIMesh.create(scene.mMeshes().get(meshIndex));
 
             //Put our lists into buffers for this Model.
-            float[] vPositions = new float[mesh.mNumFaces() * 3 * 3];
-            float[] vNormals = new float[mesh.mNumFaces() * 3 * 3];
-            float[] vTextures = new float[mesh.mNumFaces() * 3 * 2];
+            float[] vPositions  = new float[mesh.mNumFaces() * 3 * 3];
+            float[] vNormals    = new float[mesh.mNumFaces() * 3 * 3];
+            float[] vTangents   = new float[mesh.mNumFaces() * 3 * 3];
+            float[] vBiTangents = new float[mesh.mNumFaces() * 3 * 3];
+            float[] vTextures   = new float[mesh.mNumFaces() * 3 * 2];
 
             int numBones = mesh.mNumBones();
             PointerBuffer aiBones = mesh.mBones();
@@ -267,9 +271,18 @@ public class ModelManager {
             //For each vertex, get all data we need
             for(int i = 0; i < mesh.mNumVertices(); i++){
                 //Get ref to vector
-                AIVector3D position = mesh.mVertices().get(i);
-                AIVector3D normal   = mesh.mNormals().get(i);
-                AIVector3D texture = null;
+                AIVector3D position  = mesh.mVertices().get(i);
+                AIVector3D normal    = mesh.mNormals().get(i);
+                AIVector3D tangent = null;
+                if(mesh.mTangents() != null){
+                    tangent = mesh.mTangents().get(i);
+                }
+                AIVector3D bitangent = null;
+                if(mesh.mBitangents() != null){
+                    tangent = mesh.mBitangents().get(i);
+                }
+
+                AIVector3D texture   = null;
                 if(mesh.mTextureCoords(0) != null) {
                     texture = mesh.mTextureCoords(0).get(i);
                 }
@@ -283,6 +296,26 @@ public class ModelManager {
                 vNormals[(i * 3) + 1] = normal.y();
                 vNormals[(i * 3) + 2] = normal.z();
 
+                if(tangent != null) {
+                    vTangents[(i * 3) + 0] = tangent.x();
+                    vTangents[(i * 3) + 1] = tangent.y();
+                    vTangents[(i * 3) + 2] = tangent.z();
+                }else{
+                    vTangents[(i * 3) + 0] = 0;
+                    vTangents[(i * 3) + 1] = 0;
+                    vTangents[(i * 3) + 2] = 0;
+                }
+
+                if(bitangent != null) {
+                    vBiTangents[(i * 3) + 0] = bitangent.x();
+                    vBiTangents[(i * 3) + 1] = bitangent.y();
+                    vBiTangents[(i * 3) + 2] = bitangent.z();
+                }else{
+                    vBiTangents[(i * 3) + 0] = 0;
+                    vBiTangents[(i * 3) + 1] = 0;
+                    vBiTangents[(i * 3) + 2] = 0;
+                }
+
                 if(texture != null) {
                     vTextures[(i * 2) + 0] = texture.x();
                     vTextures[(i * 2) + 1] = texture.y();
@@ -295,6 +328,8 @@ public class ModelManager {
             Handshake modelHandshake = new Handshake();
             modelHandshake.addAttributeList("vPosition", vPositions, EnumGLDatatype.VEC3);
             modelHandshake.addAttributeList("vNormal", vNormals, EnumGLDatatype.VEC3);
+            modelHandshake.addAttributeList("vTangent", vTangents, EnumGLDatatype.VEC3);
+            modelHandshake.addAttributeList("vBitangent", vBiTangents, EnumGLDatatype.VEC3);
             modelHandshake.addAttributeList("vColor", vNormals, EnumGLDatatype.VEC3);
             modelHandshake.addAttributeList("vTexture", vTextures, EnumGLDatatype.VEC2);
 

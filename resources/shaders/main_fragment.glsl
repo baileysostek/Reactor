@@ -19,6 +19,8 @@ in vec3 passCamPos;
 in vec3 passFragPos;
 in vec4 passPosLightSpace[maxLights];
 
+in mat3 passTBN;
+
 //Reflection normal.
 in vec3 passReflectNormal;
 
@@ -88,16 +90,20 @@ void main(void){
     vec3 viewDir = normalize((passCamPos * -1));
     vec3 viewDir2 = normalize((passCamPos * -1) - passFragPos);
 
+    //Recalculate the surface normal
+    vec4 normalTexture = 2.0 * texture(normalID, passCoords, -1.0) -1.0;
+    vec3 surfaceNormal = passTBN * normalize(normalTexture.xyz);
+
     vec3 totalDiffuse  = vec3(0);
     vec3 totalSpecular = vec3(0);
     //Directional lights
     for(int i = 0; i < maxLights; i++){
         vec3 lightDir      = normalize(sunAngle[i]);
-        vec3 reflectDir    = reflect(lightDir, passNormal);
+        vec3 reflectDir    = reflect(lightDir, surfaceNormal);
         vec3 halfwayDir    = normalize(lightDir + viewDir);
         vec3 halfwayDir2    = normalize(lightDir + viewDir2);
 
-        float diffuse  = clamp(dotProduct(passNormal, lightDir * -1), 0, 1);
+        float diffuse  = clamp(dotProduct(surfaceNormal, lightDir * -1), 0, 1);
         float specular = pow(clamp(dotProduct(viewDir, reflectDir), 0, 1), 32);
 
         float shadow = ShadowCalculation(i);    

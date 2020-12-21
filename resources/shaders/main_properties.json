@@ -5,6 +5,8 @@
     "Attributes": {
       "vPosition": "vec4",
       "vNormal": "vec3",
+      "vTangent": "vec3",
+      "vBitangent": "vec3",
       "vTexture": "vec2"
     },
     "Uniforms": {

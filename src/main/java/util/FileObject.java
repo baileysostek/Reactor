@@ -53,6 +53,7 @@ public class FileObject{
         }else{
 //            data = StringUtils.load(directory);
             relativePath = directory;
+            System.out.println(directory);
             fileExtension = directory.substring(directory.lastIndexOf("."), directory.length()).toLowerCase();
             name = directory.substring(directory.lastIndexOf("/", directory.length()));
         }

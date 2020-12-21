@@ -28,9 +28,18 @@ public class ChromaManager extends Engine implements Runnable{
     private static ConcurrentHashMap<Integer, KeyColorDuration> keyColorsAdd = new ConcurrentHashMap<>();
     private static HashMap<Integer, KeyColorDuration> keyColors = new HashMap<>();
 
+    private boolean isInitialized = false;
+
     private ChromaManager(){
-        chroma = JChroma.getInstance();
-        chroma.init();
+
+        try{
+            chroma = JChroma.getInstance();
+            chroma.init();
+        }catch(UnsatisfiedLinkError noLink){
+            isInitialized = false;
+            System.out.println("Error: No razor SDK found on this computer, there are probably no Razer devices attached.");
+            return;
+        }
 
         //Init chroma effect
         try {
@@ -135,6 +144,7 @@ public class ChromaManager extends Engine implements Runnable{
         thread = new Thread(this);
         thread.start();
 
+        isInitialized = true;
     }
 
     public static ChromaManager getInstance(){
@@ -145,6 +155,9 @@ public class ChromaManager extends Engine implements Runnable{
     }
 
     public void tick(double delta){
+        if(!isInitialized){
+            return;
+        }
         for(KeyColorDuration color : keyColors.values()){
             color.tick(delta);
         }
@@ -152,6 +165,10 @@ public class ChromaManager extends Engine implements Runnable{
 
     //Color functions
     public void setBackgroundColor(int r, int g, int b){
+        if(!isInitialized){
+            return;
+        }
+
         ChromaManager.redraw = true;
         //Init colors
         ColorRef[][] colors = new ColorRef[6][22];
@@ -166,6 +183,10 @@ public class ChromaManager extends Engine implements Runnable{
     }
 
     public void setKeyColor(int KEY, int r, int g, int b){
+        if(!isInitialized){
+            return;
+        }
+
         if(keyMapping.containsKey(KEY)) {
             ChromaManager.redraw = true;
             keyColorsAdd.put(keyMapping.get(KEY), new KeyColorDuration(keyMapping.get(KEY), r, g, b));
