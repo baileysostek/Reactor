@@ -68,7 +68,6 @@ public class MaterialManager {
 
     private void addMaterial(Material material){
         materials.put(material.getName(), material);
-        System.out.println(materials);
     }
 
     public int generatePreview(Material material){

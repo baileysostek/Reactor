@@ -15,6 +15,9 @@
   },
   "Fragment":{
     "Uniforms": {
+      "depthTexture": "sampler2D",
+      "sceneTexture": "sampler2D",
+      "screenSize": "vec2"
     }
   }
 }

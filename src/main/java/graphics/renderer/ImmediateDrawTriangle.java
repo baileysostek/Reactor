@@ -50,6 +50,16 @@ public class ImmediateDrawTriangle {
         // Vertex data
         ShaderManager.getInstance().useShader(lineShaderID);
 
+        ShaderManager.getInstance().loadUniformIntoActiveShader("screenSize", Renderer.getInstance().getScreenSize());
+
+        GL46.glActiveTexture(GL46.GL_TEXTURE0);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, Renderer.getInstance().getFrameBuffer().getTextureID());
+        GL46.glUniform1i(GL46.glGetUniformLocation(lineShaderID, "depthTexture"), 0);
+
+        GL46.glActiveTexture(GL46.GL_TEXTURE0 + 1);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, Renderer.getInstance().getFrameBuffer().getDepthTexture());
+        GL46.glUniform1i(GL46.glGetUniformLocation(lineShaderID, "sceneTexture"), 1);
+
         //Overall GL config
         GL46.glDisable(GL46.GL_CULL_FACE);
 

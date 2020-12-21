@@ -30,6 +30,7 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Attributes are the raw pieces of data that make up an entity;
     private HashMap<String, Attribute> attributes    = new HashMap<>();
+    //TODO fix this implementation CHECK with cloning a particle system
 //    private HashMap<String, LinkedList<Attribute>> categories = new HashMap<>();
     //Components reference and set attributes on an entity, the Attributes are a state and the components are how they are modified.
     private LinkedList<Component> components = new LinkedList<Component>();
@@ -70,7 +71,8 @@ public class Entity implements Transformable, Serializable<Entity> {
 //        this.addAttribute("Material",  new Attribute<Integer> ("roughnessID"  , SpriteBinder.getInstance().getDefaultRoughnessMap()));
 //        this.addAttribute("Material",  new Attribute<Integer> ("aoID"         , SpriteBinder.getInstance().getDefaultAmbientOcclusionMap()));
 //        materials.add(new Material());
-        this.addAttribute("Material",  new  Attribute<LinkedList<Material>>("materials", new LinkedList<>()));
+        LinkedList<Material> tmp = new LinkedList<>();
+        this.addAttribute("Material",  new  Attribute<LinkedList<Material>>("materials", tmp));
         this.addAttribute("2D",        new Attribute<Integer> ("zIndex"       , 0));
         this.addAttribute("2D",        new Attribute<Boolean> ("autoScale"    , false));
         this.addAttribute("Title",     new Attribute<String>  ("name"         , "Undefined"));
@@ -547,12 +549,14 @@ public class Entity implements Transformable, Serializable<Entity> {
         }
 
         //Add our children
-        LinkedList<Entity> childrenEntities =  EntityManager.getInstance().getEntitiesChildren(this);
-        JsonArray children = new JsonArray(childrenEntities.size());
-        for(Entity child : childrenEntities){
-            children.add(child.serialize());
+        if(!this.hasAttribute("serializeChildren") || (boolean)this.getAttribute("serializeChildren").getData()) {
+            LinkedList<Entity> childrenEntities = EntityManager.getInstance().getEntitiesChildren(this);
+            JsonArray children = new JsonArray(childrenEntities.size());
+            for (Entity child : childrenEntities) {
+                children.add(child.serialize());
+            }
+            out.add("children", children);
         }
-        out.add("children", children);
 
         return out;
     }

@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import editor.components.UIComponet;
 import engine.FraudTek;
 import entity.*;
+import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
 import imgui.ImGui;
 import imgui.ImGuiIO;
@@ -18,7 +19,9 @@ import imgui.enums.*;
 import imgui.gl3.ImGuiImplGl3;
 import input.Keyboard;
 import input.MousePicker;
+import org.joml.Quaternionf;
 import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
@@ -72,6 +75,20 @@ public class Editor {
 
     //Entity Registry
     private EntityRegistry registry;
+
+    //FBO associated with the elements
+    private FBO overlay;
+
+    //Camera constants
+    private float rotationSpeed = 45f;
+    private float cameraSpeed = 0.1f;
+
+    private enum RightClickAction{
+        ORBIT,
+        FIRST_PERSON
+    }
+
+    private RightClickAction rightClickAction = RightClickAction.FIRST_PERSON;
 
     private Editor(){
         //Create imgui context
@@ -281,6 +298,16 @@ public class Editor {
                     }
                 }
 
+                //For our Orbit calculations.
+                if(button == MousePicker.MOUSE_MIDDLE){
+                    if (action == GLFW.GLFW_RELEASE) {
+                        MousePicker.getInstance().unlockMouse();
+                    }
+                    if (action == GLFW.GLFW_PRESS) {
+                        MousePicker.getInstance().requestLockMouse();
+                    }
+                }
+
                 return null;
             }
         });
@@ -342,6 +369,52 @@ public class Editor {
             LinkedList<UIComponet> safeItterate = new LinkedList<>(UIComponets.get(location));
             for (editor.components.UIComponet UIComponet : safeItterate) {
                 UIComponet.update(delta);
+            }
+        }
+
+        //Get the camera
+        Camera cam = CameraManager.getInstance().getActiveCamera();
+
+        //Right Click rotation
+        if(MousePicker.getInstance().isMousePressed(MousePicker.MOUSE_RIGHT)){
+            if(rightClickAction.equals(RightClickAction.FIRST_PERSON)) {
+                cam.setRotation(new Vector3f((float) (MousePicker.getInstance().getMouseDeltaY() / (Renderer.getHEIGHT() / 2f)) * rotationSpeed, (float) (MousePicker.getInstance().getMouseDeltaX() / (Renderer.getWIDTH() / 2f)) * rotationSpeed, 0).add(cam.getRotationV()));
+            }
+            if(rightClickAction.equals(RightClickAction.ORBIT)) {
+                //Update Rotation
+                Vector3f deltaRot = new Vector3f((float) -(MousePicker.getInstance().getMouseDeltaY() / (Renderer.getHEIGHT() / 2f)) * rotationSpeed, (float) (MousePicker.getInstance().getMouseDeltaX() / (Renderer.getWIDTH() / 2f)) * rotationSpeed, 0);
+                //X axis
+                Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -90).normalize();
+                Vector3f xAxis = (new Vector3f(0, 0, 1).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * cam.getRotationV().y())).normalize()).normalize());
+                cam.setRotation(new Vector3f(deltaRot).add(cam.getRotationV()));
+                Vector3f pos = new Vector3f(cam.getPosition());
+                pos.rotateAxis((float) Math.toRadians(deltaRot.y), 0, -1, 0);
+                pos.rotateAxis((float) Math.toRadians(deltaRot.x), xAxis.x, xAxis.y, xAxis.z);
+                cam.setPosition(new Vector3f(pos).mul(-1));
+
+            }
+        }
+
+        //Scroll wheel zoom in and out
+        cam.translate(cam.getLookingDirection().mul(-ImGui.getIO().getMouseWheel()));
+
+        //Orbit
+        if(MousePicker.getInstance().isMousePressed(GLFW_MOUSE_BUTTON_3)){
+            if(rightClickAction.equals(RightClickAction.FIRST_PERSON)) {
+                //Update Rotation
+                Vector3f deltaRot = new Vector3f((float) -(MousePicker.getInstance().getMouseDeltaY() / (Renderer.getHEIGHT() / 2f)) * rotationSpeed, (float) (MousePicker.getInstance().getMouseDeltaX() / (Renderer.getWIDTH() / 2f)) * rotationSpeed, 0);
+                //X axis
+                Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -90).normalize();
+                Vector3f xAxis = (new Vector3f(0, 0, 1).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * cam.getRotationV().y())).normalize()).normalize());
+                cam.setRotation(new Vector3f(deltaRot).add(cam.getRotationV()));
+                Vector3f pos = new Vector3f(cam.getPosition());
+                pos.rotateAxis((float) Math.toRadians(deltaRot.y), 0, -1, 0);
+                pos.rotateAxis((float) Math.toRadians(deltaRot.x), xAxis.x, xAxis.y, xAxis.z);
+                cam.setPosition(new Vector3f(pos).mul(-1));
+            }
+            if(rightClickAction.equals(RightClickAction.ORBIT)) {
+                Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -90).normalize();
+                cam.translate((new Vector3f(0, MousePicker.getInstance().getMouseDeltaY(), MousePicker.getInstance().getMouseDeltaX()).mul(0.1f)).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * cam.getRotationV().y())).normalize()));
             }
         }
     }

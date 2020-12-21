@@ -12,7 +12,9 @@ public class StringUtils {
 
     private static HashMap<String, String> fileCache = new HashMap<>();
 
-    private static String PATH = new File("").getAbsolutePath() + "\\resources\\";
+    private static String RESOURCES_DIRECTORY = "/resources/";
+
+    private static String PATH = new File("").getAbsolutePath().replaceAll("\\\\", "/") + RESOURCES_DIRECTORY;
 
     private static JsonParser parser = new JsonParser();
 
@@ -23,6 +25,7 @@ public class StringUtils {
         StringBuilder fileData = new StringBuilder();
         try{
             String path = PATH + filePath;
+            System.out.println("PATH:" + PATH);
             System.out.println(path);
             BufferedReader reader = new BufferedReader(new FileReader(path));
             String line;
@@ -81,7 +84,7 @@ public class StringUtils {
 
     public static void write(String data, String filePath){
         try {
-            String path = new File("").getAbsolutePath() + "\\resources\\" + filePath;
+            String path = new File("").getAbsolutePath() + RESOURCES_DIRECTORY + filePath;
             FileWriter myWriter = new FileWriter(path);
             myWriter.write(data);
             myWriter.close();

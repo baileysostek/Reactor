@@ -13,6 +13,8 @@ precision highp sampler2D;
 // Inputs
 in vec4 vPosition;
 in vec3 vNormal;
+in vec3 vTangent;
+in vec3 vBitangent;
 in vec2 vTexture;
 in ivec3 jointIndices;
 in vec3 weights;
@@ -37,6 +39,8 @@ out vec3 passCamPos;
 out vec2 passCoords;
 out vec3 passFragPos;
 
+out mat3 passTBN;
+
 //Reflection
 out vec3 passReflectNormal;
 
@@ -49,6 +53,20 @@ void main(){
     vec4 offsetNormal = transformation *  vec4(vNormal.xyz, 1.0);
     vec4 worldOffset = transformation * vec4(0, 0, 0, 1);
     passNormal = normalize((vec3(offsetNormal) / offsetNormal.w) - (worldOffset.xyz)/worldOffset.w);
+
+    vec4 offsetTangent = transformation *  vec4(vTangent.xyz, 1.0);
+    vec3 passTangent = normalize((vec3(offsetTangent) / offsetTangent.w) - (worldOffset.xyz)/worldOffset.w);
+
+    vec4 offsetBitangent = transformation *  vec4(vBitangent.xyz, 1.0);
+    vec3 passBitangent = normalize((vec3(offsetBitangent) / offsetBitangent.w) - (worldOffset.xyz)/worldOffset.w);
+
+    mat3 tbnMatrix = mat3(
+        passTangent.x, passBitangent.x, passNormal.x,
+        passTangent.y, passBitangent.y, passNormal.y,
+        passTangent.z, passBitangent.z, passNormal.z
+    );
+
+    passTBN = transpose(tbnMatrix);
 
     vec4 worldPosition = transformation * vec4(vPosition.xyz, 1.0);
     passFragPos = worldPosition.xyz;

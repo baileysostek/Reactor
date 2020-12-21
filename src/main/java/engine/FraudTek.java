@@ -31,6 +31,9 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.nanovg.NVGColor;
+import org.lwjgl.nanovg.NanoVG;
+import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL46;
 import particle.ParticleManager;
@@ -41,31 +44,39 @@ import platform.EnumPlatform;
 import platform.PlatformManager;
 import scene.SceneManager;
 import scripting.ScriptingEngine;
+import skybox.SkyboxManager;
 import sound.SoundEngine;
+import steam.SteamManager;
 import util.StopwatchManager;
 import util.StringUtils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
+import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.system.MemoryUtil.memByteBuffer;
 
 public class FraudTek {
 
     private static Window WINDOW;
     public static long WINDOW_POINTER;
+    public static long vg;
 
     //Engine Variables
     private static boolean INITIALIZED = false;
     private static boolean RUNNING = false;
 
     //Global Variables
-    private static int     WIDTH  = 900;
-    private static int     HEIGHT = 900;
-    private static String  TITLE  = "Reactor V1.0";
-    private static boolean VSYNC  = false;
+    private static int     WIDTH        = 900;
+    private static int     HEIGHT       = 900;
+    private static String  TITLE        = "Reactor V1.0";
+    private static boolean VSYNC        = false;
+    private static boolean FULLSCREEN   = false;
 
     //Local Static variables
     private static int     FRAMES = 0;
@@ -132,40 +143,17 @@ public class FraudTek {
                 }
                 System.out.println("success.");
 
-                //Try to init steam
-                try {
-                    System.out.print("Try init Steamworks...");
-                    String libraryPath = StringUtils.getRelativePath() + "/libs/steam";
-                    libraryPath = libraryPath.replace("\\resources\\", "");
-                    System.out.println("Lib Path:"+libraryPath);
-                    SteamAPI.loadLibraries(libraryPath);
-                    System.out.println(SteamAPI.isSteamRunning());
-                    if (!SteamAPI.init()) {
-                        // Steamworks initialization error, e.g. Steam client not running
-                        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
-                            SteamAPI.printDebugInfo(System.out);
-                        }
-                    }else{
-                        System.out.println("Steam Running:"+SteamAPI.isSteamRunning());
-                    }
-                    System.out.println("sucess.");
-                } catch (SteamException e) {
-                    System.out.println("failed.");
-                    // Error extracting or loading native libraries
-                    e.printStackTrace();
-                }
-
                 //Set the size to take up the screen.
                 long primaryMonitorPointer = glfwGetPrimaryMonitor();
                 WIDTH   = glfwGetVideoMode(primaryMonitorPointer).width();
                 HEIGHT  = glfwGetVideoMode(primaryMonitorPointer).height()-64;
 
                 //Creating our window.
-                System.out.print("Creating Window:["+WIDTH+" x "+HEIGHT+"] Title:"+TITLE+" Vsync:"+VSYNC);
+                System.out.println("Creating Window:["+WIDTH+" x "+HEIGHT+"] Title:"+TITLE+" Vsync:"+VSYNC);
                 WINDOW = new Window(WIDTH, HEIGHT).setTitle(TITLE);
                 WINDOW.setVsyncEnabled(VSYNC);
                 try {
-                    WINDOW.setWindowIcon("/textures/logo.png");
+                    WINDOW.setWindowIcon("textures/logo.png");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -183,8 +171,17 @@ public class FraudTek {
 
                 //We have a known window size, a shader, and a GL context, we can make a window.
                 Renderer.initialize(WIDTH, HEIGHT);
+                SkyboxManager.initialize();
+
+                vg = NanoVGGL3.nvgCreate(NanoVGGL3.NVG_ANTIALIAS);
+                if (vg == NULL) {
+                    throw new RuntimeException("Could not init nanovg.");
+                }else{
+                    System.out.println("NanoVG handle:" + vg);
+                }
 
                 LogManager.initialize();
+                SteamManager.initialize();
                 ModelManager.initialize();
                 CameraManager.initialize();
                 MaterialManager.initialize();
@@ -417,6 +414,20 @@ public class FraudTek {
 //        StopwatchManager.getInstance().getTimer("render_editor").stop();
 
         PhysicsEngine.getInstance().render();
+
+//        //UI
+//        NanoVG.nvgBeginFrame(vg, Renderer.getWIDTH(), Renderer.getHEIGHT(), 1);
+//
+//        NVGColor colorA = NVGColor.create();
+//
+//        NanoVG.nvgFontSize(vg, 18.0f);
+//        NanoVG.nvgFontFace(vg, "sans");
+//        NanoVG.nvgFillColor(vg, NanoVG.nvgRGBA((byte)255, (byte)255, (byte)255, (byte)64, colorA));
+//        NanoVG.nvgTextAlign(vg, NanoVG.NVG_ALIGN_RIGHT | NanoVG.NVG_ALIGN_MIDDLE);
+//        NanoVG.nvgText(vg, 129, 129, "test");
+//
+//        NanoVG.nvgEndFrame(vg);
+
         Renderer.getInstance().postpare();
 
         //If Dev render UI

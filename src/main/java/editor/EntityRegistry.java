@@ -23,6 +23,7 @@ import models.ModelManager;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import particle.ParticleSystem;
+import skybox.Skybox;
 import util.Callback;
 
 import java.util.HashMap;
@@ -59,7 +60,9 @@ public class EntityRegistry extends UIComponet {
         Entity whiteCube = new Entity();
         whiteCube.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
         whiteCube.getAttribute("name").setData("Cube");
-        whiteCube.setMaterial(MaterialManager.getInstance().generateMaterial(SpriteBinder.getInstance().load("white.png").getTextureID()));
+        Material mat1 = MaterialManager.getInstance().generateMaterial(MaterialManager.getInstance().getDefaultMaterial());
+        mat1.setAlbedoID(SpriteBinder.getInstance().load("white.png").getTextureID());
+        whiteCube.setMaterial(mat1);
         addEntity("Geometry", whiteCube);
 
         Entity sphere = new Entity();
@@ -84,6 +87,23 @@ public class EntityRegistry extends UIComponet {
         dragon.setMaterial(mat2);
         addEntity("Geometry", dragon);
 
+//        Entity cerberus = new Entity();
+//        cerberus.setModel(ModelManager.getInstance().loadModel("Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX").getFirst());
+//        cerberus.setScale(0.1f);
+//        cerberus.setRotation(new Vector3f(-90, 0, 0));
+//        cerberus.getAttribute("name").setData("Cerberus");
+//        Material mat3 = MaterialManager.getInstance().generateMaterial(MaterialManager.getInstance().getDefaultMaterial());
+//        mat3.setAlbedoID(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_A.png").getTextureID());
+//        mat3.setNormalID(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_N.png").getTextureID());
+//        mat3.setMetallicID(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_M.png").getTextureID());
+//        mat3.setRoughnessID(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_R.png").getTextureID());
+//        mat3.setShader("main");
+//        cerberus.setMaterial(mat3);
+//        addEntity("Geometry", cerberus);
+
+        Material brick = MaterialManager.getInstance().generateMaterial(SpriteBinder.getInstance().load("normal.png"));
+        brick.setNormalID(SpriteBinder.getInstance().load("white_normal.png").getTextureID());
+
 //        Entity garden = new Entity();
 //        garden.setModel(ModelManager.getInstance().loadModel("garden.obj").getFirst());
 //        garden.getAttribute("name").setData("Garden");
@@ -100,6 +120,9 @@ public class EntityRegistry extends UIComponet {
 
         ParticleSystem system = new ParticleSystem();
         addEntity("Particles", system);
+
+        Skybox skybox = new Skybox();
+        addEntity("Skybox", skybox);
 
 
         //Genreate mouse callback for when we release the mouse

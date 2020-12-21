@@ -213,7 +213,7 @@ public class EntityEditor extends UIComponet {
                     if(metaData.ddd_x != null) {
                         Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_x.getAABB());
                         if (pos != null) {
-                            delta = new Vector3f(entity.getPositionSelf()).sub(pos);
+                            delta = new Vector3f(pos).sub(entity.getPositionSelf());
                             initialCastHit = new Vector3f(pos);
                             rayToHit = new Vector3f(pos).sub(entity.getPositionSelf()).normalize();
                             if(toolType.equals(EditorMode.ROTATE)){
@@ -230,7 +230,7 @@ public class EntityEditor extends UIComponet {
                     if(metaData.ddd_y != null) {
                         Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_y.getAABB());
                         if (pos != null) {
-                            delta = new Vector3f(entity.getPositionSelf()).sub(pos);
+                            delta = new Vector3f(pos).sub(entity.getPositionSelf());
                             initialCastHit = new Vector3f(pos);
                             rayToHit = new Vector3f(pos).sub(entity.getPositionSelf()).normalize();
                             if(toolType.equals(EditorMode.ROTATE)){
@@ -245,9 +245,12 @@ public class EntityEditor extends UIComponet {
                         }
                     }
                     if(metaData.ddd_z != null) {
-                        Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_z.getAABB());
+                        Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_z.getAABB());
+
+//                        Renderer.getInstance().drawLine(new Vector3f(0), new Vector3f(pos), new Vector3f(1));
+
                         if (pos != null) {
-                            delta = new Vector3f(entity.getPosition()).sub(pos);
+                            delta = new Vector3f(pos).sub(entity.getPositionSelf());
                             initialCastHit = new Vector3f(pos);
                             rayToHit = new Vector3f(pos).sub(entity.getPositionSelf()).normalize();
                             if(toolType.equals(EditorMode.ROTATE)){
@@ -324,7 +327,7 @@ public class EntityEditor extends UIComponet {
                                     break;
                                 }
 
-                                Vector3f deltaPos = new Vector3f(pos).add(delta);
+                                Vector3f deltaPos = new Vector3f(pos).sub(delta);
 
                                 //Snap to snap res
                                 if(Keyboard.getInstance().isKeyPressed(Keyboard.SHIFT_LEFT)){
@@ -392,7 +395,7 @@ public class EntityEditor extends UIComponet {
                                     break;
                                 }
 
-                                Vector3f deltaPos = new Vector3f(pos).add(delta);
+                                Vector3f deltaPos = new Vector3f(pos).sub(delta);
 
                                 //Snap to snap res
                                 if(Keyboard.getInstance().isKeyPressed(Keyboard.SHIFT_LEFT)){
@@ -454,13 +457,13 @@ public class EntityEditor extends UIComponet {
                         switch(toolType){
                             case TRANSLATE:{
                                 //Raycast to plane
-                                Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(1, 0, 0));
+                                Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(entity.getPosition()), new Vector3f(0, 1, 0));
 
                                 if(pos == null){
                                     break;
                                 }
 
-                                Vector3f deltaPos = new Vector3f(pos).add(new Vector3f(delta).mul(1, 1, 0));
+                                Vector3f deltaPos = new Vector3f(pos).sub(new Vector3f(delta).mul(1, 1, 1));
 
                                 //Snap to snap res
                                 if(Keyboard.getInstance().isKeyPressed(Keyboard.SHIFT_LEFT)){
@@ -646,6 +649,18 @@ public class EntityEditor extends UIComponet {
     @Override
     public void self_update(double delta) {
         raycastToWorld();
+
+        if(this.selectedEntities.containsKey(this.entity)) {
+            //Get meta-data for selected entity and see if the entity
+            EntityMetaData metaData = this.selectedEntities.get(this.entity);
+
+            if(metaData.ddd_z != null) {
+                Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_z.getAABB());
+                if (pos != null) {
+                    Renderer.getInstance().drawLine(new Vector3f(0), new Vector3f(pos), new Vector3f(1));
+                }
+            }
+        }
     }
 
     public void getTexture(){

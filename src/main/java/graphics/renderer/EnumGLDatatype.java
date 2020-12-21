@@ -46,4 +46,8 @@ public enum EnumGLDatatype implements Serializable<EnumGLDatatype> {
     public EnumGLDatatype deserialize(JsonObject data) {
         return EnumGLDatatype.valueOf(data.get("index").getAsString());
     }
+
+    public int getSizePerVertex() {
+        return sizePerVertex;
+    }
 }

@@ -145,7 +145,6 @@ public class ParticleManager {
         GL46.glVertexAttribDivisor(2, 1); // color : one per quad -> 1
         GL46.glVertexAttribDivisor(3, 1); // scale : one per quad -> 1
 
-
         int toRender = getAllocatedParticles();
         GL46.glDrawArraysInstanced(GL46.GL_TRIANGLE_STRIP, 0, verticies.length / 3, toRender);
 

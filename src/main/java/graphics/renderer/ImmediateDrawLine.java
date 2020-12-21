@@ -70,6 +70,16 @@ public class ImmediateDrawLine {
         // Vertex data
         ShaderManager.getInstance().useShader(lineShaderID);
 
+        ShaderManager.getInstance().loadUniformIntoActiveShader("screenSize", Renderer.getInstance().getScreenSize());
+
+        GL46.glActiveTexture(GL46.GL_TEXTURE0);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, Renderer.getInstance().getFrameBuffer().getTextureID());
+        GL46.glUniform1i(GL46.glGetUniformLocation(lineShaderID, "depthTexture"), 0);
+
+        GL46.glActiveTexture(GL46.GL_TEXTURE0 + 1);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, Renderer.getInstance().getFrameBuffer().getDepthTexture());
+        GL46.glUniform1i(GL46.glGetUniformLocation(lineShaderID, "sceneTexture"), 1);
+
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lineShaderID, "projectionMatrix"),false, Renderer.getInstance().getProjectionMatrix());
 
         handshake.addAttributeList("position", positionsF, EnumGLDatatype.VEC3);

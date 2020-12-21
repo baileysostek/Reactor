@@ -15,7 +15,6 @@ public class Camera3D extends Camera{
 
     //Camera controls
     float speed = 0.1f;
-    float rotationSpeed = 45f;
 
     public Camera3D(){
         //Pass by reference or value
@@ -33,8 +32,6 @@ public class Camera3D extends Camera{
     @Override
     public void update(double delta){
 
-        super.setRotation(new Vector3f((float)(MousePicker.getInstance().getMouseDeltaY() / (Renderer.getHEIGHT() / 2f)) * rotationSpeed,(float)(MousePicker.getInstance().getMouseDeltaX() / (Renderer.getWIDTH() / 2f)) * rotationSpeed,0).add(super.getRotationV()));
-//
         if(Keyboard.getInstance().isKeyPressed(Keyboard.W)){
             this.translate(super.getLookingDirection().mul(-speed));
         }
@@ -66,7 +63,7 @@ public class Camera3D extends Camera{
         out.add("pos", SerializationHelper.addClass(new Vector3f(this.getPosition()).mul(-1)));
         out.add("rot", SerializationHelper.addClass(this.getRotation()));
         out.add("off", SerializationHelper.addClass(this.getOffset()));
-        out.addProperty("rotSpeed", rotationSpeed);
+//        out.addProperty("rotSpeed", rotationSpeed);
         out.addProperty("speed", speed);
         return out;
     }

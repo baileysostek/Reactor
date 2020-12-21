@@ -66,7 +66,7 @@ public class FBO {
     }
 
     public void bindFrameBuffer(){
-        GL46.glBindTexture(GL46.GL_TEXTURE_2D, 0);
+//        GL46.glBindTexture(GL46.GL_TEXTURE_2D, 0);
         GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, id);
         bufferStack.push(id);
         GL46.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
