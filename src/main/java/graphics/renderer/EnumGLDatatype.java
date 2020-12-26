@@ -6,6 +6,8 @@ import serialization.Serializable;
 public enum EnumGLDatatype implements Serializable<EnumGLDatatype> {
 
     //Different data types that we can use in our shader.
+    INT(Integer.BYTES, 1 ),
+
     FLOAT(Float.BYTES, 1 ),
     VEC2 (Float.BYTES, 2 ),
     VEC3 (Float.BYTES, 3 ),

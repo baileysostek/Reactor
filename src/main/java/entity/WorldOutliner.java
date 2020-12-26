@@ -2,6 +2,7 @@ package entity;
 
 import editor.Editor;
 import editor.components.UIComponet;
+import graphics.renderer.DirectDraw;
 import graphics.renderer.Renderer;
 import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
@@ -76,7 +77,7 @@ public class WorldOutliner extends UIComponet {
                 //No parent, therefore is parent and should render at this level
                 renderEntity(e);
                 if(ImGui.isItemHovered()){
-                    Renderer.getInstance().drawAABB(e, new Vector3f(1));
+                    DirectDraw.getInstance().drawAABB(e, new Vector3f(1));
                 }
             }
         }
@@ -137,7 +138,7 @@ public class WorldOutliner extends UIComponet {
                 for (Entity child : children) {
                     renderEntity(child);
                     if(ImGui.isItemHovered()){
-                        Renderer.getInstance().drawAABB(child, new Vector3f(1));
+                        DirectDraw.getInstance().drawAABB(child, new Vector3f(1));
                     }
                 }
             }

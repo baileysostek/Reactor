@@ -206,6 +206,7 @@ public class FraudTek {
 
 
                 Renderer.getInstance();
+                DirectDraw.initialize();
 
 //                sun = new DirectionalLight();
 //                EntityManager.getInstance().addEntity(sun);
@@ -364,44 +365,7 @@ public class FraudTek {
         ParticleManager.getInstance().render();
 
 //        StopwatchManager.getInstance().getTimer("render_editor").start();
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
-            //Draw Axis
-            int size = 4096;
-            Renderer.getInstance().drawLine(new Vector3f(-size, 0, 0), new Vector3f(size, 0, 0), new Vector3f(1, 0, 0));
-            Renderer.getInstance().drawLine(new Vector3f(0, -size, 0), new Vector3f(0, size, 0), new Vector3f(0, 1, 0));
-            Renderer.getInstance().drawLine(new Vector3f(0, 0, -size), new Vector3f(0, 0, size), new Vector3f(0, 0, 1));
 
-            //Draw arrows point in +Axis direction.
-//            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(1, 0, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
-//            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(0, 1, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
-//            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(0, 0, 1), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
-
-            //Draw Grid
-            size = 50;
-            for(int i = -size; i <= size; i++){
-                if(i == 0){
-                    i++;
-                }
-                Vector3f color = new Vector3f(0.5f);
-                if(i % 10 == 0){
-                    color.add(0.5f , 0.5f, 0.5f);
-                }
-                Renderer.getInstance().drawLine(new Vector3f(-size, 0, i), new Vector3f(size, 0, i), color);
-                Renderer.getInstance().drawLine(new Vector3f(i, 0, -size), new Vector3f(i, 0, size), color);
-            }
-
-            //Draw a Ring
-
-//            Vector3f pos = MousePicker.getInstance().rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), new Vector3f(0, 0, 0), new Vector3f(0, 1, 0));
-//            if(pos != null) {
-//                DirectDrawData ddd = Renderer.getInstance().drawArrow(new Vector3f(5, 5, 5), new Vector3f(pos), new Vector3f(0.5f, 0.5f, 1.25f), 13, new Vector3f(1, 1, 1));
-//                Renderer.getInstance().drawAABB(ddd.getAABB());
-//                if(MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd.getAABB()) != null){
-//                    Renderer.getInstance().redrawTriangleColor(ddd, new Vector3f(1, 0, 0));
-//                }
-//            }
-
-        }
 //        StopwatchManager.getInstance().getTimer("render_editor").stop();
 
         SceneManager.getInstance().render();

@@ -8,6 +8,8 @@ import com.google.gson.JsonObject;
 import editor.components.UIComponet;
 import engine.FraudTek;
 import entity.*;
+import entity.component.Attribute;
+import graphics.renderer.DirectDraw;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
 import imgui.ImGui;
@@ -88,7 +90,7 @@ public class Editor {
         FIRST_PERSON
     }
 
-    private RightClickAction rightClickAction = RightClickAction.FIRST_PERSON;
+    private Attribute<RightClickAction> rightClickAction = new  Attribute<RightClickAction>("Editor Style", RightClickAction.FIRST_PERSON);
 
     private Editor(){
         //Create imgui context
@@ -245,6 +247,7 @@ public class Editor {
         registry = new EntityRegistry(entityEditor);
         addComponent(EnumEditorLocation.LEFT_TAB, registry);
         Settings settings = new Settings();
+        settings.addWatchedAttribute(rightClickAction);
         addComponent(EnumEditorLocation.LEFT_TAB, settings);
         resourcesViewer = new ResourcesViewer();
         addComponent(EnumEditorLocation.LEFT_BOTTOM, resourcesViewer);
@@ -377,10 +380,10 @@ public class Editor {
 
         //Right Click rotation
         if(MousePicker.getInstance().isMousePressed(MousePicker.MOUSE_RIGHT)){
-            if(rightClickAction.equals(RightClickAction.FIRST_PERSON)) {
+            if(rightClickAction.getData().equals(RightClickAction.FIRST_PERSON)) {
                 cam.setRotation(new Vector3f((float) (MousePicker.getInstance().getMouseDeltaY() / (Renderer.getHEIGHT() / 2f)) * rotationSpeed, (float) (MousePicker.getInstance().getMouseDeltaX() / (Renderer.getWIDTH() / 2f)) * rotationSpeed, 0).add(cam.getRotationV()));
             }
-            if(rightClickAction.equals(RightClickAction.ORBIT)) {
+            if(rightClickAction.getData().equals(RightClickAction.ORBIT)) {
                 //Update Rotation
                 Vector3f deltaRot = new Vector3f((float) -(MousePicker.getInstance().getMouseDeltaY() / (Renderer.getHEIGHT() / 2f)) * rotationSpeed, (float) (MousePicker.getInstance().getMouseDeltaX() / (Renderer.getWIDTH() / 2f)) * rotationSpeed, 0);
                 //X axis
@@ -400,7 +403,7 @@ public class Editor {
 
         //Orbit
         if(MousePicker.getInstance().isMousePressed(GLFW_MOUSE_BUTTON_3)){
-            if(rightClickAction.equals(RightClickAction.FIRST_PERSON)) {
+            if(rightClickAction.getData().equals(RightClickAction.FIRST_PERSON)) {
                 //Update Rotation
                 Vector3f deltaRot = new Vector3f((float) -(MousePicker.getInstance().getMouseDeltaY() / (Renderer.getHEIGHT() / 2f)) * rotationSpeed, (float) (MousePicker.getInstance().getMouseDeltaX() / (Renderer.getWIDTH() / 2f)) * rotationSpeed, 0);
                 //X axis
@@ -412,7 +415,7 @@ public class Editor {
                 pos.rotateAxis((float) Math.toRadians(deltaRot.x), xAxis.x, xAxis.y, xAxis.z);
                 cam.setPosition(new Vector3f(pos).mul(-1));
             }
-            if(rightClickAction.equals(RightClickAction.ORBIT)) {
+            if(rightClickAction.getData().equals(RightClickAction.ORBIT)) {
                 Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -90).normalize();
                 cam.translate((new Vector3f(0, MousePicker.getInstance().getMouseDeltaY(), MousePicker.getInstance().getMouseDeltaX()).mul(0.1f)).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * cam.getRotationV().y())).normalize()));
             }
@@ -420,6 +423,34 @@ public class Editor {
     }
 
     public void preUIRender(){
+        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+            //Draw Axis
+            int size = 4096;
+            DirectDraw.getInstance().drawLine(new Vector3f(-size, 0, 0), new Vector3f(size, 0, 0), new Vector3f(1, 0, 0));
+            DirectDraw.getInstance().drawLine(new Vector3f(0, -size, 0), new Vector3f(0, size, 0), new Vector3f(0, 1, 0));
+            DirectDraw.getInstance().drawLine(new Vector3f(0, 0, -size), new Vector3f(0, 0, size), new Vector3f(0, 0, 1));
+
+            //Draw arrows point in +Axis direction.
+//            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(1, 0, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
+//            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(0, 1, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 1, 0));
+//            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(0, 0, 1), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(0, 0, 1));
+
+            //Draw Grid
+            size = 50;
+            for(int i = -size; i <= size; i++){
+                if(i == 0){
+                    i++;
+                }
+                Vector3f color = new Vector3f(0.5f);
+                if(i % 10 == 0){
+                    color.add(0.5f , 0.5f, 0.5f);
+                }
+                DirectDraw.getInstance().drawLine(new Vector3f(-size, 0, i), new Vector3f(size, 0, i), color);
+                DirectDraw.getInstance().drawLine(new Vector3f(i, 0, -size), new Vector3f(i, 0, size), color);
+            }
+        }
+
+        //Render our UI elements
         for(EnumEditorLocation location : EnumEditorLocation.values()) {
             for (UIComponet uiComponet : UIComponets.get(location)) {
                 uiComponet.preUIRender();

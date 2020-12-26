@@ -21,6 +21,37 @@ public class EntityUtils {
         buffer = new FBO(128, 128);
     }
 
+    public static Entity cloneTarget(Entity target){
+        Entity entity;
+
+        //This has broken attributes, set from parent
+        JsonObject serialziedEntity = target.serialize();
+
+        //Deserialize the entity
+        if(target.getClass().equals(Entity.class)) {
+            //Regula old entity
+            entity = new Entity().deserialize(serialziedEntity);
+        }else{
+            //Fancy entity from another class or namespace :)
+            try {
+                Class<?> classType = Class.forName(target.getClass().getName());
+                entity = ((Entity) SerializationHelper.getGson().fromJson(serialziedEntity, classType)).deserialize(serialziedEntity);
+
+            } catch (ClassNotFoundException e) {
+                //TODO play sound that that entity is unknown, maybe show message dialogue too.
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        //Check if the moved entity was a child
+        if(target.hasParent()){
+            entity.setParent(target.getParent());
+        }
+
+        return entity;
+    }
+
     public static Entity group(Collection<Entity> entities){
         //Out save object. This will be a .tek file eventually.
         JsonObject out = new JsonObject();

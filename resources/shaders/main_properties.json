@@ -32,7 +32,12 @@
       "ambientOcclusionID": "sampler2D",
       "shadowMap": "sampler2D",
       "sunAngle": "vec3",
-      "sunColor": "vec3"
+      "sunColor": "vec3",
+      "lightPosition": "vec3",
+      "lightColor": "vec3",
+      "lightIntensity": "float",
+      "numDirectionalLights": "int",
+      "numPointLights": "int"
     }
   }
 }
