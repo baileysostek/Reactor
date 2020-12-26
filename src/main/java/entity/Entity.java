@@ -466,6 +466,23 @@ public class Entity implements Transformable, Serializable<Entity> {
         return this;
     }
 
+    public final void setModel(Collection<Model> models) {
+
+        if(models.size() == 1){
+            setModel((Model) models.toArray()[0]);
+            return;
+        }
+
+        //Now make children, later make smart children that combine to form a single model.
+        for(Model m : models){
+            Entity e = new Entity();
+
+            e.setModel(m);
+            e.setMaterial(e.getMaterial());
+            e.setParent(this);
+        }
+    }
+
     //Parent
     public final Entity getParent(){
         return this.parent;

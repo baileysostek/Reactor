@@ -62,7 +62,9 @@ public class ShaderManager {
             GL46.glGetShaderiv(vertexShader, GL46.GL_INFO_LOG_LENGTH, compileBuffer);
             //Check that log exists
             if (compileBuffer[0] > 0) {
-                System.out.println("[ERROR] Vertex Shader Compilation | " + name + " : " + GL46.glGetShaderInfoLog(vertexShader));
+                String errorMesssage = GL46.glGetShaderInfoLog(vertexShader);
+                String lineNumber = errorMesssage.substring(errorMesssage.indexOf("(")+ 1, errorMesssage.indexOf(")"));
+                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + "shaders/" + name + "_vertex.glsl:" + lineNumber + " | " + GL46.glGetShaderInfoLog(vertexShader));
                 //Cleanup our broken shader
                 GL46.glDeleteShader(vertexShader);
                 System.exit(0);
@@ -84,7 +86,9 @@ public class ShaderManager {
             GL46.glGetShaderiv(fragmentShader, GL46.GL_INFO_LOG_LENGTH, compileBuffer);
             //Check that log exists
             if (compileBuffer[0] > 0) {
-                System.out.println("Fragment Status:" + GL46.glGetShaderInfoLog(fragmentShader));
+                String errorMesssage = GL46.glGetShaderInfoLog(fragmentShader);
+                String lineNumber = errorMesssage.substring(errorMesssage.indexOf("(")+ 1, errorMesssage.indexOf(")"));
+                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + "shaders/" + name + "_fragment.glsl:" + lineNumber + " | " + GL46.glGetShaderInfoLog(fragmentShader));
                 //Cleanup our broken shader
                 GL46.glDeleteShader(vertexShader);
                 System.exit(0);
@@ -203,18 +207,27 @@ public class ShaderManager {
                         break loop;
                     }
 
+                    int errorCheck = GL46.glGetError();
+                    while (errorCheck != GL46.GL_NO_ERROR) {
+                        System.out.println("Pre error:");
+                        errorCheck = GL46.glGetError();
+                    }
+
                     //If handshake contains this buffered data.
                     int attribPointer = GL46.glGetAttribLocation(programID, attribute);
 
-                    //If this attribute is out of range of the program IE compiler optomised it out skip over loading into memory.
-                    int errorCheck = GL46.glGetError();
+                    //If this attribute is out of range of the program IE compiler optimised it out skip over loading into memory.
+                    errorCheck = GL46.glGetError();
                     boolean error = false;
                     while (errorCheck != GL46.GL_NO_ERROR) {
                         System.out.println("GLError:" + errorCheck);
-                        if (errorCheck == GL46.GL_INVALID_VALUE) {
+                        if (errorCheck == GL46.GL_INVALID_VALUE ) {
                             error = true;
                             System.out.println("Attribute[" + attribute + "] could not be found in Shader[" + shaderInstances_prime.get(programID) + ']');
                             shader.removeAttribute(attribute);
+                        }
+                        if(errorCheck == GL46.GL_INVALID_OPERATION){
+
                         }
                         errorCheck = GL46.glGetError();
                     }
@@ -242,11 +255,28 @@ public class ShaderManager {
             return;
         }
 
+        int errorCheck = GL46.glGetError();
+        while (errorCheck != GL46.GL_NO_ERROR) {
+            System.out.println("Pre load uniform:" + errorCheck);
+            errorCheck = GL46.glGetError();
+        }
+
         int location = GL46.glGetUniformLocation(activeShader, name);
+
+        errorCheck = GL46.glGetError();
+        while (errorCheck != GL46.GL_NO_ERROR) {
+            System.out.println("post get location:" + errorCheck);
+            errorCheck = GL46.glGetError();
+        }
+
 
         float[] data = new float[uniformType.getSize()];
 
         switch(uniformType){
+            case INT : {
+                GL46.glUniform1i(location, (int)uniform);
+                break;
+            }
             case FLOAT : {
                 GL46.glUniform1f(location, (float)uniform);
                 break;
@@ -285,6 +315,12 @@ public class ShaderManager {
                 System.out.println("[loadUniformIntoActiveShader]Error: datatype " + uniformType +" is not supported yet.");
             }
         }
+
+        errorCheck = GL46.glGetError();
+        while (errorCheck != GL46.GL_NO_ERROR) {
+            System.out.println("Load uniform error:" + errorCheck);
+            errorCheck = GL46.glGetError();
+        }
     }
 
     public void loadUniformIntoActiveShader(String name, Object uniform){
@@ -301,7 +337,7 @@ public class ShaderManager {
     public static void initialize(){
         if(shaderManager == null){
             shaderManager = new ShaderManager();
-            defaultShader = shaderManager.loadShader("main");
+            defaultShader = shaderManager.loadShader("pbr");
         }
     }
 

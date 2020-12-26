@@ -9,6 +9,7 @@ import entity.component.Attribute;
 import entity.component.Component;
 import entity.component.EnumAttributeType;
 import entity.component.Event;
+import graphics.renderer.DirectDraw;
 import graphics.renderer.DirectDrawData;
 import graphics.renderer.Renderer;
 import graphics.sprite.Sprite;
@@ -359,16 +360,16 @@ public class EntityEditor extends UIComponet {
                                     this.initialRotationPoint = new Vector3f(pos);
                                 }
 
-                                Renderer.getInstance().drawLine(new Vector3f(planeNormal).add(entity.getPosition()), entity.getPosition(), new Vector3f(1, 0, 0));
+                                DirectDraw.getInstance().drawLine(new Vector3f(planeNormal).add(entity.getPosition()), entity.getPosition(), new Vector3f(1, 0, 0));
 
                                 float angle = new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).angleSigned(new Vector3f(pos).sub(entity.getPosition()), planeNormal);
                                 float offsetAngle = new Vector3f(0, 0, -1).angleSigned(new Vector3f(this.initialRotationPoint).sub(entity.getPosition()), planeNormal);
 
                                 //Draw arch
                                 float biggestDimension = VectorUtils.maxComponent(new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]));
-                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(1, 0, 0));
-                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(1, 0, 0));
-                                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 45f, new Vector3f(1, 0, 0));
+                                DirectDraw.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(1, 0, 0));
+                                DirectDraw.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(1, 0, 0));
+                                DirectDraw.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 45f, new Vector3f(1, 0, 0));
 
                                 Vector3f rot = entity.getRotation();
 
@@ -426,16 +427,16 @@ public class EntityEditor extends UIComponet {
                                     this.initialRotationPoint = new Vector3f(pos);
                                 }
 
-                                Renderer.getInstance().drawLine(new Vector3f(planeNormal).add(entity.getPosition()), entity.getPosition(), new Vector3f(0, 1, 0));
+                                DirectDraw.getInstance().drawLine(new Vector3f(planeNormal).add(entity.getPosition()), entity.getPosition(), new Vector3f(0, 1, 0));
 
                                 float angle = new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).angleSigned(new Vector3f(pos).sub(entity.getPosition()), planeNormal);
                                 float offsetAngle = new Vector3f(0, 0, 1).angleSigned(new Vector3f(this.initialRotationPoint).sub(entity.getPosition()), planeNormal);
 
                                 //Draw arch
                                 float biggestDimension = VectorUtils.maxComponent(new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]));
-                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 1, 0));
-                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 1, 0));
-                                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 90f, new Vector3f(0, 1, 0));
+                                DirectDraw.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 1, 0));
+                                DirectDraw.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 1, 0));
+                                DirectDraw.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 90f, new Vector3f(0, 1, 0));
 
                                 Vector3f rot = entity.getRotation();
 
@@ -494,16 +495,16 @@ public class EntityEditor extends UIComponet {
                                     this.initialRotationPoint = new Vector3f(pos);
                                 }
 
-                                Renderer.getInstance().drawLine(new Vector3f(planeNormal).add(entity.getPosition()), entity.getPosition(), new Vector3f(0, 0, 1));
+                                DirectDraw.getInstance().drawLine(new Vector3f(planeNormal).add(entity.getPosition()), entity.getPosition(), new Vector3f(0, 0, 1));
 
                                 float angle = new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).angleSigned(new Vector3f(pos).sub(entity.getPosition()), planeNormal);
                                 float offsetAngle = new Vector3f(0, 0, 1).angleSigned(new Vector3f(this.initialRotationPoint).sub(entity.getPosition()), planeNormal);
 
                                 //Draw arch
                                 float biggestDimension = VectorUtils.maxComponent(new Vector3f(entity.getAABB()[1]).sub(entity.getAABB()[0]));
-                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 0, 1));
-                                Renderer.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 0, 1));
-                                Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 150f, new Vector3f(0, 0, 1));
+                                DirectDraw.getInstance().drawCylinder(entity.getPosition(), new Vector3f(pos).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 0, 1));
+                                DirectDraw.getInstance().drawCylinder(entity.getPosition(), new Vector3f(this.initialRotationPoint).sub(entity.getPosition()).normalize().mul(biggestDimension + 2), new Vector3f(0.125f), 13, new Vector3f(0, 0, 1));
+                                DirectDraw.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 2, biggestDimension + 2, 0.0625f), new Vector3f(planeNormal), new Vector2i(32, 9), (float) Math.toDegrees(angle), (float) Math.toDegrees(offsetAngle) - 150f, new Vector3f(0, 0, 1));
 
                                 Vector3f rot = entity.getRotation();
 
@@ -657,7 +658,7 @@ public class EntityEditor extends UIComponet {
             if(metaData.ddd_z != null) {
                 Vector3f pos = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), new Vector3f(MousePicker.getInstance().getRay()), metaData.ddd_z.getAABB());
                 if (pos != null) {
-                    Renderer.getInstance().drawLine(new Vector3f(0), new Vector3f(pos), new Vector3f(1));
+                    DirectDraw.getInstance().drawLine(new Vector3f(0), new Vector3f(pos), new Vector3f(1));
                 }
             }
         }
@@ -673,7 +674,7 @@ public class EntityEditor extends UIComponet {
             //Direct draw AABB
             for(Entity e: selectedEntities.keySet()){
                 e.renderInEditor(true);
-                Renderer.getInstance().drawAABB(e, new Vector3f(1));
+                DirectDraw.getInstance().drawAABB(e, new Vector3f(1));
             }
 
             Vector3f YELLOW = new Vector3f(1, 1, 0);
@@ -698,7 +699,7 @@ public class EntityEditor extends UIComponet {
                 float closest = Float.MAX_VALUE;
                 DirectDrawData closestVolume = null;
 
-                DirectDrawData ddd_x = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 1, biggestDimension + 1, 0.0625f), new Vector3f(rotx.x, rotx.y, rotx.z), new Vector2i(32, 9), 360f, new Vector3f(1, 0, 0));
+                DirectDrawData ddd_x = DirectDraw.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 1, biggestDimension + 1, 0.0625f), new Vector3f(rotx.x, rotx.y, rotx.z), new Vector2i(32, 9), 360f, new Vector3f(1, 0, 0));
                 Vector3f xTest = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_x.getAABB());
                 if(xTest != null){
                     float distance = xTest.distance(CameraManager.getInstance().getActiveCamera().getPosition());
@@ -707,7 +708,7 @@ public class EntityEditor extends UIComponet {
                         closestVolume = ddd_x;
                     }
                 }
-                DirectDrawData ddd_y = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 1, biggestDimension + 1, 0.0625f), new Vector3f(roty.x, roty.y, roty.z), new Vector2i(32, 9), 360f, new Vector3f(0, 1, 0));
+                DirectDrawData ddd_y = DirectDraw.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 1, biggestDimension + 1, 0.0625f), new Vector3f(roty.x, roty.y, roty.z), new Vector2i(32, 9), 360f, new Vector3f(0, 1, 0));
                 Vector3f yTest = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_y.getAABB());
                 if(yTest != null){
                     float distance = yTest.distance(CameraManager.getInstance().getActiveCamera().getPosition());
@@ -716,7 +717,7 @@ public class EntityEditor extends UIComponet {
                         closestVolume = ddd_y;
                     }
                 }
-                DirectDrawData ddd_z = Renderer.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 1, biggestDimension + 1, 0.0625f), new Vector3f(rotz.x, rotz.y, rotz.z), new Vector2i(32, 9), 360f, new Vector3f(0, 0, 1));
+                DirectDrawData ddd_z = DirectDraw.getInstance().drawRing(new Vector3f(entity.getPosition()), new Vector3f(biggestDimension + 1, biggestDimension + 1, 0.0625f), new Vector3f(rotz.x, rotz.y, rotz.z), new Vector2i(32, 9), 360f, new Vector3f(0, 0, 1));
                 Vector3f zTest = MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_z.getAABB());
                 if(zTest != null){
                     float distance = zTest.distance(CameraManager.getInstance().getActiveCamera().getPosition());
@@ -728,7 +729,7 @@ public class EntityEditor extends UIComponet {
 
                 //Draw closest in yellow
                 if(closestVolume != null) {
-                    Renderer.getInstance().redrawTriangleColor(closestVolume, drawColor);
+                    DirectDraw.getInstance().redrawTriangleColor(closestVolume, drawColor);
                 }
 
                 //Set our direct draw volumes
@@ -743,41 +744,41 @@ public class EntityEditor extends UIComponet {
                 float scale = new Vector3f(entity.getPosition()).distance(CameraManager.getInstance().getActiveCamera().getPosition()) / 16f;
 
                 //Direct Draw Axis arrows
-                DirectDrawData ddd_x = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(scale, 0, 0).mul(Math.max(entity.getScale().x / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f * scale), 13, new Vector3f(1, 0, 0));
+                DirectDrawData ddd_x = DirectDraw.getInstance().drawArrow(entity.getPosition(), new Vector3f(scale, 0, 0).mul(Math.max(entity.getScale().x / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f * scale), 13, new Vector3f(1, 0, 0));
                 //If no tool selected, render if hits
                 if (selectedTool.equals(NONE)) {
                     //render if hits
                     if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_x.getAABB()) != null) {
                         //render in yellow
-                        Renderer.getInstance().redrawTriangleColor(ddd_x, drawColor);
+                        DirectDraw.getInstance().redrawTriangleColor(ddd_x, drawColor);
                     }
                 } else {
                     //We are using a tool, if its a valid tool, set our color to yellow.
                     if (selectedTool.equals(MOVE_X) || selectedTool.equals(MOVE_XY) || selectedTool.equals(MOVE_ZX) || selectedTool.equals(MOVE_XYZ)) {
-                        Renderer.getInstance().redrawTriangleColor(ddd_x, drawColor);
+                        DirectDraw.getInstance().redrawTriangleColor(ddd_x, drawColor);
                     }
                 }
-                DirectDrawData ddd_y = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, scale, 0).mul(Math.max(entity.getScale().y / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f * scale), 13, new Vector3f(0, 1, 0));
+                DirectDrawData ddd_y = DirectDraw.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, scale, 0).mul(Math.max(entity.getScale().y / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f * scale), 13, new Vector3f(0, 1, 0));
                 if (selectedTool.equals(NONE)) {
                     if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_y.getAABB()) != null) {
-                        Renderer.getInstance().redrawTriangleColor(ddd_y, drawColor);
+                        DirectDraw.getInstance().redrawTriangleColor(ddd_y, drawColor);
                     }
                 } else {
                     //We are using a tool, if its a valid tool, set our color to yellow.
                     if (selectedTool.equals(MOVE_Y) || selectedTool.equals(MOVE_XY) || selectedTool.equals(MOVE_YZ) || selectedTool.equals(MOVE_XYZ)) {
-                        Renderer.getInstance().redrawTriangleColor(ddd_y, drawColor);
+                        DirectDraw.getInstance().redrawTriangleColor(ddd_y, drawColor);
                     }
                 }
 
-                DirectDrawData ddd_z = Renderer.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 0, scale).mul(Math.max(entity.getScale().z / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f * scale), 13, new Vector3f(0, 0, 1));
+                DirectDrawData ddd_z = DirectDraw.getInstance().drawArrow(entity.getPosition(), new Vector3f(0, 0, scale).mul(Math.max(entity.getScale().z / 2f, 1)).add(entity.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f * scale), 13, new Vector3f(0, 0, 1));
                 if (selectedTool.equals(NONE)) {
                     if (MousePicker.rayHitsAABB(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()).sub(CameraManager.getInstance().getActiveCamera().getOffset()), new Vector3f(MousePicker.getInstance().getRay()), ddd_z.getAABB()) != null) {
-                        Renderer.getInstance().redrawTriangleColor(ddd_z, drawColor);
+                        DirectDraw.getInstance().redrawTriangleColor(ddd_z, drawColor);
                     }
                 } else {
                     //We are using a tool, if its a valid tool, set our color to yellow.
                     if (selectedTool.equals(MOVE_Z) || selectedTool.equals(MOVE_ZX) || selectedTool.equals(MOVE_YZ) || selectedTool.equals(MOVE_XYZ)) {
-                        Renderer.getInstance().redrawTriangleColor(ddd_z, drawColor);
+                        DirectDraw.getInstance().redrawTriangleColor(ddd_z, drawColor);
                     }
                 }
 

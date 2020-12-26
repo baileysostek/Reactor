@@ -37,7 +37,7 @@ uniform mat4 boneTransforms[maxJoints];
 out vec3 passNormal;
 out vec3 passCamPos;
 out vec2 passCoords;
-out vec3 passFragPos;
+out vec3 WorldPos;
 
 out mat3 passTBN;
 
@@ -69,7 +69,7 @@ void main(){
     passTBN = transpose(tbnMatrix);
 
     vec4 worldPosition = transformation * vec4(vPosition.xyz, 1.0);
-    passFragPos = worldPosition.xyz;
+    WorldPos = worldPosition.xyz;
 
     passCoords = vTexture;
 

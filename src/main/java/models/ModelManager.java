@@ -250,107 +250,98 @@ public class ModelManager {
 
         HashMap<String, Joint> joints = new HashMap<>();
 
-        for(int meshIndex = 0; meshIndex < scene.mNumMeshes(); meshIndex++){
-            AIMesh mesh = AIMesh.create(scene.mMeshes().get(meshIndex));
+        try {
+            for (int meshIndex = 0; meshIndex < scene.mNumMeshes(); meshIndex++) {
+                AIMesh mesh = AIMesh.create(scene.mMeshes().get(meshIndex));
 
-            //Put our lists into buffers for this Model.
-            float[] vPositions  = new float[mesh.mNumFaces() * 3 * 3];
-            float[] vNormals    = new float[mesh.mNumFaces() * 3 * 3];
-            float[] vTangents   = new float[mesh.mNumFaces() * 3 * 3];
-            float[] vBiTangents = new float[mesh.mNumFaces() * 3 * 3];
-            float[] vTextures   = new float[mesh.mNumFaces() * 3 * 2];
+                //Put our lists into buffers for this Model.
+                float[] vPositions = new float[mesh.mNumFaces() * 3 * 3];
+                float[] vNormals = new float[mesh.mNumFaces() * 3 * 3];
+                float[] vTangents = new float[mesh.mNumFaces() * 3 * 3];
+                float[] vBiTangents = new float[mesh.mNumFaces() * 3 * 3];
+                float[] vTextures = new float[mesh.mNumFaces() * 3 * 2];
 
-            int numBones = mesh.mNumBones();
-            PointerBuffer aiBones = mesh.mBones();
-            for (int i = 0; i < numBones; i++) {
-                AIBone aiBone = AIBone.create(aiBones.get(i));
-                String name = aiBone.mName().dataString();
-                joints.put(name, new Joint(i, name, this.toJOML(aiBone.mOffsetMatrix())));
-            }
-
-            //For each vertex, get all data we need
-            for(int i = 0; i < mesh.mNumVertices(); i++){
-                //Get ref to vector
-                AIVector3D position  = mesh.mVertices().get(i);
-                AIVector3D normal    = mesh.mNormals().get(i);
-                AIVector3D tangent = null;
-                if(mesh.mTangents() != null){
-                    tangent = mesh.mTangents().get(i);
-                }
-                AIVector3D bitangent = null;
-                if(mesh.mBitangents() != null){
-                    tangent = mesh.mBitangents().get(i);
+                int numBones = mesh.mNumBones();
+                PointerBuffer aiBones = mesh.mBones();
+                for (int i = 0; i < numBones; i++) {
+                    AIBone aiBone = AIBone.create(aiBones.get(i));
+                    String name = aiBone.mName().dataString();
+                    joints.put(name, new Joint(i, name, this.toJOML(aiBone.mOffsetMatrix())));
                 }
 
-                AIVector3D texture   = null;
-                if(mesh.mTextureCoords(0) != null) {
-                    texture = mesh.mTextureCoords(0).get(i);
-                }
+                //For each vertex, get all data we need
+                for (int i = 0; i < mesh.mNumVertices(); i++) {
+                    //Get ref to vector
+                    AIVector3D position = mesh.mVertices().get(i);
+                    AIVector3D normal = mesh.mNormals().get(i);
+                    AIVector3D tangent = mesh.mTangents().get(i);
+                    AIVector3D bitangent = mesh.mBitangents().get(i);
 
-                //Add to our array
-                vPositions[(i * 3) + 0] = position.x();
-                vPositions[(i * 3) + 1] = position.y();
-                vPositions[(i * 3) + 2] = position.z();
+                    AIVector3D texture = null;
+                    if (mesh.mTextureCoords(0) != null) {
+                        texture = mesh.mTextureCoords(0).get(i);
+                    }
 
-                vNormals[(i * 3) + 0] = normal.x();
-                vNormals[(i * 3) + 1] = normal.y();
-                vNormals[(i * 3) + 2] = normal.z();
+                    //Add to our array
+                    vPositions[(i * 3) + 0] = position.x();
+                    vPositions[(i * 3) + 1] = position.y();
+                    vPositions[(i * 3) + 2] = position.z();
 
-                if(tangent != null) {
+                    vNormals[(i * 3) + 0] = normal.x();
+                    vNormals[(i * 3) + 1] = normal.y();
+                    vNormals[(i * 3) + 2] = normal.z();
+
                     vTangents[(i * 3) + 0] = tangent.x();
                     vTangents[(i * 3) + 1] = tangent.y();
                     vTangents[(i * 3) + 2] = tangent.z();
-                }else{
-                    vTangents[(i * 3) + 0] = 0;
-                    vTangents[(i * 3) + 1] = 0;
-                    vTangents[(i * 3) + 2] = 0;
-                }
 
-                if(bitangent != null) {
                     vBiTangents[(i * 3) + 0] = bitangent.x();
                     vBiTangents[(i * 3) + 1] = bitangent.y();
                     vBiTangents[(i * 3) + 2] = bitangent.z();
-                }else{
-                    vBiTangents[(i * 3) + 0] = 0;
-                    vBiTangents[(i * 3) + 1] = 0;
-                    vBiTangents[(i * 3) + 2] = 0;
+
+                    if (texture != null) {
+                        vTextures[(i * 2) + 0] = texture.x();
+                        vTextures[(i * 2) + 1] = texture.y();
+                    } else {
+                        vTextures[(i * 2) + 0] = 0;
+                        vTextures[(i * 2) + 1] = 0;
+                    }
                 }
 
-                if(texture != null) {
-                    vTextures[(i * 2) + 0] = texture.x();
-                    vTextures[(i * 2) + 1] = texture.y();
-                }else{
-                    vTextures[(i * 2) + 0] = 0;
-                    vTextures[(i * 2) + 1] = 0;
+                Handshake modelHandshake = new Handshake();
+                modelHandshake.addAttributeList("vPosition", vPositions, EnumGLDatatype.VEC3);
+                modelHandshake.addAttributeList("vNormal", vNormals, EnumGLDatatype.VEC3);
+                modelHandshake.addAttributeList("vTangent", vTangents, EnumGLDatatype.VEC3);
+                modelHandshake.addAttributeList("vBitangent", vBiTangents, EnumGLDatatype.VEC3);
+                modelHandshake.addAttributeList("vColor", vNormals, EnumGLDatatype.VEC3);
+                modelHandshake.addAttributeList("vTexture", vTextures, EnumGLDatatype.VEC2);
+
+                AIVector3D min = mesh.mAABB().mMin();
+                AIVector3D max = mesh.mAABB().mMax();
+
+                //Get Bone info
+                Joint root = calcualteBoneHeierarchy(scene.mRootNode(), joints);
+
+                //Determine Animations
+                calculateAnimations(scene, joints);
+
+                //TODO refactor to grouped model.
+                Model model = new Model(this.getNextID(), modelHandshake, mesh.mNumFaces() * 3, new Vector3f[]{new Vector3f(min.x(), min.y(), min.z()), new Vector3f(max.x(), max.y(), max.z())});
+                model.setJoints(new LinkedList<>(joints.values()));
+                model.setRootJoint(root);
+                LinkedList<Animation> animations = calculateAnimations(scene, joints);
+                if (animations.size() > 0) {
+                    model.animation = animations.getFirst();
                 }
+                out.push(model);
+
             }
+        }catch(Exception exception){
+            exception.printStackTrace();
+            System.out.println("Error parsing data for model:");
 
-            Handshake modelHandshake = new Handshake();
-            modelHandshake.addAttributeList("vPosition", vPositions, EnumGLDatatype.VEC3);
-            modelHandshake.addAttributeList("vNormal", vNormals, EnumGLDatatype.VEC3);
-            modelHandshake.addAttributeList("vTangent", vTangents, EnumGLDatatype.VEC3);
-            modelHandshake.addAttributeList("vBitangent", vBiTangents, EnumGLDatatype.VEC3);
-            modelHandshake.addAttributeList("vColor", vNormals, EnumGLDatatype.VEC3);
-            modelHandshake.addAttributeList("vTexture", vTextures, EnumGLDatatype.VEC2);
-
-            AIVector3D min = mesh.mAABB().mMin();
-            AIVector3D max = mesh.mAABB().mMax();
-
-            //Get Bone info
-            Joint root = calcualteBoneHeierarchy(scene.mRootNode(), joints);
-
-            //Determine Animations
-            calculateAnimations(scene, joints);
-
-            //TODO refactor to grouped model.
-            Model model = new Model(this.getNextID(), modelHandshake, mesh.mNumFaces() * 3, new Vector3f[]{new Vector3f(min.x(), min.y(), min.z()), new Vector3f(max.x(), max.y(), max.z())});
-            model.setJoints(new LinkedList<>(joints.values()));
-            model.setRootJoint(root);
-            LinkedList<Animation> animations = calculateAnimations(scene, joints);
-            if(animations.size() > 0) {
-                model.animation = animations.getFirst();
-            }
-            out.push(model);
+            out.clear();
+            out.push(DEFAULT_MODEL);
 
         }
 

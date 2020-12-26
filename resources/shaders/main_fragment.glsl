@@ -9,6 +9,7 @@ precision highp float;
 precision highp sampler2D;
 
 #define maxLights 25
+#define maxPointLights 25
 #define specularStrength 0.1
 #define PI 3.14159
 
@@ -16,7 +17,7 @@ precision highp sampler2D;
 in vec3 passNormal;
 in vec2 passCoords;
 in vec3 passCamPos;
-in vec3 passFragPos;
+in vec3 WorldPos;
 in vec4 passPosLightSpace[maxLights];
 
 in mat3 passTBN;
@@ -35,6 +36,14 @@ uniform sampler2D ambientOcclusionID;
 uniform sampler2D shadowMap[maxLights];
 uniform vec3 sunAngle[maxLights];
 uniform vec3 sunColor[maxLights];
+uniform int  numDirectionalLights;
+
+//Point Light Sources
+uniform vec3 lightPosition[maxPointLights];
+uniform vec3 lightColor[maxPointLights];
+uniform float lightIntensity[maxPointLights];
+uniform int  numPointLights;
+
 
 //Skybox and nearest Reflection probe
 uniform samplerCube nearestProbe;
@@ -88,7 +97,7 @@ void main(void){
 
     // ray to camera from frag
     vec3 viewDir = normalize((passCamPos * -1));
-    vec3 viewDir2 = normalize((passCamPos * -1) - passFragPos);
+//    vec3 viewDir2 = normalize((passCamPos * -1) - passFragPos);
 
     //Recalculate the surface normal
     vec4 normalTexture = 2.0 * texture(normalID, passCoords, -1.0) -1.0;
@@ -96,21 +105,37 @@ void main(void){
 
     vec3 totalDiffuse  = vec3(0);
     vec3 totalSpecular = vec3(0);
+
+//    for(int i = 0; i < numPointLights; i++){
+//        vec3 lightDir      = normalize(lightPosition[i] - WorldPos);
+//        vec3 reflectDir    = reflect(lightDir, surfaceNormal);
+//        vec3 halfwayDir    = normalize(lightDir + viewDir);
+//
+//        float diffuse  = clamp(dotProduct(surfaceNormal, lightDir * -1), 0, 1);
+//        float specular = pow(clamp(dotProduct(viewDir, reflectDir), 0, 1), 32);
+//
+//        float shadow = ShadowCalculation(i);
+//        vec3 thislightColor = ((1.0 - shadow) * lightColor[i]);
+//
+//        totalDiffuse  += (thislightColor * diffuse);
+//        totalSpecular += (thislightColor * specularStrength * specular);
+//    }
+
+
     //Directional lights
-    for(int i = 0; i < maxLights; i++){
+    for(int i = 0; i < numDirectionalLights; i++){
         vec3 lightDir      = normalize(sunAngle[i]);
         vec3 reflectDir    = reflect(lightDir, surfaceNormal);
         vec3 halfwayDir    = normalize(lightDir + viewDir);
-        vec3 halfwayDir2    = normalize(lightDir + viewDir2);
 
         float diffuse  = clamp(dotProduct(surfaceNormal, lightDir * -1), 0, 1);
         float specular = pow(clamp(dotProduct(viewDir, reflectDir), 0, 1), 32);
 
-        float shadow = ShadowCalculation(i);    
-        vec3 lightColor = ((1.0 - shadow) * sunColor[i]);
+        float shadow = ShadowCalculation(i);
+        vec3 thislightColor = ((1.0 - shadow) * sunColor[i]);
 
-        totalDiffuse  += (lightColor * diffuse);
-        totalSpecular += (lightColor * specularStrength * specular);
+        totalDiffuse  += (thislightColor * diffuse);
+        totalSpecular += (thislightColor * specularStrength * specular);
 
     }
 

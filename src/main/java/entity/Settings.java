@@ -1,7 +1,9 @@
 package entity;
 
+import editor.AttributeRenderer;
 import editor.Editor;
 import editor.components.UIComponet;
+import entity.component.Attribute;
 import imgui.ImGui;
 import imgui.enums.ImGuiDragDropFlags;
 import imgui.enums.ImGuiSelectableFlags;
@@ -11,6 +13,8 @@ import imgui.enums.ImGuiWindowFlags;
 import java.util.LinkedList;
 
 public class Settings extends UIComponet{
+
+    private LinkedList<Attribute> attribtues = new LinkedList<>();
 
     public Settings(){
 
@@ -35,7 +39,8 @@ public class Settings extends UIComponet{
     public void self_render() {
         int flags = ImGuiWindowFlags.NoCollapse;
         ImGui.beginChild(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight(),  true, flags);
-        ImGui.showDemoWindow();
+        AttributeRenderer.renderAttributes(attribtues);
+//        ImGui.showDemoWindow();
         ImGui.endChild();
     }
 
@@ -47,5 +52,9 @@ public class Settings extends UIComponet{
     @Override
     public String getName(){
         return "Settings";
+    }
+
+    public void addWatchedAttribute(Attribute attribute) {
+        attribtues.add(attribute);
     }
 }

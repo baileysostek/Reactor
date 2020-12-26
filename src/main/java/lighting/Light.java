@@ -12,6 +12,7 @@ public abstract class Light extends Entity {
         addAttribute(new Attribute("color", new Vector3f(1)).setType(EnumAttributeType.COLOR));
         addAttribute(new Attribute("frustum", new Vector3f(10, 1, 7.5f)));
         addAttribute(new Attribute("castsShadows", false));
+        addAttribute(new Attribute<Float>("brightness", (float) 1));
 
         //Remove unneeded attributes
         removeAttribute("normalID");
@@ -22,6 +23,10 @@ public abstract class Light extends Entity {
 
     public Vector3f getColor(){
         return (Vector3f) this.getAttribute("color").getData();
+    }
+
+    public float getBrightness(){
+        return (float) this.getAttribute("brightness").getData();
     }
 
     @Override

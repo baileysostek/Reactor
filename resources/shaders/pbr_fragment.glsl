@@ -34,11 +34,13 @@ uniform sampler2D ambientOcclusionID;
 uniform sampler2D shadowMap[maxLights];
 uniform vec3 sunAngle[maxLights];
 uniform vec3 sunColor[maxLights];
+uniform int  numDirectionalLights;
 
 //Point Light Sources
 uniform vec3 lightPosition[maxPointLights];
 uniform vec3 lightColor[maxPointLights];
 uniform float lightIntensity[maxPointLights];
+uniform int  numPointLights;
 
 //Skybox and nearest Reflection probe
 uniform samplerCube nearestProbe;
@@ -135,7 +137,7 @@ void main(void){
 
     vec3 Lo = vec3(0.0);
     //Point lights
-    for(int i = 0; i < maxPointLights; i++){
+    for(int i = 0; i < numPointLights; i++){
         vec3 L = normalize(lightPosition[i] - WorldPos);
         vec3 H = normalize(V + L);
 
@@ -154,7 +156,7 @@ void main(void){
         kD *= 1.0 - metallic;
 
         vec3 numerator    = NDF * G * F;
-        float denominator = maxPointLights * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
+        float denominator = numPointLights * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
         vec3 specular     = (numerator / max(denominator, 0.001));
 
         float NdotL = max(dot(N, L), 0.0);
@@ -162,7 +164,7 @@ void main(void){
     }
 
     //Directional lights
-    for(int i = 0; i < maxLights; i++){
+    for(int i = 0; i < numDirectionalLights; i++){
         vec3 L = normalize(sunAngle[i] * -1);
         vec3 H = normalize(V + L);
 
@@ -181,12 +183,12 @@ void main(void){
         kD *= 1.0 - metallic;
 
         vec3 numerator    = NDF * G * F;
-        float denominator = maxLights * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
+        float denominator = numDirectionalLights * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
         vec3 specular     = (numerator / max(denominator, 0.001));
 
         float NdotL = max(dot(N, L), 0.0);
         Lo += (kD * albedo.xyz / PI + specular) * radiance * NdotL;
-        }
+    }
 
     // ambient
     vec3 ambient = vec3(0.15) * albedo.xyz * ao;
