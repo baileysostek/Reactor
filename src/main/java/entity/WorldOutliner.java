@@ -2,6 +2,7 @@ package entity;
 
 import editor.Editor;
 import editor.components.UIComponet;
+import entity.component.Collision;
 import graphics.renderer.DirectDraw;
 import graphics.renderer.Renderer;
 import graphics.sprite.SpriteBinder;
@@ -172,11 +173,17 @@ public class WorldOutliner extends UIComponet {
                     EntityManager.getInstance().removeEntity(parent);
                     clicked = true;
                 }
+                ImGui.separator();
                 if(parent.hasParent()){
                     if(ImGui.button("Unparent", ImGui.getWindowWidth(), 32)){
                         parent.setParent(null);
                     }
                     clicked = true;
+                }
+                ImGui.separator();
+                //TODO make arrow
+                if(ImGui.button("Add Component", ImGui.getWindowWidth(), 32)){
+                    parent.addComponent(new Collision());
                 }
                 ImGui.endPopup();
             }

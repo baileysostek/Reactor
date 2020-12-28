@@ -27,6 +27,7 @@ import platform.PlatformManager;
 import scene.SceneManager;
 import scripting.ScriptingEngine;
 import skybox.SkyboxManager;
+import sound.SoundEngine;
 import steam.SteamManager;
 import util.StopwatchManager;
 import util.StringUtils;
@@ -164,7 +165,7 @@ public class Reactor {
                 ParticleManager.initialize();
                 EntityManager.initialize();
                 SceneManager.initialize();
-//                SoundEngine.initialize();
+                SoundEngine.initialize();
                 PhysicsEngine.initialize();
                 LightingManager.initialize();
                 ControllerManager.initialize();
@@ -311,6 +312,7 @@ public class Reactor {
         SceneManager.getInstance().update(delta);
         LightingManager.getInstance().update(delta);
         EntityManager.getInstance().update(delta);
+        SoundEngine.getInstance().update(delta);
         ParticleManager.getInstance().update(delta);
         ControllerManager.getInstance().update(delta);
 
@@ -383,7 +385,7 @@ public class Reactor {
     private static void shutdown(){
         Renderer.getInstance().onShutdown();
         SpriteBinder.getInstance().onShutdown();
-//        SoundEngine.getInstance().onShutdown();
+        SoundEngine.getInstance().onShutdown();
         ChromaManager.getInstance().onShutdown();
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             Editor.getInstance().onShutdown();

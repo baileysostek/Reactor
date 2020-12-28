@@ -24,6 +24,7 @@ import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import particle.ParticleSystem;
 import skybox.Skybox;
+import sound.SoundEmitter;
 import util.Callback;
 
 import java.util.HashMap;
@@ -124,6 +125,10 @@ public class EntityRegistry extends UIComponet {
         Skybox skybox = new Skybox();
         addEntity("Skybox", skybox);
 
+
+        Entity soundEmitter = new SoundEmitter();
+        soundEmitter.getAttribute("name").setData("Sound Emitter");
+        addEntity("Sound", soundEmitter);
 
         //Genreate mouse callback for when we release the mouse
         dropFileInWorld = new Callback() {

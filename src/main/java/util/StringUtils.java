@@ -25,8 +25,6 @@ public class StringUtils {
         StringBuilder fileData = new StringBuilder();
         try{
             String path = PATH + filePath;
-            System.out.println("PATH:" + PATH);
-            System.out.println(path);
             BufferedReader reader = new BufferedReader(new FileReader(path));
             String line;
             while((line = reader.readLine()) != null){
