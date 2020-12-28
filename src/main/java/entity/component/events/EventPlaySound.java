@@ -21,7 +21,8 @@ public class EventPlaySound extends Event {
 
     public void intialize(){
         soundID = SoundEngine.getInstance().loadSound(this.sourceName);
-        SoundEngine.getInstance().createSoundSource(soundID);
+        int sourcePointer = SoundEngine.getInstance().createSoundSource();
+        SoundEngine.getInstance().loadSoundIntoSource(sourcePointer, soundID);
 
         this.setCallback(new Callback() {
             @Override

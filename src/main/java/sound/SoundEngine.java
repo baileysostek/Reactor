@@ -1,5 +1,6 @@
 package sound;
 
+import camera.CameraManager;
 import org.joml.Vector3f;
 import org.lwjgl.openal.*;
 import org.lwjgl.stb.STBVorbis;
@@ -8,6 +9,7 @@ import org.lwjgl.system.libc.LibCStdlib;
 import util.StringUtils;
 
 import javax.script.ScriptEngine;
+import java.io.File;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.HashMap;
@@ -39,6 +41,9 @@ public class SoundEngine{
         if(alCapabilities.OpenAL10) {
             System.out.println("OpenAL 1.0 is supported!");
         }
+
+        AL10.alDistanceModel(AL11.AL_LINEAR_DISTANCE_CLAMPED);
+
     }
 
 
@@ -46,6 +51,12 @@ public class SoundEngine{
         if(!bufferPointers.containsKey(fileName)) {
             String path = StringUtils.getRelativePath() + "sound/" + fileName;
             System.out.println("Loading sound at:" + path);
+
+            File check = new File(path);
+            if(!check.exists()){
+                System.out.println("Sound does not exist.");
+                return -1;
+            }
 
             //Allocate space to store return information from the function
             MemoryStack.stackPush();
@@ -78,8 +89,7 @@ public class SoundEngine{
             bufferPointers.put(fileName, bufferPointer);
 
             //Send the data to OpenAL
-            //TODO remove comment below
-//            AL10.alBufferData(bufferPointer, format, rawAudioBuffer, sampleRate);
+            AL10.alBufferData(bufferPointer, format, rawAudioBuffer, sampleRate);
 
             //Free the memory allocated by STB
             LibCStdlib.free(rawAudioBuffer);
@@ -89,18 +99,28 @@ public class SoundEngine{
         }
     }
 
-    public int createSoundSource(int soundBufferPointer){
+    public int createSoundSource(){
         int sourcePointer = AL10.alGenSources();
         soundSources.push(sourcePointer);
 
-        //Assign our buffer to the source
-        AL10.alSourcei(sourcePointer, AL10.AL_BUFFER, soundBufferPointer);
+        AL10.alSourcef(sourcePointer, AL10.AL_ROLLOFF_FACTOR, 1);
+        AL10.alSourcef(sourcePointer, AL10.AL_REFERENCE_DISTANCE, 15);
+        AL10.alSourcef(sourcePointer, AL10.AL_MAX_DISTANCE, 32);
+
+        AL10.alSource3f(sourcePointer, AL10.AL_POSITION, 0, 0, 0);
+        AL10.alSource3f(sourcePointer, AL10.AL_VELOCITY, 0, 0, 0);
 
         return sourcePointer;
     }
 
+    public void loadSoundIntoSource(int source, int bufferPointer){
+        //Assign our buffer to the source
+        if(soundSources.contains(source)) {
+            AL10.alSourcei(source, AL10.AL_BUFFER, bufferPointer);
+        }
+    }
+
     public void playSound(int sourcePointer){
-        System.out.println("Playing sound");
         AL10.alSourcePlay(sourcePointer);
     }
 
@@ -115,6 +135,17 @@ public class SoundEngine{
             System.out.println("The sound:"+sourceName+" could not be found. Has a call to Load been made for it yet?");
         }
         return 0;
+    }
+
+    public void update(double delta){
+        Vector3f position = CameraManager.getInstance().getActiveCamera().getPosition();
+        Vector3f lookDir  = CameraManager.getInstance().getActiveCamera().getLookingDirection();
+        AL10.alListener3f(AL10.AL_POSITION, position.x, position.y, position.z);
+        float[] orientation = new float[]{
+            -lookDir.x, -lookDir.y, -lookDir.z,
+            0,1,0
+        };
+        AL10.alListenerfv(AL10.AL_ORIENTATION, orientation);
     }
 
     public void onShutdown() {
