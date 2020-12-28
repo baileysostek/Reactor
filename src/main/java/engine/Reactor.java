@@ -1,44 +1,25 @@
 package engine;
 
 import camera.CameraManager;
-import com.codedisaster.steamworks.SteamAPI;
-import com.codedisaster.steamworks.SteamException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import editor.Editor;
-import editor.EntityRegistry;
-import entity.Entity;
 import entity.EntityManager;
-import entity.EntityUtils;
-import entity.component.Collision;
 import graphics.renderer.*;
-import graphics.sprite.Colors;
-import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import input.Chroma.ChromaManager;
 import input.MousePicker;
 import input.controller.ControllerManager;
-import lighting.DirectionalLight;
 import lighting.LightingManager;
-import lighting.PointLight;
 import logging.LogManager;
 import material.MaterialManager;
-import models.AABB;
 import models.Model;
 import models.ModelManager;
-import org.fmod.FMOD;
-import org.joml.Vector2f;
-import org.joml.Vector2i;
-import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.nanovg.NVGColor;
-import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL46;
 import particle.ParticleManager;
-import particle.ParticleSystem;
 import physics.PhysicsEngine;
 import platform.EnumDevelopment;
 import platform.EnumPlatform;
@@ -46,16 +27,9 @@ import platform.PlatformManager;
 import scene.SceneManager;
 import scripting.ScriptingEngine;
 import skybox.SkyboxManager;
-import sound.SoundEngine;
 import steam.SteamManager;
 import util.StopwatchManager;
 import util.StringUtils;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.Set;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -63,7 +37,7 @@ import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.system.MemoryUtil.memByteBuffer;
 
-public class FraudTek {
+public class Reactor {
 
     private static Window WINDOW;
     public static long WINDOW_POINTER;
@@ -420,7 +394,7 @@ public class FraudTek {
 
 
     public static void main(String[] args){
-        FraudTek.initialize();
+        Reactor.initialize();
         if(args.length > 0) {
             try {
                 JsonObject action = new JsonParser().parse(args[0]).getAsJsonObject();
@@ -528,7 +502,7 @@ public class FraudTek {
 
 
 
-        FraudTek.run();
+        Reactor.run();
     }
 
 }

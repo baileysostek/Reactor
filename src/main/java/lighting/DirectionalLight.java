@@ -1,6 +1,5 @@
 package lighting;
 
-import engine.FraudTek;
 import entity.component.Attribute;
 import graphics.renderer.DirectDraw;
 import graphics.renderer.FBO;
@@ -9,7 +8,6 @@ import graphics.sprite.SpriteBinder;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.joml.Vector3fc;
 import util.Callback;
 
 public class DirectionalLight extends Light {

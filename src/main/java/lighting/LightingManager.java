@@ -1,16 +1,11 @@
 package lighting;
 
-import engine.FraudTek;
 import entity.Entity;
 import entity.EntityManager;
 import graphics.renderer.ShaderManager;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
-import particle.ParticleManager;
-import util.StopwatchManager;
 
-import java.awt.*;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;

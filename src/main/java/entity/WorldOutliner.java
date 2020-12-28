@@ -7,12 +7,16 @@ import graphics.renderer.Renderer;
 import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
 import imgui.ImString;
+import imgui.ImVec2;
 import imgui.enums.ImGuiDragDropFlags;
 import imgui.enums.ImGuiInputTextFlags;
 import imgui.enums.ImGuiSelectableFlags;
 import imgui.enums.ImGuiTreeNodeFlags;
+import material.Material;
+import material.MaterialManager;
 import org.joml.Vector3f;
 
+import java.util.Collection;
 import java.util.LinkedList;
 
 public class WorldOutliner extends UIComponet {
@@ -138,6 +142,48 @@ public class WorldOutliner extends UIComponet {
                 ImGui.endDragDropTarget();
             }
             ImGui.endChildFrame();
+
+            boolean rightClick = false;
+
+            if (ImGui.isItemHovered() && ImGui.getIO().getMouseDown(1)) {
+                rightClick = true;
+            }
+
+            String popupIDRight = Editor.getInstance().getNextID()+"";
+
+            if (rightClick) {
+                ImGui.openPopup(popupIDRight);
+            }
+
+            //Popup for right click
+            ImGui.setNextWindowSize(ImGui.getColumnWidth(), -1);
+            ImVec2 vec2 = new ImVec2();
+            ImGui.getWindowPos(vec2);
+//            ImGui.setNextWindowPos(vec2.x, vec2.y);
+            boolean clicked = false;
+            if (ImGui.beginPopup(popupIDRight)) {
+                if(ImGui.button("Clone", ImGui.getWindowWidth(), 32)){
+                    Entity clone = EntityUtils.cloneTarget(parent);
+                    EntityManager.getInstance().addEntity(clone);
+                    this.editor.setTarget(clone);
+                    clicked = true;
+                }
+                if(ImGui.button("Delete", ImGui.getWindowWidth(), 32)){
+                    EntityManager.getInstance().removeEntity(parent);
+                    clicked = true;
+                }
+                if(parent.hasParent()){
+                    if(ImGui.button("Unparent", ImGui.getWindowWidth(), 32)){
+                        parent.setParent(null);
+                    }
+                    clicked = true;
+                }
+                ImGui.endPopup();
+            }
+
+            if(clicked){
+                ImGui.closeCurrentPopup();
+            }
         }
 
 

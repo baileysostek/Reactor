@@ -2,7 +2,7 @@ package input;
 
 import editor.Editor;
 import engine.Engine;
-import engine.FraudTek;
+import engine.Reactor;
 import imgui.ImGui;
 import input.Chroma.ChromaManager;
 import org.lwjgl.glfw.GLFW;
@@ -87,7 +87,7 @@ public class Keyboard extends Engine {
             releasedCallbacks[i] = new LinkedList<Callback>();
         }
         //Callback stuff
-        GLFW.glfwSetKeyCallback(FraudTek.WINDOW_POINTER, new GLFWKeyCallback() {
+        GLFW.glfwSetKeyCallback(Reactor.WINDOW_POINTER, new GLFWKeyCallback() {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
 //                System.out.println(key);

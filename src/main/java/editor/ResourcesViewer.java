@@ -2,7 +2,7 @@ package editor;
 
 import camera.CameraManager;
 import editor.components.UIComponet;
-import engine.FraudTek;
+import engine.Reactor;
 import entity.Entity;
 import entity.EntityManager;
 import entity.component.Attribute;
@@ -55,7 +55,7 @@ public class ResourcesViewer extends UIComponet {
         //GLFW callback for dropping an item in the world
         //Set the GLFW drop callback
         //Callback stuff
-        GLFW.glfwSetDropCallback(FraudTek.WINDOW_POINTER, new GLFWDropCallback() {
+        GLFW.glfwSetDropCallback(Reactor.WINDOW_POINTER, new GLFWDropCallback() {
             @Override
             public void invoke(long window, int count, long names) {
             PointerBuffer charPointers = MemoryUtil.memPointerBuffer(names, count);
@@ -211,7 +211,8 @@ public class ResourcesViewer extends UIComponet {
     private void renderFileObject(FileObject object){
         if(object.isDirectory()){
             int nodeFlags_attributes = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
-            ImGui.image(FOLDER_OPEN, 32, 32);
+            ImGui.image(FOLDER_CLOSE, 16, 16);
+            ImGui.sameLine();
             if(ImGui.collapsingHeader(object.getName(), nodeFlags_attributes)) {
                 ImGui.indent();
                 for (FileObject fileObject : new LinkedList<FileObject>(object.getChildren())) {
