@@ -68,7 +68,7 @@ public class Handshake implements Serializable<Handshake> {
     }
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject saveData = new JsonObject();
 
         saveData.add("attributes", SerializationHelper.serializeHashMap(bufferedAttributes, bufferNameIndexes));

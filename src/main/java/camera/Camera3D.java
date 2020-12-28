@@ -58,7 +58,7 @@ public class Camera3D extends Camera{
     }
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
         out.add("pos", SerializationHelper.addClass(new Vector3f(this.getPosition()).mul(-1)));
         out.add("rot", SerializationHelper.addClass(this.getRotation()));

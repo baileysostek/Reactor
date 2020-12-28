@@ -1,6 +1,7 @@
 package graphics.renderer;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import entity.Entity;
 import entity.component.Attribute;
 import imgui.ImGui;
 import org.joml.Vector2f;
@@ -363,5 +364,17 @@ public class ShaderManager {
             return shaderInstances_prime.get(id);
         }
         return "unknown";
+    }
+
+    public void loadAttributesFromEntity(Entity entity) {
+
+        Collection<String> uniforms = shaders.get(shaderInstances_prime.get(activeShader)).getUniforms();
+
+        for(String uniform : uniforms){
+            if (entity.hasAttribute(uniform)) {
+                ShaderManager.getInstance().loadUniformIntoActiveShader(uniform, entity.getAttribute(uniform).getData());
+            }
+        }
+
     }
 }

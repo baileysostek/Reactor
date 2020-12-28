@@ -27,7 +27,10 @@ public class FileObject{
                 public Object callback(Object... objects) {
                     System.out.println("Changed within file");
                     System.out.println(objects[0]);
-                    System.out.println(objects[1]);
+
+                    String fileName = objects[1].toString();
+                    System.out.println(fileName);
+
                     WatchEvent.Kind<StandardWatchEventKinds> event = (WatchEvent.Kind<StandardWatchEventKinds>) objects[0];
                     //Create
                     if(event.equals(StandardWatchEventKinds.ENTRY_CREATE)){
@@ -41,6 +44,11 @@ public class FileObject{
                                 break;
                             }
                         }
+                    }
+                    //Modify
+                    if(event.equals(StandardWatchEventKinds.ENTRY_MODIFY)){
+                        System.out.println("File:" + relativePath + "/" + fileName);
+                        StringUtils.recacheFile(relativePath + "/" + fileName);
                     }
                     return null;
                 }
@@ -60,7 +68,7 @@ public class FileObject{
     }
 
     public void onShutdown(){
-        watcher.destrory();
+        watcher.destroy();
     }
 
     public File getFile(){

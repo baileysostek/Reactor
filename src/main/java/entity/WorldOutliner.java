@@ -8,6 +8,7 @@ import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
 import imgui.ImString;
 import imgui.enums.ImGuiDragDropFlags;
+import imgui.enums.ImGuiInputTextFlags;
 import imgui.enums.ImGuiSelectableFlags;
 import imgui.enums.ImGuiTreeNodeFlags;
 import org.joml.Vector3f;
@@ -25,6 +26,8 @@ public class WorldOutliner extends UIComponet {
     EntityEditor editor;
 
     private final int SEARCH;
+
+    private String filterString = "";
 
     public WorldOutliner(EntityEditor editor){
 
@@ -61,10 +64,19 @@ public class WorldOutliner extends UIComponet {
         ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight());
         //Search / filter for a specific type of Entity
         ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), 32);
-        ImGui.image(SEARCH, 32, 32);
+        ImGui.image(SEARCH, 16, 16);
         ImGui.sameLine();
-        ImString filter = new ImString();
-        ImGui.inputText("Search", filter);
+
+        ImString value = new ImString(filterString);
+
+        int flags = ImGuiInputTextFlags.CallbackResize | ImGuiInputTextFlags.AutoSelectAll ;
+
+        ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
+        ImGui.inputText(Editor.getInstance().getNextID()+"", value, flags);
+        ImGui.popItemWidth();
+
+        filterString = value.get();
+
         ImGui.endChildFrame();
         //Render all entities in the world.
         renderEntity(new LinkedList<Entity>(EntityManager.getInstance().getEntities()));
@@ -85,7 +97,8 @@ public class WorldOutliner extends UIComponet {
 
     public void renderEntity(Entity parent){
         //Drag container
-        ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16);
+        if(parent.getName().toLowerCase().contains(filterString)) {
+            ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16);
             int selected = ImGuiSelectableFlags.AllowDoubleClick;
             ImGui.image(parent.getTextureID(), 16, 16);
             ImGui.sameLine();
@@ -93,12 +106,12 @@ public class WorldOutliner extends UIComponet {
             if (ImGui.selectable(parent.getName(), parent.equals(this.entity), selected)) {
                 this.entity = parent;
                 this.editor.setTarget(parent);
-    //                CameraManager.getInstance().getActiveCamera().setPosition(new Vector3f(e.getPosition()).mul(1, 0, 1).add(new Vector3f( CameraManager.getInstance().getActiveCamera().getPosition()).mul(0, 1, 0)));
+                //                CameraManager.getInstance().getActiveCamera().setPosition(new Vector3f(e.getPosition()).mul(1, 0, 1).add(new Vector3f( CameraManager.getInstance().getActiveCamera().getPosition()).mul(0, 1, 0)));
             }
-            if(ImGui.beginDragDropSource()){
+            if (ImGui.beginDragDropSource()) {
                 //Render Tooltip
-                if(ImGui.setDragDropPayload("ENTITY", new byte[]{1}, 1)){
-                    System.out.println("Drag:"+parent.getName());
+                if (ImGui.setDragDropPayload("ENTITY", new byte[]{1}, 1)) {
+                    System.out.println("Drag:" + parent.getName());
                     dragged = parent;
                 }
                 ImGui.beginTooltip();
@@ -107,14 +120,14 @@ public class WorldOutliner extends UIComponet {
                 ImGui.endDragDropSource();
             }
 
-            if(ImGui.beginDragDropTarget()){
+            if (ImGui.beginDragDropTarget()) {
                 int target_flags = ImGuiDragDropFlags.None;
                 byte[] data = ImGui.acceptDragDropPayload("ENTITY", target_flags);
-                if (data != null){
-                    if(dragged != null) {
+                if (data != null) {
+                    if (dragged != null) {
                         System.out.println("Drop:" + dragged.getName());
                         LinkedList<Entity> grandChildren = EntityManager.getInstance().getEntitiesChildren(dragged);
-                        if(!grandChildren.contains(parent)) {
+                        if (!grandChildren.contains(parent)) {
                             dragged.translate(new Vector3f(parent.getPosition()).mul(-1));
                             dragged.setParent(parent);
                         }
@@ -124,7 +137,8 @@ public class WorldOutliner extends UIComponet {
 
                 ImGui.endDragDropTarget();
             }
-        ImGui.endChildFrame();
+            ImGui.endChildFrame();
+        }
 
 
         //Render Children
@@ -134,12 +148,10 @@ public class WorldOutliner extends UIComponet {
             int nodeFlags_attributes = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
 //            ImGui.sameLine();
             ImGui.indent();
-            if (ImGui.collapsingHeader("["+children.size()+"] children", nodeFlags_attributes)) {
-                for (Entity child : children) {
-                    renderEntity(child);
-                    if(ImGui.isItemHovered()){
-                        DirectDraw.getInstance().drawAABB(child, new Vector3f(1));
-                    }
+            for (Entity child : children) {
+                renderEntity(child);
+                if(ImGui.isItemHovered()){
+                    DirectDraw.getInstance().drawAABB(child, new Vector3f(1));
                 }
             }
             ImGui.unindent();

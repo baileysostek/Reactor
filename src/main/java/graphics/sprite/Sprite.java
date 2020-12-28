@@ -335,7 +335,7 @@ public class Sprite implements Serializable<Sprite> {
 
     //Serialize sprite call.
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
         out.addProperty("width", width);
         out.addProperty("height", height);

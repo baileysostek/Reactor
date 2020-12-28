@@ -34,7 +34,7 @@ public class EventPlaySound extends Event {
     }
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
         out.addProperty("sourceName", sourceName);
         return out;

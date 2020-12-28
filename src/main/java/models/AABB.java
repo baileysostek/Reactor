@@ -83,7 +83,7 @@ public class AABB implements Serializable<AABB> {
     }
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
         min:{
             JsonObject helperObject = new JsonObject();

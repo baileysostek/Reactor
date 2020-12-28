@@ -44,6 +44,24 @@ public class StringUtils {
         return null;
     }
 
+    public static boolean releaseCachedFile(String fileName){
+        if(fileName.startsWith("/")){
+            fileName = fileName.substring(1, fileName.length());
+        }
+
+        if(fileCache.containsKey(fileName)){
+            fileCache.remove(fileName);
+            return true;
+        }
+        return false;
+    }
+
+    public static void recacheFile(String fileName){
+        if(releaseCachedFile(fileName)){
+            load(fileName);
+        }
+    }
+
     public static ByteBuffer loadRaw(String filePath) {
         try{
             String path = PATH + filePath;

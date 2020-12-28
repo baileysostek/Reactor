@@ -66,7 +66,7 @@ public class DirectoryWatcher implements Runnable{
         this.callbacks.add(callback);
     }
 
-    public void destrory(){
+    public void destroy(){
         running = false;
         if(key != null){
             try {

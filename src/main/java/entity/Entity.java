@@ -73,15 +73,15 @@ public class Entity implements Transformable, Serializable<Entity> {
 //        materials.add(new Material());
         LinkedList<Material> tmp = new LinkedList<>();
         this.addAttribute("Material",  new  Attribute<LinkedList<Material>>("materials", tmp));
-        this.addAttribute("2D",        new Attribute<Integer> ("zIndex"       , 0));
-        this.addAttribute("2D",        new Attribute<Boolean> ("autoScale"    , false));
+//        this.addAttribute("2D",        new Attribute<Integer> ("zIndex"       , 0));
+//        this.addAttribute("2D",        new Attribute<Boolean> ("autoScale"    , false));
         this.addAttribute("Title",     new Attribute<String>  ("name"         , "Undefined"));
         this.addAttribute("Title",     new Attribute<String>  ("type"         , this.toString()));
-        this.addAttribute("2D",        new Attribute<Vector2f>("t_scale"      , new Vector2f(1)));
+//        this.addAttribute("2D",        new Attribute<Vector2f>("t_scale"      , new Vector2f(1)));
         this.addAttribute(new Attribute<Boolean>("updateInEditor", false));
         this.addAttribute(new Attribute<Boolean>("visible"      , true));
-        this.addAttribute(new Attribute<Float>("mat_m", 0.5f));
-        this.addAttribute(new Attribute<Float>("mat_r", 0.5f));
+//        this.addAttribute(new Attribute<Float>("mat_m", 0.5f));
+//        this.addAttribute(new Attribute<Float>("mat_r", 0.5f));
 
 //        this.addComponent(new ComponentShader());
 
@@ -522,10 +522,22 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Going from an entity to json
     @Override
-    public JsonObject serialize() {
+    public final JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
+
+        if(meta == null){
+            meta = new JsonObject();
+            meta.add("names", new JsonArray());
+            meta.add("models", new JsonArray());
+            meta.add("materials", new JsonArray());
+
+            out.add("meta", meta);
+        }
+        meta.get("names").getAsJsonArray().add(this.getName());
+
         //Add our Model if it exists
         if(this.model != null) {
+
             out.add("model", this.model.serialize());
         }
         //Create a json object to hold our attributes
@@ -570,7 +582,7 @@ public class Entity implements Transformable, Serializable<Entity> {
             LinkedList<Entity> childrenEntities = EntityManager.getInstance().getEntitiesChildren(this);
             JsonArray children = new JsonArray(childrenEntities.size());
             for (Entity child : childrenEntities) {
-                children.add(child.serialize());
+                children.add(child.serialize(meta));
             }
             out.add("children", children);
         }
