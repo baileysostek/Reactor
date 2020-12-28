@@ -3,7 +3,7 @@ package input;
 import camera.CameraManager;
 import editor.Editor;
 import engine.Engine;
-import engine.FraudTek;
+import engine.Reactor;
 import graphics.renderer.Renderer;
 import imgui.ImGui;
 import models.AABB;
@@ -48,7 +48,7 @@ public class MousePicker extends Engine {
     public float scrollDelta = 0;
 
     private MousePicker(){
-        GLFW.glfwSetMouseButtonCallback(FraudTek.WINDOW_POINTER, (long window, int button, int action, int mods) -> {
+        GLFW.glfwSetMouseButtonCallback(Reactor.WINDOW_POINTER, (long window, int button, int action, int mods) -> {
             //Update Editor
             Editor.getInstance().onClick(button, action, mods);
             //Check for Intersection
@@ -87,7 +87,7 @@ public class MousePicker extends Engine {
         DoubleBuffer x = BufferUtils.createDoubleBuffer(1);
         DoubleBuffer y = BufferUtils.createDoubleBuffer(1);
 
-        GLFW.glfwGetCursorPos(FraudTek.WINDOW_POINTER, x, y);
+        GLFW.glfwGetCursorPos(Reactor.WINDOW_POINTER, x, y);
         x.rewind();
         y.rewind();
 
@@ -102,7 +102,7 @@ public class MousePicker extends Engine {
             MouseDeltaX = (float) (newX - (Renderer.getInstance().getWIDTH()/2));
             MouseDeltaY = (float) (newY - (Renderer.getInstance().getHEIGHT()/2));
 
-            GLFW.glfwSetCursorPos(FraudTek.WINDOW_POINTER, Renderer.getWIDTH() / 2, Renderer.getHEIGHT() / 2);
+            GLFW.glfwSetCursorPos(Reactor.WINDOW_POINTER, Renderer.getWIDTH() / 2, Renderer.getHEIGHT() / 2);
         }else{
             MouseDeltaX = 0;
             MouseDeltaY = 0;

@@ -1,15 +1,11 @@
 package camera;
 
 import com.google.gson.JsonObject;
-import engine.FraudTek;
-import graphics.renderer.Renderer;
 import input.Keyboard;
 import input.MousePicker;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import serialization.SerializationHelper;
-
-import java.awt.event.KeyEvent;
 
 public class Camera3D extends Camera{
 

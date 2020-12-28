@@ -6,7 +6,7 @@ import camera.CameraManager;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import editor.components.UIComponet;
-import engine.FraudTek;
+import engine.Reactor;
 import entity.*;
 import entity.component.Attribute;
 import graphics.renderer.DirectDraw;
@@ -202,13 +202,13 @@ public class Editor {
         // ------------------------------------------------------------
         // Here goes GLFW callbacks to update user input in Dear ImGui
 
-        glfwSetCharCallback(FraudTek.WINDOW_POINTER, (w, c) -> {
+        glfwSetCharCallback(Reactor.WINDOW_POINTER, (w, c) -> {
             if (c != GLFW_KEY_DELETE) {
                 io.addInputCharacter(c);
             }
         });
 
-        glfwSetScrollCallback(FraudTek.WINDOW_POINTER, (w, xOffset, yOffset) -> {
+        glfwSetScrollCallback(Reactor.WINDOW_POINTER, (w, xOffset, yOffset) -> {
             io.setMouseWheelH(io.getMouseWheelH() + (float) xOffset);
             io.setMouseWheel(io.getMouseWheel() + (float) yOffset);
         });
@@ -216,14 +216,14 @@ public class Editor {
         io.setSetClipboardTextFn(new ImStrConsumer() {
             @Override
             public void accept(final String s) {
-                glfwSetClipboardString(FraudTek.WINDOW_POINTER, s);
+                glfwSetClipboardString(Reactor.WINDOW_POINTER, s);
             }
         });
 
         io.setGetClipboardTextFn(new ImStrSupplier() {
             @Override
             public String get() {
-                return glfwGetClipboardString(FraudTek.WINDOW_POINTER);
+                return glfwGetClipboardString(Reactor.WINDOW_POINTER);
             }
         });
 
@@ -367,8 +367,8 @@ public class Editor {
 
         // Update mouse cursor
         final int imguiCursor = ImGui.getMouseCursor();
-        glfwSetCursor(FraudTek.WINDOW_POINTER, mouseCursors[imguiCursor]);
-        glfwSetInputMode(FraudTek.WINDOW_POINTER, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursor(Reactor.WINDOW_POINTER, mouseCursors[imguiCursor]);
+        glfwSetInputMode(Reactor.WINDOW_POINTER, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 
         //Update all UIComponets
