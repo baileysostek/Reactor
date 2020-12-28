@@ -38,7 +38,7 @@ public class SerializableBuffer implements Serializable<SerializableBuffer> {
     }
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
 
         //Our data is stored in here

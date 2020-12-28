@@ -12,7 +12,7 @@ public class EventCallback extends Event {
     }
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         return null;
     }
 

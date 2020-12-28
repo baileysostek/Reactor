@@ -208,29 +208,7 @@ public class Renderer extends Engine {
 
                 loadMaterialIntoShader(shaderID, material);
 
-                if (entity.hasAttribute("t_scale")) {
-                    ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", entity.getAttribute("t_scale").getData());
-                } else {
-                    ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", new org.joml.Vector2f(1.0f));
-                }
-
-                if (entity.hasAttribute("t_offset")) {
-                    ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", entity.getAttribute("t_offset").getData());
-                } else {
-                    ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", new org.joml.Vector2f(0.0f));
-                }
-
-                if (entity.hasAttribute("mat_m")) {
-                    ShaderManager.getInstance().loadUniformIntoActiveShader("mat_m", entity.getAttribute("mat_m").getData());
-                } else {
-                    ShaderManager.getInstance().loadUniformIntoActiveShader("mat_m", 0.5f);
-                }
-
-                if (entity.hasAttribute("mat_r")) {
-                    ShaderManager.getInstance().loadUniformIntoActiveShader("mat_r", entity.getAttribute("mat_r").getData());
-                } else {
-                    ShaderManager.getInstance().loadUniformIntoActiveShader("mat_r", 0.5f);
-                }
+                ShaderManager.getInstance().loadAttributesFromEntity(entity);
 //                StopwatchManager.getInstance().getTimer("uploadUniforms").stop();
 
                 //Mess with uniforms

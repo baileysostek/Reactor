@@ -1,5 +1,6 @@
 package graphics.renderer;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 //Metadata container for the metadata in shaders
@@ -41,6 +42,10 @@ public class Shader {
         }else{
             System.err.println("No datatype like " + datatype + " for uniform " + name + " could be found.");
         }
+    }
+
+    public Collection<String> getUniforms(){
+        return this.uniforms.keySet();
     }
 
     public void removeAttribute(String attribute) {

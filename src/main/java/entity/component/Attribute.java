@@ -127,7 +127,7 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
     }
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
         out.addProperty("name", name);
         out.addProperty("locked", locked);

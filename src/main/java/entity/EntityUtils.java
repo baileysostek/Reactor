@@ -52,6 +52,24 @@ public class EntityUtils {
         return entity;
     }
 
+    public static boolean isDescendedFrom(Entity toCheck, Entity possibleAncestor){
+        if(toCheck == null){
+            return false;
+        }
+
+        if(toCheck.hasParent()){
+            if(toCheck.getParent().hasParent()){
+                return isDescendedFrom(toCheck.getParent(), possibleAncestor);
+            }else{
+                if(toCheck.getParent().equals(possibleAncestor)){
+                    return true;
+                }
+            }
+        }
+
+        return toCheck.equals(possibleAncestor);
+    }
+
     public static Entity group(Collection<Entity> entities){
         //Out save object. This will be a .tek file eventually.
         JsonObject out = new JsonObject();

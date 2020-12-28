@@ -33,7 +33,7 @@ public class EventWarp extends Event {
     }
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
         out.addProperty("destination", desination);
         return out;

@@ -157,7 +157,7 @@ public abstract class Component implements Serializable<Component>{
 
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
         for(String s : this.getTriggers()){
             LinkedList<Event> triggeredEvents = this.events.get(s);

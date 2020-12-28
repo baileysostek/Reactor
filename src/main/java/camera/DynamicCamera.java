@@ -31,7 +31,7 @@ public class DynamicCamera extends Camera{
     }
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
         out.add("pos", SerializationHelper.addClass(this.getPosition()));
         out.add("rot", SerializationHelper.addClass(this.getRotation()));

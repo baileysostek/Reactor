@@ -69,7 +69,8 @@ public class Editor {
     Debouncer playPause = new Debouncer(false);
 
     //Store variables for later
-    private Camera gameCamera = null;
+    private Camera editorCamera = new Camera3D();
+    private Camera gameCamera   = null;
 
     //If this is the first time the window is rendering, we can set the window sizing information
     private final int COLUMN_WIDTHS = 256;
@@ -91,6 +92,8 @@ public class Editor {
     }
 
     private Attribute<RightClickAction> rightClickAction = new  Attribute<RightClickAction>("Editor Style", RightClickAction.FIRST_PERSON);
+
+    int gameWindowID = 0;
 
     private Editor(){
         //Create imgui context
@@ -325,7 +328,9 @@ public class Editor {
     }
 
     public void addComponent(EnumEditorLocation location, UIComponet UIComponet){
-        this.UIComponets.get(location).addLast(UIComponet);
+        if(!this.UIComponets.get(location).contains(UIComponet)) {
+            this.UIComponets.get(location).addLast(UIComponet);
+        }
         UIComponet.onAdd();
     }
 
@@ -399,7 +404,9 @@ public class Editor {
         }
 
         //Scroll wheel zoom in and out
-        cam.translate(cam.getLookingDirection().mul(-ImGui.getIO().getMouseWheel()));
+        if(! ImGui.getIO().getWantCaptureMouse()) {
+            cam.translate(cam.getLookingDirection().mul(-ImGui.getIO().getMouseWheel()));
+        }
 
         //Orbit
         if(MousePicker.getInstance().isMousePressed(GLFW_MOUSE_BUTTON_3)){
@@ -531,6 +538,7 @@ public class Editor {
             float adj_height = ((float) Renderer.getInstance().getHEIGHT() / (float) Renderer.getInstance().getWIDTH()) * ImGui.getColumnWidth();
             float colX = ImGui.getColumnOffset(ImGui.getColumnIndex());
             float colY = 0;
+
             ImGui.beginChildFrame(getNextID(), ImGui.getColumnWidth()  - (padding.x * 2), ImGui.getWindowHeight());
                 ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), adj_height);
                     ImGui.image(Renderer.getInstance().getFrameBuffer().getTextureID(), ImGui.getColumnWidth(), adj_height , 0, 1, 1, 0);
@@ -544,6 +552,7 @@ public class Editor {
                 //Render our UIComponets
                 renderComponentSet(EnumEditorLocation.CENTER);
             ImGui.endChildFrame();
+
         ImGui.popStyleVar();
 
         //Col 3
@@ -562,6 +571,7 @@ public class Editor {
         ImGui.popStyleVar();
         ImGui.popStyleVar();
         ImGui.popStyleVar();
+
         //End
         ImGui.end();
 
@@ -586,14 +596,13 @@ public class Editor {
     }
 
     public void onShutdown() {
-        //Destroy our listener threads
         for(EnumEditorLocation location : UIComponets.keySet()){
             for(UIComponet component : new LinkedList<>(UIComponets.get(location))) {
                 component.onShutdown();
             }
         }
 
-        saveProject();
+//        saveProject();
 
         IMGUIGL.dispose();
         ImGui.destroyContext();
@@ -657,16 +666,20 @@ public class Editor {
     public void onPlay(){
         //restore the camera
         Renderer.getInstance().resize(Renderer.getWIDTH(), Renderer.getHEIGHT());
-//        if(this.gameCamera != null) {
-//            CameraManager.getInstance().setActiveCamera(this.gameCamera);
-//            this.gameCamera = null;
-//        }
+        if(this.gameCamera != null) {
+            CameraManager.getInstance().setActiveCamera(this.gameCamera);
+        }else{
+            //We dont have a game camera yet, lets look for one, if we dont find one then editor camera will persist as active camera.
+//            EntityManager.getInstance().getEntitiesOfType(Camera.class)
+        }
     }
 
     public void onExitPlay(){
         //set camera back to our Camera
-        this.gameCamera = CameraManager.getInstance().getActiveCamera();
-        CameraManager.getInstance().setActiveCamera(new Camera3D());
+        if(this.editorCamera != null) {
+            CameraManager.getInstance().setActiveCamera(this.editorCamera);
+        }
+
         MousePicker.getInstance().unlockMouse();
     }
 

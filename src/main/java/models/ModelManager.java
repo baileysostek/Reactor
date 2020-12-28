@@ -63,11 +63,12 @@ public class ModelManager {
 
         switch(fileExtension){
             case "tek": {
-                Model model = new Model(this.getNextID()).deserialize(parser.parse(data).getAsJsonObject());
+                Model model = new Model(this.getNextID(), modelName).deserialize(parser.parse(data).getAsJsonObject());
+
                 cachedModels.put(modelName, model);
                 LinkedList<Model> out = new LinkedList();
                 out.add(model);
-                cachedModels.put(modelName, model);
+
                 return out;
             }
             default: {
@@ -97,7 +98,7 @@ public class ModelManager {
                     return out;
                 }
 
-                LinkedList<Model> out = parseAssimp(aiScene);
+                LinkedList<Model> out = parseAssimp(modelName, aiScene);
                 cachedModels.put(modelName, out.getFirst());
                 return out;
             }
@@ -245,7 +246,7 @@ public class ModelManager {
         }
     }
 
-    private LinkedList<Model> parseAssimp(AIScene scene){
+    private LinkedList<Model> parseAssimp(String modelPath, AIScene scene){
         LinkedList<Model> out = new LinkedList<>();
 
         HashMap<String, Joint> joints = new HashMap<>();
@@ -326,7 +327,7 @@ public class ModelManager {
                 calculateAnimations(scene, joints);
 
                 //TODO refactor to grouped model.
-                Model model = new Model(this.getNextID(), modelHandshake, mesh.mNumFaces() * 3, new Vector3f[]{new Vector3f(min.x(), min.y(), min.z()), new Vector3f(max.x(), max.y(), max.z())});
+                Model model = new Model(this.getNextID(), modelPath, modelHandshake, mesh.mNumFaces() * 3, new Vector3f[]{new Vector3f(min.x(), min.y(), min.z()), new Vector3f(max.x(), max.y(), max.z())});
                 model.setJoints(new LinkedList<>(joints.values()));
                 model.setRootJoint(root);
                 LinkedList<Animation> animations = calculateAnimations(scene, joints);

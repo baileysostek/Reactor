@@ -36,7 +36,7 @@ public class SerializationHelper {
                 System.out.println("Error: Cannot serialize this hashMap.");
                 return null;
             }
-            out.add(key, ((Serializable)map.get(key)).serialize());
+            out.add(key, ((Serializable)map.get(key)).serialize(null));
         }
 
         return out;

@@ -40,7 +40,7 @@ public class EventSetSprite extends Event {
     }
 
     @Override
-    public JsonObject serialize() {
+    public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
         out.add("sprite", this.sprite.serialize());
         return out;

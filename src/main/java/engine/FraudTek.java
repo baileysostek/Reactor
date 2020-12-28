@@ -16,6 +16,7 @@ import graphics.renderer.*;
 import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
+import input.Chroma.ChromaManager;
 import input.MousePicker;
 import input.controller.ControllerManager;
 import lighting.DirectionalLight;
@@ -54,6 +55,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
+import java.util.Set;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -303,6 +305,8 @@ public class FraudTek {
                 last = now;
             }
 
+            //Set running to false.
+            RUNNING = false;
 
             //Close all managers that we have instantiated
             shutdown();
@@ -314,7 +318,6 @@ public class FraudTek {
             // Terminate GLFW and free the error callback
             glfwTerminate();
             glfwSetErrorCallback(null).free();
-
         }
     }
 
@@ -407,9 +410,12 @@ public class FraudTek {
         Renderer.getInstance().onShutdown();
         SpriteBinder.getInstance().onShutdown();
 //        SoundEngine.getInstance().onShutdown();
+        ChromaManager.getInstance().onShutdown();
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             Editor.getInstance().onShutdown();
         }
+
+        System.out.println("Finished Shutting down.");
     }
 
 
@@ -523,8 +529,6 @@ public class FraudTek {
 
 
         FraudTek.run();
-        FraudTek.shutdown();
-
     }
 
 }
