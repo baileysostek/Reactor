@@ -141,7 +141,7 @@ public class ChromaManager extends Engine implements Runnable{
         keyMapping.put(GLFW.GLFW_KEY_F12, KeyboardKeys.RZKEY_F12);
 
         running = true;
-        thread = new Thread(this);
+        thread = new Thread(this, "Controller Manager Thread");
         thread.start();
 
         isInitialized = true;

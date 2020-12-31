@@ -10,11 +10,11 @@ import java.util.LinkedList;
 public class Attribute<T> implements Serializable<Attribute<T>> {
 
     private String name;
+    private String category = "";
     private T attribute;
     protected LinkedList<Callback> subscribers = new LinkedList<Callback>(){};
 
     //Rendering helpers
-    private String category = "";
     private boolean locked  = false;
     private boolean visible = true;
     private EnumAttributeType type = EnumAttributeType.NONE;
@@ -176,13 +176,4 @@ public class Attribute<T> implements Serializable<Attribute<T>> {
     public String getCategory(){
         return this.category;
     }
-
-//    //These methods are used for the Editor only
-//    public void setOnAdd(Callback c){
-//        this.onAdd = c;
-//    }
-//
-//    public Callback getOnAdd() {
-//        return this.onAdd;
-//    }
 }

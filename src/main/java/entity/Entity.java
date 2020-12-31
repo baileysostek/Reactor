@@ -18,6 +18,7 @@ import util.StringUtils;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 public class Entity implements Transformable, Serializable<Entity> {
@@ -29,9 +30,8 @@ public class Entity implements Transformable, Serializable<Entity> {
     private Entity parent = null;
 
     //Attributes are the raw pieces of data that make up an entity;
-    private HashMap<String, Attribute> attributes    = new HashMap<>();
-    //TODO fix this implementation CHECK with cloning a particle system
-//    private HashMap<String, LinkedList<Attribute>> categories = new HashMap<>();
+    private LinkedHashMap<String, Attribute> attributes    = new LinkedHashMap<>();
+
     //Components reference and set attributes on an entity, the Attributes are a state and the components are how they are modified.
     private LinkedList<Component> components = new LinkedList<Component>();
 
@@ -96,15 +96,10 @@ public class Entity implements Transformable, Serializable<Entity> {
     public final Attribute addAttribute(String category, Attribute attribute){
         String name = attribute.getName();
 
-        if(!this.hasAttribute(name)){
-//            if(!category.isEmpty()){
-//                if(!this.categories.containsKey(category)){
-//                    this.categories.put(category, new LinkedList<Attribute>());
-//                }
-//                this.categories.get(category).addLast(attribute);
-//                attribute.setCategory(category);
-//            }
+        //Set the category
+        attribute.setCategory(category);
 
+        if(!this.hasAttribute(name)){
             this.attributes.put(attribute.getName(), attribute);
             //Create subscriber to this attribute changing states
             attribute.subscribe(new Callback() {
@@ -144,24 +139,12 @@ public class Entity implements Transformable, Serializable<Entity> {
         if(this.attributes.containsKey(attribute.getName())) {
             this.attributes.remove(attribute.getName());
         }
-//        for(String category : categories.keySet()){
-//            if(categories.get(category).contains(attribute)){
-//                categories.remove(attribute);
-//            }
-//        }
     }
 
     public final void removeAttribute(String attribute){
         if(this.attributes.containsKey(attribute)) {
             this.attributes.remove(attribute);
         }
-//        for(String category : categories.keySet()){
-//            for(Attribute att : categories.get(category)){
-//                if(att.getName().equals(attribute)){
-//                    categories.remove(att);
-//                }
-//            }
-//        }
     }
 
     //Attributes when they update emmit a message, this is where that message is sent.
@@ -351,6 +334,14 @@ public class Entity implements Transformable, Serializable<Entity> {
     public final Vector3f[] getAABB(){
         //Get the model transform
         //2 index Vec3 array, [min, max]
+        if(this.hasAttribute("disableAABB")){
+            Object data = this.getAttribute("disableAABB").getData();
+            if(data instanceof Boolean){
+                if((boolean) data){
+                    return new Vector3f[]{new Vector3f(0), new Vector3f(0)};
+                }
+            }
+        }
 
 
         //If we have a model use that AABB, otherwise use a normalized AABB

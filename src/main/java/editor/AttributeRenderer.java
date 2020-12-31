@@ -13,12 +13,9 @@ import material.MaterialManager;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
-import org.lwjgl.glfw.GLFW;
 import util.Callback;
 
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.LinkedList;
+import java.util.*;
 
 public class AttributeRenderer{
 
@@ -26,71 +23,123 @@ public class AttributeRenderer{
 
     private static final int MATERIAL_PREVIEW_SIZE = 64;
 
+    private static float columnWidth = 0;
+
     public static void renderAttributes(Collection<Attribute> attributes){
-        //Loop through each attribute in the list.
-        //These will be Key value pairs, where the key is in the left column.
-        for (Attribute attribute : attributes) {
-            //If this attribute should not be rendered, just skip this one.
-            if(!attribute.isVisible()){
-                continue;
-            }
+        //First thing we do is build our set of attributes
+        LinkedHashMap<String, LinkedList<Attribute>> categories = new LinkedHashMap<>();
 
-            float baseWidth = ImGui.getColumnWidth();
+        for(Attribute attribute : attributes){
+            //Lookup category
+            String cat = attribute.getCategory();
+            if(!categories.containsKey(cat)){
+                categories.put(cat, new LinkedList<Attribute>());
+            }
+            categories.get(cat).addLast(attribute);
+        }
 
-            //Try find a type
-            ImGui.columns(2);
-            ImGui.pushID(Editor.getInstance().getNextID());
-            if(!initialized) {
-                ImGui.setColumnWidth(0, baseWidth * 0.33f);
-            }
-            ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
-            ImGui.labelText("", attribute.getName());
-            ImGui.popItemWidth();
-            ImGui.popID();
-            ImGui.nextColumn();
-            if(!initialized) {
-                ImGui.setColumnWidth(1, baseWidth * 0.67f);
-            }
-//            ImGui.pushID(Editor.getInstance().getNextID());
-            if(attribute.getData() instanceof Collection){
-                if(attribute.getData() instanceof LinkedList){
-                    //This can cause direct access of LL members, so we need to create new instance of LL to check for change.
-                    LinkedList data = new LinkedList((LinkedList)attribute.getData());
-                    ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), lookupHeight(attribute));
-                    int index = 0;
-                    for(Object object : data){
-                        Attribute tmp = new Attribute(""+index, object);
-                        tmp.setType(attribute.getType());
-                        renderAttribute(tmp);
-                        data.set(index, tmp.getData());
-                        index++;
-                    }
-                    attribute.setData(data);
-//                    //Render an add button
-//                    if(ImGui.button("Add", ImGui.getColumnWidth(), 32)){
-//                        attribute.getOnAdd().callback(attribute);
-//                    }
-                }else{
-                    Collection<?> data = (Collection<?>)attribute.getData();
-                    ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), lookupHeight(attribute));
-                    int index = 0;
-                    for(Object object : data){
-                        Attribute tmp = new Attribute(""+index, object);
-                        tmp.setType(attribute.getType());
-                        renderAttribute(tmp);
-                        object = attribute.getData();
-                        index++;
-                    }
+
+        for(String category : categories.keySet()) {
+            LinkedList<Attribute> attSet = categories.get(category);
+            ImGui.separator();
+            ImGui.text(category);
+            ImGui.separator();
+            //Loop through each attribute in the list.
+            //These will be Key value pairs, where the key is in the left column.
+            for (Attribute attribute : attSet) {
+                //If this attribute should not be rendered, just skip this one.
+                if (!attribute.isVisible()) {
+                    continue;
                 }
-            }else if(attribute.getType().equals(EnumAttributeType.COLOR)){
-                ImGui.beginChild(""+Editor.getInstance().getNextID(), ImGui.getColumnWidth(), ImGui.getColumnWidth() + 32);
-                renderAttribute(attribute);
-            }else{
-                ImGui.beginChild(""+Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16 );
-                renderAttribute(attribute);
+
+                float baseWidth = ImGui.getColumnWidth();
+
+                //Try find a type
+                ImGui.columns(2);
+                ImGui.pushID(Editor.getInstance().getNextID());
+                if (!initialized) {
+                    ImGui.setColumnWidth(0, baseWidth * 0.33f);
+                }else{
+                    ImGui.setColumnWidth(0, columnWidth);
+                }
+
+                columnWidth = ImGui.getColumnWidth();
+
+                ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
+                ImGui.labelText("", attribute.getName());
+                ImGui.popItemWidth();
+                ImGui.popID();
+                ImGui.nextColumn();
+                if (!initialized) {
+                    ImGui.setColumnWidth(1, baseWidth * 0.67f);
+                }
+//            ImGui.pushID(Editor.getInstance().getNextID());
+                if (attribute.getData() instanceof Collection) {
+                    if(((Collection)attribute.getData()).size() <= 0){
+                        ImGui.text("[ Empty ]");
+                        ImGui.columns();
+                        break;
+                    }
+                    if (attribute.getData() instanceof LinkedList) {
+                        //This can cause direct access of LL members, so we need to create new instance of LL to check for change.
+                        LinkedList data = new LinkedList((LinkedList) attribute.getData());
+                        ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), lookupHeight(attribute));
+                        int index = 0;
+                        for (Object object : data) {
+                            Attribute tmp = new Attribute("" + index, object);
+                            tmp.setType(attribute.getType());
+                            renderAttribute(tmp);
+                            ImGui.sameLine();
+                            //Render an add button
+//                            ImGui.beginTooltip();
+//                            ImGui.setTooltip("Remove:" + tmp.getData());
+                            ImGui.pushID(Editor.getInstance().getNextID());
+                            if(ImGui.button("Remove", -1, 14)){
+                                data.set(index, null);
+                                System.out.println("Setting index:"+index+" to null");
+                            }else{
+                                data.set(index, tmp.getData());
+                            }
+                            ImGui.popID();
+//                            ImGui.endTooltip();
+                            index++;
+                        }
+
+                        LinkedList out = new LinkedList();
+                        //Filter
+                        for(Object obj : data){
+                            if(obj != null){
+                                out.addLast(obj);
+                            }
+                        }
+
+                        attribute.setData(out);
+                    } else {
+                        Collection<?> data = (Collection<?>) attribute.getData();
+                        ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), lookupHeight(attribute));
+                        int index = 0;
+                        for (Object object : data) {
+                            Attribute tmp = new Attribute("" + index, object);
+                            tmp.setType(attribute.getType());
+                            renderAttribute(tmp);
+                            ImGui.sameLine();
+                            if(ImGui.button("-", 16, 16)){
+
+                            }
+                            object = attribute.getData();
+                            index++;
+                        }
+                    }
+                } else if (attribute.getType().equals(EnumAttributeType.COLOR)) {
+                    ImGui.beginChild("" + Editor.getInstance().getNextID(), ImGui.getColumnWidth(), ImGui.getColumnWidth() + 32);
+                    renderAttribute(attribute);
+                } else {
+                    ImGui.beginChild("" + Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16);
+                    renderAttribute(attribute);
+                }
+                ImGui.endChild();
+                ImGui.columns();
             }
-            ImGui.endChild();
-            ImGui.columns();
         }
         ImGui.columns();
 

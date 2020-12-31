@@ -33,6 +33,7 @@ public class ResourcesViewer extends UIComponet {
     private FileObject draggedFile = null;
 
     private boolean IS_DRAGGING_FILE = false;
+    private boolean DRAG_RELEASE = true;
 
     //Mouse Callback
     private Callback dropFileInWorld;
@@ -42,8 +43,9 @@ public class ResourcesViewer extends UIComponet {
     private final int FOLDER_OPEN;
 
     //Callback actions that can be hooked into through EDITOR.
-    private LinkedList<Callback> onTryPlaceInWorld = new LinkedList<>();
-    private LinkedList<Callback> onPlaceInWorld    = new LinkedList<>();
+    private LinkedList<Callback> onTryPlaceInWorld      = new LinkedList<>();
+    private LinkedList<Callback> onPlaceInWorld         = new LinkedList<>();
+    private LinkedList<Callback> onDragStartCallbacks   = new LinkedList<>();
 
     public ResourcesViewer(){
 
@@ -167,6 +169,8 @@ public class ResourcesViewer extends UIComponet {
                             //Add to world
                             EntityManager.getInstance().addEntity(newEntity);
                         }
+
+                        DRAG_RELEASE = true;
                     }
                 }
                 return null;
@@ -224,6 +228,13 @@ public class ResourcesViewer extends UIComponet {
             ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16);
             ImGui.selectable(object.getName());
             if(ImGui.beginDragDropSource()){
+                if(DRAG_RELEASE){
+                    DRAG_RELEASE = false;
+                    for(Callback c : onDragStartCallbacks){
+                        c.callback();
+                    }
+                }
+
                 //Set properties
                 IS_DRAGGING_FILE = true;
                 draggedFile = object;
@@ -274,6 +285,10 @@ public class ResourcesViewer extends UIComponet {
 
     public FileObject getDraggedFile() {
         return this.draggedFile;
+    }
+
+    public void onDragStart(Callback c){
+        this.onDragStartCallbacks.addLast(c);
     }
 }
 
