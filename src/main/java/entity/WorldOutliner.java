@@ -201,7 +201,7 @@ public class WorldOutliner extends UIComponet {
             int nodeFlags_attributes = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
 //            ImGui.sameLine();
             ImGui.indent();
-            for (Entity child : children) {
+            for (Entity child : new LinkedList<>(children)) {
                 renderEntity(child);
                 if(ImGui.isItemHovered()){
                     DirectDraw.getInstance().drawAABB(child, new Vector3f(1));

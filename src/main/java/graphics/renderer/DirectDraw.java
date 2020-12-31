@@ -1,11 +1,14 @@
 package graphics.renderer;
 
+import engine.Reactor;
 import entity.Entity;
 import entity.EntityManager;
 import models.AABB;
 import models.Joint;
 import org.joml.*;
 import org.lwjgl.opengl.GL46;
+import platform.EnumDevelopment;
+import platform.PlatformManager;
 
 import java.lang.Math;
 import java.util.HashMap;
@@ -548,7 +551,9 @@ public class DirectDraw {
     //Draw
     protected void render(){
         drawerLine.render();
-        GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
+        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+            GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
+        }
         drawTriangle.render();
         drawSprite.render();
     }

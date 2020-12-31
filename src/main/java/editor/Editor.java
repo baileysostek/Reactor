@@ -93,6 +93,10 @@ public class Editor {
 
     private Attribute<RightClickAction> rightClickAction = new  Attribute<RightClickAction>("Editor Style", RightClickAction.FIRST_PERSON);
 
+    //Hooks for editor
+    private LinkedList<Callback> onPlayCallbacks   = new LinkedList<>();
+    private LinkedList<Callback> onEditorCallbacks = new LinkedList<>();
+
     int gameWindowID = 0;
 
     private Editor(){
@@ -663,7 +667,7 @@ public class Editor {
         }
     }
 
-    public void onPlay(){
+    private void onPlay(){
         //restore the camera
         Renderer.getInstance().resize(Renderer.getWIDTH(), Renderer.getHEIGHT());
         if(this.gameCamera != null) {
@@ -672,15 +676,24 @@ public class Editor {
             //We dont have a game camera yet, lets look for one, if we dont find one then editor camera will persist as active camera.
 //            EntityManager.getInstance().getEntitiesOfType(Camera.class)
         }
+
+        for(Callback c : onPlayCallbacks){
+            c.callback();
+        }
+
     }
 
-    public void onExitPlay(){
+    private void onExitPlay(){
         //set camera back to our Camera
         if(this.editorCamera != null) {
             CameraManager.getInstance().setActiveCamera(this.editorCamera);
         }
 
         MousePicker.getInstance().unlockMouse();
+
+        for(Callback c : onEditorCallbacks){
+            c.callback();
+        }
     }
 
     public static Editor getInstance(){
@@ -709,6 +722,11 @@ public class Editor {
     }
 
     //Callback registry
+    public void onDragStart(Callback c){
+        this.registry.onDragStart(c);
+        this.resourcesViewer.onDragStart(c);
+    }
+
     public void onTryDragEntityToWorld(Callback c){
         resourcesViewer.onTryPlaceInWorld(c);
         registry.onTryPlaceInWorld(c);
@@ -722,7 +740,20 @@ public class Editor {
         this.entityEditor.addOnActionStop(c);
     }
 
+    public void onDelete(Callback c){
+        this.entityEditor.addOnDelete(c);
+    }
+
+    public void onPlayFocus(Callback c){
+        this.onPlayCallbacks.addLast(c);
+    }
+
+    public void onEditorFocus(Callback c){
+        this.onEditorCallbacks.addLast(c);
+    }
+
     public Collection<Entity> getSelectedEntities() {
         return entityEditor.getSelected();
     }
+
 }

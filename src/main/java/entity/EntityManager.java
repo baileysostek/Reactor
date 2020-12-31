@@ -136,7 +136,18 @@ public class EntityManager {
     public LinkedList<Entity> getHitEntities(Vector3f pos, Vector3f dir, Class ... types){
 
         LinkedList<Entity> check = new LinkedList<Entity>();
-        LinkedList<Entity> hits  = new LinkedList<Entity>();
+
+        class Meta{
+            public Vector3f collisionPosition;
+            public Entity hit;
+            Meta(Entity hit, Vector3f collisionPosiiton){
+                this.hit = hit;
+                this.collisionPosition = collisionPosiiton;
+            }
+        }
+
+        LinkedList<Meta> hits  = new LinkedList<Meta>();
+
         //TODO
         //Calculate view frustum to filter
 
@@ -150,19 +161,25 @@ public class EntityManager {
 
         for(Entity e : check){
             Vector3f[] aabb = e.getAABB();
-            if(MousePicker.rayHitsAABB(pos, dir, aabb[0], aabb[1]) != null){
-                hits.add(e);
+            Vector3f worldPos = MousePicker.rayHitsAABB(pos, dir, aabb[0], aabb[1]);
+            if(worldPos != null){
+                hits.add(new Meta(e, worldPos));
             }
         }
 
-        Collections.sort(hits, new Comparator<Entity>() {
+        Collections.sort(hits, new Comparator<Meta>() {
             @Override
-            public int compare(Entity o1, Entity o2) {
-                return -1 * (int) (o1.getPosition().distance(pos) - o2.getPosition().distance(pos));
+            public int compare(Meta o1, Meta o2) {
+                return -1 * (int) (o1.collisionPosition.distance(pos) - o2.collisionPosition.distance(pos));
             }
         });
 
-        return hits;
+        LinkedList<Entity> out = new LinkedList<>();
+        for(Meta meta : hits){
+            out.addLast(meta.hit);
+        }
+
+        return out;
     }
 
     public LinkedList<Entity> getHitEntities(Vector3f pos, Vector3f dir, Collection<Entity> check){

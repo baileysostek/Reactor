@@ -3,6 +3,7 @@ package graphics.renderer;
 import camera.CameraManager;
 import camera.DynamicCamera;
 import engine.Engine;
+import engine.Reactor;
 import entity.Entity;
 import entity.EntityManager;
 import graphics.sprite.SpriteBinder;
@@ -58,6 +59,8 @@ public class Renderer extends Engine {
     //Used for entity Previews
     private HashMap<Entity, FBO> snapshotFBOS = new HashMap<>();
     private DirectionalLight light;
+
+    private boolean fboBound = false;
 
     private Renderer(int width, int height){
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
@@ -128,6 +131,7 @@ public class Renderer extends Engine {
         //TODO Cleanup, This code should live in the Shader class, and also the  Projection Matrix should be buffered on resize and not regenerated per frame, only regen on screen resize.
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             frameBuffer.bindFrameBuffer();
+            fboBound = true;
         }else{
             GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
         }
@@ -229,9 +233,13 @@ public class Renderer extends Engine {
         SkyboxManager.getInstance().render();
 
         //Render our lines!
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT) || Reactor.canDirectDraw()) {
             DirectDraw.getInstance().render();
+        }
+
+        if(fboBound) {
             frameBuffer.unbindFrameBuffer();
+            fboBound = false;
         }
 
         GL46.glDisableVertexAttribArray(0);

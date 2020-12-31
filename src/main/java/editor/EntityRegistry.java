@@ -49,7 +49,10 @@ public class EntityRegistry extends UIComponet {
     private final int svgTest;
 
     //Callback hooks
-    private LinkedList<Callback> onTryPlaceInWorld = new LinkedList<>();
+    private LinkedList<Callback> onDragStartCallbacks   = new LinkedList<>();
+    private LinkedList<Callback> onTryPlaceInWorld      = new LinkedList<>();
+
+    private boolean DRAG_STOP = true;
 
     private int scale = 64;
 
@@ -171,6 +174,9 @@ public class EntityRegistry extends UIComponet {
                         }
                     }
                 }
+
+                DRAG_STOP = true;
+
                 return null;
             }
         };
@@ -238,6 +244,13 @@ public class EntityRegistry extends UIComponet {
                 dragged = templateEntity;
                 isDraggingTemplate = true;
 
+                if(DRAG_STOP) {
+                    DRAG_STOP = false;
+                    for (Callback c : onDragStartCallbacks) {
+                        c.callback(dragged);
+                    }
+                }
+
                 ImGui.beginTooltip();
                 ImGui.text(templateEntity.getName());
                 ImGui.endTooltip();
@@ -262,5 +275,8 @@ public class EntityRegistry extends UIComponet {
     //Callback registries
     public void onTryPlaceInWorld(Callback c){
         this.onTryPlaceInWorld.addLast(c);
+    }
+    public void onDragStart(Callback c){
+        this.onDragStartCallbacks.addLast(c);
     }
 }

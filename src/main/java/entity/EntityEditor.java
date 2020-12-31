@@ -126,11 +126,13 @@ public class EntityEditor extends UIComponet {
         Keyboard.getInstance().addPressCallback(Keyboard.DELETE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                System.out.println("Callback");
-                if(entity != null){
-                    EntityManager.getInstance().removeEntity(entity);
-                    clearSelected();
+                for(Entity e : selectedEntities.keySet()){
+                    EntityManager.getInstance().removeEntity(e);
                 }
+                for(Callback callback : onDelete){
+                    callback.callback(selectedEntities.keySet());
+                }
+                clearSelected();
                 return null;
             }
         });
@@ -869,6 +871,10 @@ public class EntityEditor extends UIComponet {
 
     public void addOnActionStop(Callback callback){
         this.onActionStop.addLast(callback);
+    }
+
+    public void addOnDelete(Callback callback){
+        this.onDelete.addLast(callback);
     }
 
     public Collection<Entity> getSelected() {

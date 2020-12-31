@@ -32,6 +32,8 @@ import steam.SteamManager;
 import util.StopwatchManager;
 import util.StringUtils;
 
+import java.util.Set;
+
 import static org.lwjgl.glfw.GLFW.*;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
@@ -54,6 +56,9 @@ public class Reactor {
     private static String  TITLE        = "Reactor V1.0";
     private static boolean VSYNC        = false;
     private static boolean FULLSCREEN   = false;
+
+    //GLOBAL flags
+    private static boolean REACTOR_ENABLE_DIRECT_DRAW = false;
 
     //Local Static variables
     private static int     FRAMES = 0;
@@ -391,7 +396,16 @@ public class Reactor {
             Editor.getInstance().onShutdown();
         }
 
-        System.out.println("Finished Shutting down.");
+        Set<Thread> threads = Thread.getAllStackTraces().keySet();
+
+        for (Thread t : threads) {
+            String name = t.getName();
+            Thread.State state = t.getState();
+            int priority = t.getPriority();
+            String type = t.isDaemon() ? "Daemon" : "Normal";
+            System.out.printf("%-20s \t %s \t %d \t %s\n", name, state, priority, type);
+        }
+
     }
 
 
@@ -505,6 +519,14 @@ public class Reactor {
 
 
         Reactor.run();
+    }
+
+    public static void enableDirectDraw(boolean draw){
+        REACTOR_ENABLE_DIRECT_DRAW = draw;
+    }
+
+    public static boolean canDirectDraw(){
+        return REACTOR_ENABLE_DIRECT_DRAW;
     }
 
 }
