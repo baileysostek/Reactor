@@ -59,7 +59,7 @@ public class Handshake implements Serializable<Handshake> {
         return this.bufferedAttributes.containsKey(attribute);
     }
 
-    public int getAttributeSize(String attribute) {
+    public int getBytesPerVertex(String attribute) {
         return bufferedSizes.get(attribute).sizePerVertex;
     }
 

@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import editor.Editor;
+import entity.Entity;
 import entity.EntityManager;
 import graphics.renderer.*;
 import graphics.sprite.SpriteBinder;
@@ -13,6 +14,7 @@ import input.MousePicker;
 import input.controller.ControllerManager;
 import lighting.LightingManager;
 import logging.LogManager;
+import material.Material;
 import material.MaterialManager;
 import models.Model;
 import models.ModelManager;
@@ -32,6 +34,7 @@ import steam.SteamManager;
 import util.StopwatchManager;
 import util.StringUtils;
 
+import java.util.LinkedList;
 import java.util.Set;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -153,6 +156,7 @@ public class Reactor {
 
                 //We have a known window size, a shader, and a GL context, we can make a window.
                 Renderer.initialize(WIDTH, HEIGHT);
+                VAOManager.initialize();
                 SkyboxManager.initialize();
 
                 vg = NanoVGGL3.nvgCreate(NanoVGGL3.NVG_ANTIALIAS);
@@ -189,6 +193,28 @@ public class Reactor {
 
                 Renderer.getInstance();
                 DirectDraw.initialize();
+
+                int size = 16;
+
+                LinkedList<Entity> toAdd = new LinkedList<>();
+
+                for(int i = 0; i < size; i++){
+                    for(int j = 0; j < size; j++){
+                        for(int k = 0; k < size; k++){
+                            Entity sphere = new Entity();
+                            sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
+                            sphere.getAttribute("name").setData("Sphere");
+                            sphere.setMaterial(MaterialManager.getInstance().getDefaultMaterial());
+
+                            sphere.setPosition(i * 8, j * 8, k * 8);
+
+                           toAdd.add(sphere);
+                        }
+                    }
+                    System.out.println(i);
+                }
+
+                EntityManager.getInstance().addEntity(toAdd);
 
 //                sun = new DirectionalLight();
 //                EntityManager.getInstance().addEntity(sun);
@@ -321,7 +347,6 @@ public class Reactor {
         ParticleManager.getInstance().update(delta);
         ControllerManager.getInstance().update(delta);
 
-
 //        Vector3f pos = MousePicker.rayHitsPlane(new Vector3f(CameraManager.getInstance().getActiveCamera().getPosition()), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
 //        if(pos == null){
 //            pos = new Vector3f(0);
@@ -395,6 +420,7 @@ public class Reactor {
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             Editor.getInstance().onShutdown();
         }
+        VAOManager.getInstance().onShutdown();
 
         Set<Thread> threads = Thread.getAllStackTraces().keySet();
 

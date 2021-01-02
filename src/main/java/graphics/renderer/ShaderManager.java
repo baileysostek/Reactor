@@ -3,7 +3,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import entity.Entity;
 import entity.component.Attribute;
-import imgui.ImGui;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
@@ -241,7 +240,7 @@ public class ShaderManager {
 
                     if(attribPointer > 0) {
                         GL46.glEnableVertexAttribArray(attribPointer);
-                        GL46.glVertexAttribPointer(attribPointer, handshake.getAttributeSize(attribute), GL46.GL_FLOAT, true, 0, (FloatBuffer) handshake.getAttribute(attribute));
+                        GL46.glVertexAttribPointer(attribPointer, handshake.getBytesPerVertex(attribute), GL46.GL_FLOAT, true, 0, (FloatBuffer) handshake.getAttribute(attribute));
                     }
                 }
             }
