@@ -11,16 +11,17 @@ precision highp sampler2D;
 #define maxWeights 3
 
 // Inputs
-in vec4 vPosition;
-in vec3 vNormal;
-in vec3 vTangent;
-in vec3 vBitangent;
-in vec2 vTexture;
-in ivec3 jointIndices;
-in vec3 weights;
+layout(location = 0) in vec4 vPosition;
+layout(location = 1) in vec3 vNormal;
+layout(location = 2) in vec3 vTangent;
+layout(location = 3) in vec3 vBitangent;
+layout(location = 4) in vec2 vTexture;
+layout(location = 5) in mat4 transform;
+
+//in ivec3 jointIndices;
+//in vec3 weights;
 
 //Uniform variables
-uniform mat4 transformation; // objects transform in space
 uniform mat4 view;           // Cameras position in space
 uniform vec3 cameraPos;      // Cameras position in worldSpace
 uniform mat4 perspective;    //Perspective of this world
@@ -50,14 +51,14 @@ out vec4[maxLights] passPosLightSpace;
 //Main function to run
 void main(){
     //Transdform the normnal vectors of this model by its transform.
-    vec4 offsetNormal = transformation *  vec4(vNormal.xyz, 1.0);
-    vec4 worldOffset = transformation * vec4(0, 0, 0, 1);
+    vec4 offsetNormal = transform *  vec4(vNormal.xyz, 1.0);
+    vec4 worldOffset = transform * vec4(0, 0, 0, 1);
     passNormal = normalize((vec3(offsetNormal) / offsetNormal.w) - (worldOffset.xyz)/worldOffset.w);
 
-    vec4 offsetTangent = transformation *  vec4(vTangent.xyz, 1.0);
+    vec4 offsetTangent = transform *  vec4(vTangent.xyz, 1.0);
     vec3 passTangent = normalize((vec3(offsetTangent) / offsetTangent.w) - (worldOffset.xyz)/worldOffset.w);
 
-    vec4 offsetBitangent = transformation *  vec4(vBitangent.xyz, 1.0);
+    vec4 offsetBitangent = transform *  vec4(vBitangent.xyz, 1.0);
     vec3 passBitangent = normalize((vec3(offsetBitangent) / offsetBitangent.w) - (worldOffset.xyz)/worldOffset.w);
 
     mat3 tbnMatrix = mat3(
@@ -68,7 +69,7 @@ void main(){
 
     passTBN = transpose(tbnMatrix);
 
-    vec4 worldPosition = transformation * vec4(vPosition.xyz, 1.0);
+    vec4 worldPosition = transform * vec4(vPosition.xyz, 1.0);
     WorldPos = worldPosition.xyz;
 
     passCoords = vTexture;
