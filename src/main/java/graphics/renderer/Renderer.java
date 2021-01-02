@@ -12,9 +12,11 @@ import lighting.DirectionalLight;
 import lighting.Light;
 import lighting.LightingManager;
 import material.Material;
+import material.MaterialManager;
 import math.MatrixUtils;
 import models.AABB;
 import models.Joint;
+import models.ModelManager;
 import org.joml.*;
 import org.lwjgl.opengl.GL46;
 import platform.EnumDevelopment;
@@ -62,6 +64,8 @@ public class Renderer extends Engine {
 
     private boolean fboBound = false;
 
+    VAO test;
+
     private Renderer(int width, int height){
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
@@ -84,7 +88,6 @@ public class Renderer extends Engine {
 
         //INIT our light.
         light = new DirectionalLight();
-
     }
 
     public static void initialize(int width, int height){
@@ -132,6 +135,9 @@ public class Renderer extends Engine {
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             frameBuffer.bindFrameBuffer();
             fboBound = true;
+            if(test == null){
+                test = new VAO(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
+            }
         }else{
             GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
         }
@@ -158,10 +164,9 @@ public class Renderer extends Engine {
 //        int lastID = -1;
 //        int lastTexture = -1;
 //        int loads = 0;
-        for(Entity entity : entities){
-            if(entity.getModel() != null) {
 
-                int shaderID = entity.getMaterial().getShaderID();
+
+                int shaderID = ShaderManager.getInstance().getDefaultShader();
 
                 ShaderManager.getInstance().useShader(shaderID);
 
@@ -206,24 +211,22 @@ public class Renderer extends Engine {
                 }
                 ShaderManager.getInstance().loadUniformIntoActiveShader("numPointLights", index);
 
-                ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
 
-                Material material = entity.getMaterial();
 
+                Material material = MaterialManager.getInstance().getDefaultMaterial();
                 loadMaterialIntoShader(shaderID, material);
 
-                ShaderManager.getInstance().loadAttributesFromEntity(entity);
+//                ShaderManager.getInstance().loadAttributesFromEntity(entity);
 //                StopwatchManager.getInstance().getTimer("uploadUniforms").stop();
 
                 //Mess with uniforms
-                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "transformation"), false, entity.getTransform().get(new float[16]));
+//                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "transform"), false, new float[]{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1});
 //                StopwatchManager.getInstance().getTimer("drawCalls").lapStart();
-                GL46.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
+//                GL46.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
 //                StopwatchManager.getInstance().getTimer("drawCalls").stop();
+                test.render(entities);
 
             }
-        }
-    }
 
 
 

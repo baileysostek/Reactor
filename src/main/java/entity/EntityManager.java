@@ -55,6 +55,28 @@ public class EntityManager {
         }
     }
 
+    public void addEntity(Collection entity){
+        //Disallow adding a null entity.
+        if(entity == null){
+            return;
+        }
+
+        //Make sure we haven't added this object already.
+        //The same entity cant exist in the list twice.
+        if(toAdd.contains(entity) || entities.contains(entity)){
+            return;
+        }
+
+        //if not null, lock the array and add an entity, then unlock.
+        lock.lock();
+        try {
+            //Add the entity
+            this.toAdd.addAll(entity);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public void clearEntities(){
         this.entities.clear();
         for(LinkedList<Entity> typeList : typedEntities.values()){

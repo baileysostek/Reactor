@@ -34,6 +34,8 @@ public class WorldOutliner extends UIComponet {
 
     private String filterString = "";
 
+    private static int count = 0;
+
     public WorldOutliner(EntityEditor editor){
 
         SEARCH = SpriteBinder.getInstance().loadSVG("engine/svg/search.svg", 1, 1, 240f);
@@ -89,6 +91,7 @@ public class WorldOutliner extends UIComponet {
     }
 
     public void renderEntity(LinkedList<Entity> entities){
+        count = 0;
         for(Entity e : entities){
             if(e.getParent() == null) {
                 //No parent, therefore is parent and should render at this level
@@ -101,6 +104,10 @@ public class WorldOutliner extends UIComponet {
     }
 
     public void renderEntity(Entity parent){
+        if(count >= 128){
+            return;
+        }
+        count++;
         //Drag container
         if(parent.getName().toLowerCase().contains(filterString)) {
             ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16);

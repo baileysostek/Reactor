@@ -1,8 +1,10 @@
 package particle;
 
 import camera.CameraManager;
+import graphics.renderer.Handshake;
 import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
+import models.ModelManager;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
@@ -44,17 +46,21 @@ public class ParticleManager {
         // The VBO containing the 4 vertices of the particles.
         // Thanks to instancing, they will be shared by all particles.
 
-//        Handshake shape = ModelManager.getInstance().loadModel("cube2.obj").getFirst().getHandshake();
-//        FloatBuffer positions_data = (FloatBuffer) shape.getAttribute("vPosition");
-//        verticies = new float[positions_data.remaining()];
-//        positions_data.get(verticies);
+        Handshake shape = ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst().getHandshake();
+        FloatBuffer positions_data = ((FloatBuffer) shape.getAttribute("vPosition")).asReadOnlyBuffer();
+        verticies = new float[positions_data.remaining()];
+        positions_data.get(verticies);
 
-        verticies = new float[]{
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            -0.5f, 0.5f, 0.0f,
-            0.5f, 0.5f, 0.0f,
-        };
+//        verticies = new float[]{
+//            -0.5f, -0.5f, -0.5f,
+//            0.5f, -0.5f, -0.5f,
+//            -0.5f, 0.5f, -0.5f,
+//            0.5f, 0.5f, -0.5f,
+////            -0.5f, -0.5f, 0.5f,
+////            0.5f, -0.5f, 0.5f,
+////            -0.5f, 0.5f, 0.5f,
+////            0.5f, 0.5f, 0.5f,
+//        };
 
         positions = new float[MAX_PARTICLES * 3];
         scales    = new float[MAX_PARTICLES * 3];
@@ -248,26 +254,26 @@ public class ParticleManager {
         //Buffer
         GL46.glBindVertexArray(vao_id);
         // 2nd attribute buffer : positions of particles' centers
-        GL46.glEnableVertexAttribArray(1);
+//        GL46.glEnableVertexAttribArray(1);
         GL46.glBindBuffer( GL46.GL_ARRAY_BUFFER, vbo_pos);
         GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex * 3, positions);
-        GL46.glVertexAttribPointer(1, 3, GL46.GL_FLOAT, false, 0, 0);
+//        GL46.glVertexAttribPointer(1, 3, GL46.GL_FLOAT, false, 0, 0);
 
         // 3rd attribute buffer : particles' colors
-        GL46.glEnableVertexAttribArray(2);
+//        GL46.glEnableVertexAttribArray(2);
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_color);
         GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex * 4, colors);
-        GL46.glVertexAttribPointer(2, 4, GL46.GL_FLOAT, false, 0, 0);
+//        GL46.glVertexAttribPointer(2, 4, GL46.GL_FLOAT, false, 0, 0);
 
-        GL46.glEnableVertexAttribArray(3);
+//        GL46.glEnableVertexAttribArray(3);
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_scale);
         GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, startIndex * 3, scales);
-        GL46.glVertexAttribPointer(3, 3, GL46.GL_FLOAT, false, 0, 0);
+//        GL46.glVertexAttribPointer(3, 3, GL46.GL_FLOAT, false, 0, 0);
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
-        GL46.glDisableVertexAttribArray(1);
-        GL46.glDisableVertexAttribArray(2);
-        GL46.glDisableVertexAttribArray(3);
+//        GL46.glDisableVertexAttribArray(1);
+//        GL46.glDisableVertexAttribArray(2);
+//        GL46.glDisableVertexAttribArray(3);
         GL46.glBindVertexArray(0);
     }
 
