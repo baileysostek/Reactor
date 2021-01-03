@@ -80,6 +80,8 @@ public class Entity implements Transformable, Serializable<Entity> {
 //        this.addAttribute("2D",        new Attribute<Vector2f>("t_scale"      , new Vector2f(1)));
         this.addAttribute(new Attribute<Boolean>("updateInEditor", false));
         this.addAttribute(new Attribute<Boolean>("visible"      , true));
+
+        this.addAttribute(new Attribute<Matrix4f>("dummy"      , new Matrix4f().identity()));
 //        this.addAttribute(new Attribute<Float>("mat_m", 0.5f));
 //        this.addAttribute(new Attribute<Float>("mat_r", 0.5f));
 

@@ -1,6 +1,7 @@
 package entity;
 
 import com.google.gson.JsonObject;
+import graphics.renderer.VAO;
 import input.MousePicker;
 import org.joml.Intersectionf;
 import org.joml.Vector3f;
@@ -20,7 +21,9 @@ public class EntityManager {
     private LinkedList<Entity> toAdd    = new LinkedList<Entity>();
     private LinkedList<Entity> toRemove = new LinkedList<Entity>();
     private HashMap<Class, LinkedList<Entity>> typedEntities = new HashMap<Class, LinkedList<Entity>>();
-    private HashMap<EnumEntityType, LinkedList<Entity>> sceneEntities = new HashMap<EnumEntityType, LinkedList<Entity>>();
+
+    //Used for the batch renderer
+    private LinkedHashMap<VAO, LinkedList<Entity>> batches = new LinkedHashMap<VAO, LinkedList<Entity>>();
 
     //On remove see if a registered parent was removed, if it was, remove all children.
     private HashMap<Entity, LinkedList<Entity>> links = new HashMap<>();
@@ -264,6 +267,13 @@ public class EntityManager {
                 for (Entity e : new LinkedList<>(toAdd)) {
                     this.entities.add(e);
                     e.onAdd();
+                    if(e.getModel() != null){
+                        VAO id = e.getModel().getVAO();
+                        if(!batches.containsKey(id)){
+                            batches.put(id, new LinkedList<Entity>());
+                        }
+                        batches.get(id).add(e);
+                    }
                     //Check if this class list exists.
                     if(this.typedEntities.get(e.getClass()) == null){
                         this.typedEntities.put(e.getClass(), new LinkedList<>());
@@ -287,6 +297,15 @@ public class EntityManager {
                     if(this.typedEntities.containsKey(e.getClass())){
                         this.typedEntities.get(e.getClass()).remove(e);
                     }
+
+                    //Removal
+                    if(e.getModel() != null){
+                        VAO id = e.getModel().getVAO();
+                        if(batches.containsKey(id)){
+                            batches.get(id).remove(e);
+                        }
+                    }
+
                     e.onRemove();
                     //TODO refactor maybe?
                     e.cleanup();
@@ -399,5 +418,9 @@ public class EntityManager {
 
     public int getSize(){
         return this.entities.size();
+    }
+
+    public LinkedHashMap<VAO, LinkedList<Entity>> getBatches(){
+        return batches;
     }
 }

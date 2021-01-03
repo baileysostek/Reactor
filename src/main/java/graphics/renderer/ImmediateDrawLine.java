@@ -10,19 +10,23 @@ public class ImmediateDrawLine {
 
     private Handshake handshake;
 
-    private final int MAX_LINES = 2048;
+    private int MAX_LINES = 2048;
 
     float[] positionsF;
     float[] colorsF;
 
     private int drawIndex = 0;
 
+    private boolean expand = false;
+
     protected ImmediateDrawLine(){
         lineShaderID = ShaderManager.getInstance().loadShader("vector");
         handshake = new Handshake();
 
-        //Allocate our memory
-        //Each line has 2 vec3 and 2 colors, meaning 6*numLines floats
+        resize();
+    }
+
+    private void resize(){
         positionsF = new float[MAX_LINES * 6];
         colorsF    = new float[MAX_LINES * 6];
 
@@ -48,6 +52,7 @@ public class ImmediateDrawLine {
 
     public void drawLine(Vector3f from, Vector3f to, Vector3f color) {
         if(drawIndex >= MAX_LINES){
+            expand = true;
             return;
         }
         positionsF[drawIndex * 6 + 0] = (from.x());
@@ -98,5 +103,12 @@ public class ImmediateDrawLine {
         handshake.clear();
 
         drawIndex = 0;
+
+        //Check about expand
+        if(expand){
+            MAX_LINES *= 2;
+            resize();
+            expand = false;
+        }
     }
 }

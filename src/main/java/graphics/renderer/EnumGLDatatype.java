@@ -33,6 +33,18 @@ public enum EnumGLDatatype implements Serializable<EnumGLDatatype> {
         this.sizePerVertex = sizePerVertex;
     }
 
+    public static EnumGLDatatype findSuitable(int size) {
+        for(EnumGLDatatype value : EnumGLDatatype.values()){
+            if(value.sizePerVertex == size){
+                return value;
+            }
+        }
+
+        System.out.println("[EnumGLDataType] Error: could not find suitable data type to store data of unit size:" + size);
+
+        return null;
+    }
+
     protected int getSize(){
         return this.instanceSize;
     }

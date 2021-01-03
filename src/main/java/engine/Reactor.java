@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import editor.Editor;
 import entity.Entity;
 import entity.EntityManager;
+import entity.component.Collision;
 import graphics.renderer.*;
 import graphics.sprite.SpriteBinder;
 import input.Chroma.ChromaManager;
@@ -196,25 +197,43 @@ public class Reactor {
 
                 int size = 16;
 
-                LinkedList<Entity> toAdd = new LinkedList<>();
+//                LinkedList<Entity> toAdd = new LinkedList<>();
+//
+//                for(int i = 0; i < size; i++){
+//                    for(int j = 0; j < size; j++){
+//                        for(int k = 0; k < size; k++){
+//                            Entity sphere = new Entity();
+//                            sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
+//                            sphere.getAttribute("name").setData("Sphere");
+//                            sphere.setMaterial(MaterialManager.getInstance().getDefaultMaterial());
+//
+//                            sphere.setPosition(i * 8, j * 8 + 8, k * 8);
+//
+////                            sphere.addComponent(new Collision());
+//
+//                           toAdd.add(sphere);
+//                        }
+//                    }
+//                    System.out.println(i);
+//                }
 
-                for(int i = 0; i < size; i++){
-                    for(int j = 0; j < size; j++){
-                        for(int k = 0; k < size; k++){
-                            Entity sphere = new Entity();
-                            sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
-                            sphere.getAttribute("name").setData("Sphere");
-                            sphere.setMaterial(MaterialManager.getInstance().getDefaultMaterial());
+//                for(int i = 0; i < size; i++){
+//                    for(int j = 0; j < size; j++){
+//                        for(int k = 0; k < size; k++){
+//                            Entity cube = new Entity();
+//                            cube.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
+//                            cube.getAttribute("name").setData("Cube");
+//                            cube.setMaterial(MaterialManager.getInstance().getDefaultMaterial());
+//
+//                            cube.setPosition(i * -8, j * -8, k * -8);
+//
+//                            toAdd.add(cube);
+//                        }
+//                    }
+//                    System.out.println(i);
+//                }
 
-                            sphere.setPosition(i * 8, j * 8, k * 8);
-
-                           toAdd.add(sphere);
-                        }
-                    }
-                    System.out.println(i);
-                }
-
-                EntityManager.getInstance().addEntity(toAdd);
+//                EntityManager.getInstance().addEntity(toAdd);
 
 //                sun = new DirectionalLight();
 //                EntityManager.getInstance().addEntity(sun);
