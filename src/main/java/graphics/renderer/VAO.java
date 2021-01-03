@@ -274,7 +274,7 @@ public class VAO {
             // 1rst attribute buffer : vertices
             GL46.glEnableVertexAttribArray(index);
             //Now we need to tell OpenGL how big to stride each instance of draw over this VBO
-            GL46.glVertexAttribDivisor(index, index == 0 ? 0 : 1);
+            GL46.glVertexAttribDivisor(index, 0);
             index++;
         }
         for(String uniform : vbo_uniforms.keySet()){
