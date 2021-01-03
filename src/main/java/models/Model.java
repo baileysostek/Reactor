@@ -2,6 +2,7 @@ package models;
 
 import com.google.gson.JsonObject;
 import graphics.renderer.Handshake;
+import graphics.renderer.VAO;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import serialization.Serializable;
@@ -25,6 +26,7 @@ public class Model implements Serializable<Model> {
 
     //VAO
     private Handshake handshake;
+    private VAO vao;
 
     double time = 0;
 
@@ -44,6 +46,8 @@ public class Model implements Serializable<Model> {
         this.handshake      = handshake;
         this.numIndicies    = numIndicies;
         aabb = new AABB(AABB[0], AABB[1]);
+
+        vao = new VAO(this);
     }
 
     public Handshake getHandshake(){
@@ -110,5 +114,9 @@ public class Model implements Serializable<Model> {
 
     public String getPath(){
         return path;
+    }
+
+    public VAO getVAO() {
+        return vao;
     }
 }

@@ -27,6 +27,7 @@ import util.Callback;
 import java.lang.Math;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -127,17 +128,9 @@ public class Renderer extends Engine {
 
     //Renders the supplied Entities with the
     public void render(){
-        this.renderEntities(EntityManager.getInstance().getEntities());
-    }
-
-    public void renderEntities(Collection<Entity> entities){
-        //TODO Cleanup, This code should live in the Shader class, and also the  Projection Matrix should be buffered on resize and not regenerated per frame, only regen on screen resize.
         if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
             frameBuffer.bindFrameBuffer();
             fboBound = true;
-            if(test == null){
-                test = new VAO(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
-            }
         }else{
             GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
         }
@@ -166,70 +159,60 @@ public class Renderer extends Engine {
 //        int loads = 0;
 
 
-                int shaderID = ShaderManager.getInstance().getDefaultShader();
+        int shaderID = ShaderManager.getInstance().getDefaultShader();
 
-                ShaderManager.getInstance().useShader(shaderID);
+        ShaderManager.getInstance().useShader(shaderID);
 
-                ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", CameraManager.getInstance().getActiveCamera().getPosition());
-                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
-                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"),false, projectionMatrix);
+        ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", CameraManager.getInstance().getActiveCamera().getPosition());
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"), false, projectionMatrix);
 
-                //Pos -2 is skybox
-                GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
-                GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, SkyboxManager.getInstance().getSkyboxTexture());
-                GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
+        //Pos -2 is skybox
+        GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, SkyboxManager.getInstance().getSkyboxTexture());
+        GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
 
-                //-1 is closest probe to entity
+        //-1 is closest probe to entity
 
-                //Compute per frame, refactor to per entity eventually
-                LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
-                int numDirectionalLights = Math.min(shadowCasters.size(), GL46.glGetInteger(GL46.GL_MAX_TEXTURE_IMAGE_UNITS) - TEXTURE_OFFSET);
-                for(int directionalLightIndex = 0; directionalLightIndex < numDirectionalLights; directionalLightIndex++){
+        //Compute per frame, refactor to per entity eventually
+        LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
+        int numDirectionalLights = Math.min(shadowCasters.size(), GL46.glGetInteger(GL46.GL_MAX_TEXTURE_IMAGE_UNITS) - TEXTURE_OFFSET);
+        for (int directionalLightIndex = 0; directionalLightIndex < numDirectionalLights; directionalLightIndex++) {
 
-                    DirectionalLight shadowCaster = shadowCasters.get(directionalLightIndex);
-                    //Bind and allocate this texture unit.
-                    int textureUnit = TEXTURE_OFFSET + directionalLightIndex;
-                    GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
-                    int textureIndex = shadowCaster.getDepthBuffer().getDepthTexture();
-                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
+            DirectionalLight shadowCaster = shadowCasters.get(directionalLightIndex);
+            //Bind and allocate this texture unit.
+            int textureUnit = TEXTURE_OFFSET + directionalLightIndex;
+            GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
+            int textureIndex = shadowCaster.getDepthBuffer().getDepthTexture();
+            GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
 
-                    //Upload our uniforms.
-                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getPosition()).normalize());
-                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getColor());
-                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", directionalLightIndex, shadowCaster.getLightspaceTransform());
-                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", directionalLightIndex, textureUnit);
-                }
-                ShaderManager.getInstance().loadUniformIntoActiveShader("numDirectionalLights", numDirectionalLights);
-
-
-                int index = 0;
-                for(Light l : LightingManager.getInstance().getClosestPointLights(4, new Vector3f(0))){
-                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightPosition", index, l.getPosition());
-                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightColor", index, l.getColor());
-                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightIntensity", index, l.getBrightness());
-                    index++;
-                }
-                ShaderManager.getInstance().loadUniformIntoActiveShader("numPointLights", index);
+            //Upload our uniforms.
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getPosition()).normalize());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getColor());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", directionalLightIndex, shadowCaster.getLightspaceTransform());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", directionalLightIndex, textureUnit);
+        }
+        ShaderManager.getInstance().loadUniformIntoActiveShader("numDirectionalLights", numDirectionalLights);
 
 
+        int index = 0;
+        for (Light l : LightingManager.getInstance().getClosestPointLights(4, new Vector3f(0))) {
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightPosition", index, l.getPosition());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightColor", index, l.getColor());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightIntensity", index, l.getBrightness());
+            index++;
+        }
+        ShaderManager.getInstance().loadUniformIntoActiveShader("numPointLights", index);
 
-                Material material = MaterialManager.getInstance().getDefaultMaterial();
-                loadMaterialIntoShader(shaderID, material);
+        Material material = MaterialManager.getInstance().getDefaultMaterial();
+        loadMaterialIntoShader(shaderID, material);
 
-//                ShaderManager.getInstance().loadAttributesFromEntity(entity);
-//                StopwatchManager.getInstance().getTimer("uploadUniforms").stop();
+        LinkedHashMap<VAO, LinkedList<Entity>> batches = EntityManager.getInstance().getBatches();
 
-                //Mess with uniforms
-//                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "transform"), false, new float[]{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1});
-//                StopwatchManager.getInstance().getTimer("drawCalls").lapStart();
-//                GL46.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
-//                StopwatchManager.getInstance().getTimer("drawCalls").stop();
-                test.render(entities);
-
-            }
-
-
-
+        for(VAO vao : batches.keySet()) {
+            vao.render(batches.get(vao));
+        }
+    }
 
     public void postpare(){
         //Render our Skybox
