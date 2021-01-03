@@ -3,6 +3,7 @@ package entity;
 import com.google.gson.JsonObject;
 import graphics.renderer.VAO;
 import input.MousePicker;
+import material.Material;
 import org.joml.Intersectionf;
 import org.joml.Vector3f;
 import platform.EnumDevelopment;
@@ -420,7 +421,18 @@ public class EntityManager {
         return this.entities.size();
     }
 
-    public LinkedHashMap<VAO, LinkedList<Entity>> getBatches(){
-        return batches;
+    public LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> getBatches(){
+        LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> out = new LinkedHashMap<>();
+        for(VAO batch : batches.keySet()){
+            LinkedHashMap<Material, LinkedList<Entity>> materialEntities = new LinkedHashMap<>();
+            for(Entity e : batches.get(batch)){
+                if(!materialEntities.containsKey(e.getMaterial())){
+                    materialEntities.put(e.getMaterial(), new LinkedList<Entity>());
+                }
+                materialEntities.get(e.getMaterial()).add(e);
+            }
+            out.put(batch, materialEntities);
+        }
+        return out;
     }
 }

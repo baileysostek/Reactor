@@ -2,6 +2,7 @@ package graphics.renderer;
 
 import entity.Entity;
 import entity.component.Attribute;
+import material.MaterialManager;
 import models.Model;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -18,6 +19,7 @@ import java.util.LinkedList;
 
 public class VAO {
 
+    // The largest stride that a VBO can have per vertex is 4 for some reason, so we need to divide matrices into units of 4 or 3.
     private static final int MAX_VBO_ALLOCATION = 4;
     private final int VAO_DI;
 
@@ -32,6 +34,7 @@ public class VAO {
     //Used for internal lookup when reconstructing complex uniforms
     private LinkedHashMap<VBO, VBO> vbo_lookup = new LinkedHashMap<>();
 
+    // The number of faces stored in the indices list of this VAO, should be numIndices / 3
     private int numFaces = 0;
 
     public VAO(Model model){
@@ -50,7 +53,6 @@ public class VAO {
 
         //Any uniform loads go here.
         registerUniform("transform", EnumGLDatatype.MAT4);
-//        registerUniform("dummy", EnumGLDatatype.MAT4);
 
         //Load some data in there!
         Handshake shape = model.getHandshake();
