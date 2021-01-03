@@ -276,45 +276,31 @@ public class Editor {
             }
         });
 
-        Keyboard.getInstance().addPressCallback(Keyboard.B, new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                System.out.println("Building");
-                return null;
-            }
-        });
-
-        Keyboard.getInstance().addPressCallback(Keyboard.O, new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                saveProject();
-                return null;
-            }
-        });
-
         MousePicker.getInstance().addCallback(new Callback() {
             @Override
             public Object callback(Object... objects) {
-                int button = (int) objects[0];
-                int action = (int) objects[1];
+                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                    int button = (int) objects[0];
+                    int action = (int) objects[1];
 
-                if(button == MousePicker.MOUSE_RIGHT) {
-                    //On Release Set selected to none
-                    if (action == GLFW.GLFW_RELEASE) {
-                        MousePicker.getInstance().unlockMouse();
+                    if (button == MousePicker.MOUSE_RIGHT) {
+                        //On Release Set selected to none
+                        if (action == GLFW.GLFW_RELEASE) {
+                            MousePicker.getInstance().unlockMouse();
+                        }
+                        if (action == GLFW.GLFW_PRESS) {
+                            MousePicker.getInstance().requestLockMouse();
+                        }
                     }
-                    if (action == GLFW.GLFW_PRESS) {
-                        MousePicker.getInstance().requestLockMouse();
-                    }
-                }
 
-                //For our Orbit calculations.
-                if(button == MousePicker.MOUSE_MIDDLE){
-                    if (action == GLFW.GLFW_RELEASE) {
-                        MousePicker.getInstance().unlockMouse();
-                    }
-                    if (action == GLFW.GLFW_PRESS) {
-                        MousePicker.getInstance().requestLockMouse();
+                    //For our Orbit calculations.
+                    if (button == MousePicker.MOUSE_MIDDLE) {
+                        if (action == GLFW.GLFW_RELEASE) {
+                            MousePicker.getInstance().unlockMouse();
+                        }
+                        if (action == GLFW.GLFW_PRESS) {
+                            MousePicker.getInstance().requestLockMouse();
+                        }
                     }
                 }
 

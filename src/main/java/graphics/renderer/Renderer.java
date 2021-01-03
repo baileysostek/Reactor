@@ -204,13 +204,14 @@ public class Renderer extends Engine {
         }
         ShaderManager.getInstance().loadUniformIntoActiveShader("numPointLights", index);
 
-        Material material = MaterialManager.getInstance().getDefaultMaterial();
-        loadMaterialIntoShader(shaderID, material);
-
-        LinkedHashMap<VAO, LinkedList<Entity>> batches = EntityManager.getInstance().getBatches();
+        LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches = EntityManager.getInstance().getBatches();
 
         for(VAO vao : batches.keySet()) {
-            vao.render(batches.get(vao));
+            LinkedHashMap<Material, LinkedList<Entity>> materialEntities = batches.get(vao);
+            for(Material mat : materialEntities.keySet()){
+                loadMaterialIntoShader(shaderID, mat);
+                vao.render(materialEntities.get(mat));
+            }
         }
     }
 

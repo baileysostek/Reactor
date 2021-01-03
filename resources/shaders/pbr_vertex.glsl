@@ -18,15 +18,13 @@ layout(location = 5) in vec4 transform_0;
 layout(location = 6) in vec4 transform_1;
 layout(location = 7) in vec4 transform_2;
 layout(location = 8) in vec4 transform_3;
-//uniform mat4 transform;
+
+//layout(location = 9) in vec4 textureOffset;
 
 //Uniform variables
 uniform mat4 view;           // Cameras position in space
 uniform vec3 cameraPos;      // Cameras position in worldSpace
 uniform mat4 perspective;    //Perspective of this world
-
-uniform vec2 t_offset;    //texture offset
-uniform vec2 t_scale;     //texture scale
 
 //Lighting
 uniform mat4 lightSpaceMatrix[maxLights];
@@ -54,12 +52,14 @@ void main(){
     );
 
     //Transdform the normnal vectors of this model by its transform.
-    vec4 offsetNormal = transform *  vec4(vNormal.xyz, 1.0);
+    vec4 offsetNormal = transform * vec4(vNormal.xyz, 1.0);
     vec4 worldOffset = transform * vec4(0, 0, 0, 1);
     passNormal = normalize((vec3(offsetNormal) / offsetNormal.w) - (worldOffset.xyz)/worldOffset.w);
 
     vec4 worldPosition = transform * vec4(vPosition.xyz, 1.0);
     WorldPos = worldPosition.xyz;
+
+//    passCoords = (vTexture * textureOffset.xy) + (textureOffset.zw * textureOffset.xy);
 
     passCoords = vTexture;
 

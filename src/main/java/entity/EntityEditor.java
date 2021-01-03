@@ -24,6 +24,8 @@ import input.MousePicker;
 import math.VectorUtils;
 import org.joml.*;
 import org.lwjgl.glfw.GLFW;
+import platform.EnumDevelopment;
+import platform.PlatformManager;
 import serialization.SerializationHelper;
 import util.Callback;
 import util.Debouncer;
@@ -93,27 +95,29 @@ public class EntityEditor extends UIComponet {
         mouseCallback = new Callback() {
             @Override
             public Object callback(Object... objects) {
-                if(EntityEditor.super.isVisable()) {
-                    int button = (int) objects[0];
-                    int action = (int) objects[1];
+                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                    if (EntityEditor.super.isVisable()) {
+                        int button = (int) objects[0];
+                        int action = (int) objects[1];
 
-                    if(button == MousePicker.MOUSE_LEFT) {
-                        //On Release Set selected to none
-                        if (action == GLFW.GLFW_RELEASE) {
-                            //Call the callbacks
-                            for(Callback c : onActionStop){
-                                c.callback(selectedTool, selectedEntities.keySet());
+                        if (button == MousePicker.MOUSE_LEFT) {
+                            //On Release Set selected to none
+                            if (action == GLFW.GLFW_RELEASE) {
+                                //Call the callbacks
+                                for (Callback c : onActionStop) {
+                                    c.callback(selectedTool, selectedEntities.keySet());
+                                }
+                                //Deselect the tool
+                                selectedTool = NONE;
+                                hasReleased = true;
                             }
-                            //Deselect the tool
-                            selectedTool = NONE;
-                            hasReleased = true;
-                        }
 
-                        pressed = (action == GLFW.GLFW_PRESS);
-                        if (pressed) {
-                            raycastToWorld();
-                            for(Callback c : onActionStart){
-                                c.callback(selectedTool, selectedEntities.keySet());
+                            pressed = (action == GLFW.GLFW_PRESS);
+                            if (pressed) {
+                                raycastToWorld();
+                                for (Callback c : onActionStart) {
+                                    c.callback(selectedTool, selectedEntities.keySet());
+                                }
                             }
                         }
                     }
@@ -126,13 +130,15 @@ public class EntityEditor extends UIComponet {
         Keyboard.getInstance().addPressCallback(Keyboard.DELETE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                for(Entity e : selectedEntities.keySet()){
-                    EntityManager.getInstance().removeEntity(e);
+                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                    for (Entity e : selectedEntities.keySet()) {
+                        EntityManager.getInstance().removeEntity(e);
+                    }
+                    for (Callback callback : onDelete) {
+                        callback.callback(selectedEntities.keySet());
+                    }
+                    clearSelected();
                 }
-                for(Callback callback : onDelete){
-                    callback.callback(selectedEntities.keySet());
-                }
-                clearSelected();
                 return null;
             }
         });
@@ -140,21 +146,27 @@ public class EntityEditor extends UIComponet {
         Keyboard.getInstance().addPressCallback(Keyboard.ONE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                toolType = EditorMode.TRANSLATE;
+                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                    toolType = EditorMode.TRANSLATE;
+                }
                 return null;
             }
         });
         Keyboard.getInstance().addPressCallback(Keyboard.TWO, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                toolType = EditorMode.ROTATE;
+                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                    toolType = EditorMode.ROTATE;
+                }
                 return null;
             }
         });
         Keyboard.getInstance().addPressCallback(Keyboard.THREE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                toolType = EditorMode.SCALE;
+                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                    toolType = EditorMode.SCALE;
+                }
                 return null;
             }
         });
@@ -162,7 +174,9 @@ public class EntityEditor extends UIComponet {
         Keyboard.getInstance().addPressCallback(Keyboard.ESCAPE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                clearSelected();
+                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                    clearSelected();
+                }
                 return null;
             }
         });

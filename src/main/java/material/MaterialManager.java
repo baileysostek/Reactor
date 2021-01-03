@@ -8,6 +8,7 @@ import models.ModelManager;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 
 public class MaterialManager {
 
@@ -101,6 +102,14 @@ public class MaterialManager {
             //TODO add log message. from Log manager.
             System.err.println("[Material Manager] Tried to update material, however a mapping for this material does not exist.");
         }
+    }
+
+    public void generateAtlas(Collection<Entity> entities){
+        LinkedHashSet materials = new LinkedHashSet();
+        for(Entity e : entities){
+            materials.add(e.getMaterial());
+        }
+        System.out.println("Materials in Batch:");
     }
 
     //Managed Variables
