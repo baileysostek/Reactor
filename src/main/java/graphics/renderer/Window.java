@@ -100,12 +100,8 @@ public class Window {
             ByteBuffer icon16;
             ByteBuffer icon32;
             try {
-                String stringPath = (StringUtils.getRelativePath() + path);
-
-                System.out.println("Loading Icon for window:" + stringPath);
-
-                icon16 = ioResourceToByteBuffer(stringPath, 2048);
-                icon32 = ioResourceToByteBuffer(stringPath, 4096);
+                icon16 = StringUtils.loadRaw(path, 2048);
+                icon32 = StringUtils.loadRaw(path, 4096);
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -139,60 +135,11 @@ public class Window {
         memFree(w);
     }
 
-    /**
-     * Reads the specified resource and returns the raw data as a ByteBuffer.
-     *
-     * @param resource   the resource to read
-     * @param bufferSize the initial buffer size
-     *
-     * @return the resource data
-     *
-     * @throws IOException if an IO error occurs
-     */
-    public static ByteBuffer ioResourceToByteBuffer(String resource, int bufferSize) throws IOException {
-        ByteBuffer buffer;
-
-        String stringPath = resource.replaceFirst("/", "");
-        stringPath = stringPath.replaceAll("/", "\\\\");
-        final Path path = Paths.get(stringPath);
-
-        if ( Files.isReadable(path) ) {
-            try (SeekableByteChannel fc = Files.newByteChannel(path)) {
-                buffer = org.lwjgl.BufferUtils.createByteBuffer((int)fc.size() + 1);
-                while ( fc.read(buffer) != -1 ) ;
-            }
-        } else {
-            try (
-                    InputStream source = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
-                    ReadableByteChannel rbc = Channels.newChannel(source)
-            ) {
-                buffer = BufferUtils.createByteBuffer(bufferSize);
-
-                while ( true ) {
-                    int bytes = rbc.read(buffer);
-                    if ( bytes == -1 )
-                        break;
-                    if ( buffer.remaining() == 0 )
-                        buffer = resizeBuffer(buffer, buffer.capacity() * 2);
-                }
-            }
-        }
-
-        buffer.flip();
-        return buffer;
-    }
-
-    private static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {
-        ByteBuffer newBuffer = BufferUtils.createByteBuffer(newCapacity);
-        buffer.flip();
-        newBuffer.put(buffer);
-        return newBuffer;
-    }
-
     private void setup(){
         // Configure GLFW
         glfwDefaultWindowHints(); // optional, the current window hints are already the default
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
+        glfwWindowHint(GLFW_SAMPLES, 4);
 
         if(this.resize) {
             glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable

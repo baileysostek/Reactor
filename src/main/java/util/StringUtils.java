@@ -3,9 +3,16 @@ package util;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+import org.lwjgl.BufferUtils;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 public class StringUtils {
@@ -60,22 +67,57 @@ public class StringUtils {
         }
     }
 
-    public static ByteBuffer loadRaw(String filePath) {
-        try{
-            String path = PATH + filePath;
-            File file = new File(path);
+    /**
+     * Reads the specified resource and returns the raw data as a ByteBuffer.
+     *
+     * @param resource   the resource to read
+     * @param bufferSize the initial buffer size
+     *
+     * @return the resource data
+     *
+     * @throws IOException if an IO error occurs
+     */
+    public static ByteBuffer loadRaw(String resource, int bufferSize) throws IOException {
+        ByteBuffer buffer;
 
-            byte[] bytes = new byte[(int) file.length()];
-            DataInputStream dis = new DataInputStream(new FileInputStream(file));
-            dis.readFully(bytes);
+//        String stringPath = resource.replaceFirst("/", "");
+        String stringPath = (PATH + resource).replaceAll("/", "\\\\");
 
-            return ByteBuffer.wrap(bytes);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        System.out.println("Try load:" + stringPath);
+
+        final Path path = Paths.get(stringPath);
+
+        if ( Files.isReadable(path) ) {
+            try (SeekableByteChannel fc = Files.newByteChannel(path)) {
+                buffer = org.lwjgl.BufferUtils.createByteBuffer((int)fc.size() + 1);
+                while ( fc.read(buffer) != -1 ) ;
+            }
+        } else {
+            try (
+                    InputStream source = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
+                    ReadableByteChannel rbc = Channels.newChannel(source)
+            ) {
+                buffer = BufferUtils.createByteBuffer(bufferSize);
+
+                while ( true ) {
+                    int bytes = rbc.read(buffer);
+                    if ( bytes == -1 )
+                        break;
+                    if ( buffer.remaining() == 0 )
+                        buffer = resizeBuffer(buffer, buffer.capacity() * 2);
+                }
+            }
         }
-        return null;
+
+        buffer.flip();
+        return buffer;
+    }
+
+    private static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {
+        ByteBuffer newBuffer = BufferUtils.createByteBuffer(newCapacity);
+        buffer.flip();
+        newBuffer.put(buffer);
+        return newBuffer;
     }
 
     public static JsonObject loadJson(String fileName){

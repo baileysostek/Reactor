@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import editor.AttributeRenderer;
 import editor.Editor;
 import editor.components.UIComponet;
+import engine.Reactor;
 import entity.component.Attribute;
 import entity.component.Component;
 import entity.component.EnumAttributeType;
@@ -36,6 +37,7 @@ import java.security.Key;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Stack;
 
 import static entity.EditorAxis.*;
 
@@ -47,6 +49,8 @@ public class EntityEditor extends UIComponet {
     //The entity we are interacting with
     private Entity entity;
     private HashMap<Entity, EntityMetaData> selectedEntities = new HashMap<>();
+    private Stack<Entity> pastSelections = new Stack<Entity>();
+
     private Vector3f delta = new Vector3f(0);
     private Vector3f initialCastHit = new Vector3f(0);
     private Vector3f rayToHit = new Vector3f(0);
@@ -68,6 +72,7 @@ public class EntityEditor extends UIComponet {
     private LinkedList<Callback> onSelect          = new LinkedList<>();
     private LinkedList<Callback> onDeselect        = new LinkedList<>();
     private LinkedList<Callback> onDelete          = new LinkedList<>();
+    private LinkedList<Callback> onClone           = new LinkedList<>();
 
     //translations
     private LinkedList<Callback> onMove            = new LinkedList<>();
@@ -95,7 +100,7 @@ public class EntityEditor extends UIComponet {
         mouseCallback = new Callback() {
             @Override
             public Object callback(Object... objects) {
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                if(Reactor.isDev()) {
                     if (EntityEditor.super.isVisable()) {
                         int button = (int) objects[0];
                         int action = (int) objects[1];
@@ -130,14 +135,23 @@ public class EntityEditor extends UIComponet {
         Keyboard.getInstance().addPressCallback(Keyboard.DELETE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                if(Reactor.isDev()) {
                     for (Entity e : selectedEntities.keySet()) {
                         EntityManager.getInstance().removeEntity(e);
                     }
                     for (Callback callback : onDelete) {
                         callback.callback(selectedEntities.keySet());
                     }
+
                     clearSelected();
+
+                    //Selected Stack
+                    if(pastSelections.size() > 0){
+                        pastSelections.pop();
+                        if(pastSelections.size() > 0) {
+                            setTarget(pastSelections.pop());
+                        }
+                    }
                 }
                 return null;
             }
@@ -146,7 +160,7 @@ public class EntityEditor extends UIComponet {
         Keyboard.getInstance().addPressCallback(Keyboard.ONE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                if(Reactor.isDev()) {
                     toolType = EditorMode.TRANSLATE;
                 }
                 return null;
@@ -155,7 +169,7 @@ public class EntityEditor extends UIComponet {
         Keyboard.getInstance().addPressCallback(Keyboard.TWO, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                if(Reactor.isDev()) {
                     toolType = EditorMode.ROTATE;
                 }
                 return null;
@@ -164,7 +178,7 @@ public class EntityEditor extends UIComponet {
         Keyboard.getInstance().addPressCallback(Keyboard.THREE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                if(Reactor.isDev()) {
                     toolType = EditorMode.SCALE;
                 }
                 return null;
@@ -174,7 +188,7 @@ public class EntityEditor extends UIComponet {
         Keyboard.getInstance().addPressCallback(Keyboard.ESCAPE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                if(Reactor.isDev()) {
                     clearSelected();
                 }
                 return null;
@@ -207,12 +221,13 @@ public class EntityEditor extends UIComponet {
                     rayToHit = new Vector3f(0);
                     distanceToCam = 0;
 
-                    if(Keyboard.getInstance().isKeyPressed(Keyboard.CONTROL_LEFT)){
-                        StringUtils.write(this.entity.serialize().toString(), "test.json");
-                    }
-
                     if(Keyboard.getInstance().isKeyPressed(Keyboard.ALT_LEFT)){
-                        cloneSelected();
+                        Entity clone = cloneSelected();
+
+                        //Trigger the onCopy
+                        for(Callback c : onClone){
+                            c.callback(clone);
+                        }
 
                         //Need to actually draw the arrows on the screen,
                         this.preUIRender();
@@ -587,6 +602,7 @@ public class EntityEditor extends UIComponet {
                             this.addTarget(hits.getFirst());
                         } else {
                             this.setTarget(hits.getFirst());
+                            this.pastSelections.push(hits.getFirst());
                         }
                     }
                 } else {
@@ -889,6 +905,10 @@ public class EntityEditor extends UIComponet {
 
     public void addOnDelete(Callback callback){
         this.onDelete.addLast(callback);
+    }
+
+    public void addOnClone(Callback callback){
+        this.onClone.addLast(callback);
     }
 
     public Collection<Entity> getSelected() {

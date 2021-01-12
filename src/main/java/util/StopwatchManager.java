@@ -1,12 +1,10 @@
 package util;
 
-import engine.Engine;
-
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.HashMap;
 
-public class StopwatchManager extends Engine {
+public class StopwatchManager{
 
     private static StopwatchManager manager;
     private HashMap<String, Stopwatch> stopwatches = new HashMap<String, Stopwatch>();
@@ -52,7 +50,6 @@ public class StopwatchManager extends Engine {
         }
     }
 
-    @Override
     public void onShutdown() {
 
     }

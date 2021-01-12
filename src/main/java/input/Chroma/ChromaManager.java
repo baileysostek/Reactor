@@ -1,6 +1,5 @@
 package input.Chroma;
 
-import engine.Engine;
 import org.jglr.jchroma.JChroma;
 import org.jglr.jchroma.effects.CustomKeyboardEffect;
 import org.jglr.jchroma.utils.ColorRef;
@@ -11,7 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ChromaManager extends Engine implements Runnable{
+public class ChromaManager implements Runnable{
 
     private static ChromaManager chromaManager;
     private static JChroma chroma;
@@ -211,7 +210,6 @@ public class ChromaManager extends Engine implements Runnable{
         }
     }
 
-    @Override
     public void onShutdown() {
         running = false;
         if(chroma != null){
