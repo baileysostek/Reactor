@@ -1,6 +1,7 @@
 package entity;
 
 import com.google.gson.JsonObject;
+import engine.Reactor;
 import graphics.renderer.VAO;
 import input.MousePicker;
 import material.Material;
@@ -133,7 +134,7 @@ public class EntityManager {
     //Update all entities
     public void update(double delta){
         sync();
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.PRODUCTION)) {
+        if(!Reactor.isDev()) {
             for (Entity e : new LinkedList<>(entities)) {
                 e.selfUpdate(delta);
             }

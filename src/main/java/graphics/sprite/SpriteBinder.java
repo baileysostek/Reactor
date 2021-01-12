@@ -1,7 +1,5 @@
 package graphics.sprite;
 
-import com.sun.jna.Memory;
-import engine.Engine;
 import org.joml.Vector4f;
 import org.lwjgl.nanovg.NSVGImage;
 import org.lwjgl.nanovg.NanoSVG;
@@ -27,7 +25,7 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
 
-public class SpriteBinder extends Engine {
+public class SpriteBinder {
 
     private static SpriteBinder spriteBinder;
     //Map the index for this texture to
@@ -379,7 +377,6 @@ public class SpriteBinder extends Engine {
         return spriteBinder;
     }
 
-    @Override
     public void onShutdown() {
         for(Sprite sprite : sprites.values()){
             this.delete(sprite);

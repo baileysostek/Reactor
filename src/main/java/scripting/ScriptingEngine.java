@@ -1,10 +1,5 @@
 package scripting;
 
-import engine.Engine;
-import entity.EntityManager;
-import org.lwjgl.glfw.GLFW;
-import org.omg.CORBA.UNKNOWN;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -17,7 +12,7 @@ import util.StringUtils;
 
 import javax.sound.sampled.Line;
 
-public class ScriptingEngine extends Engine {
+public class ScriptingEngine{
 
     private static ScriptingEngine scriptingEngine;
 
@@ -948,7 +943,6 @@ public class ScriptingEngine extends Engine {
         }
     }
 
-    @Override
     public void onShutdown() {
         //GC all files, and call shutdown methods of scripts.
     }

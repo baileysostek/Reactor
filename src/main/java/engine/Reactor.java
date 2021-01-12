@@ -9,7 +9,10 @@ import entity.Entity;
 import entity.EntityManager;
 import entity.component.Collision;
 import graphics.renderer.*;
+import graphics.renderer.Window;
 import graphics.sprite.SpriteBinder;
+import graphics.ui.FontLoader;
+import graphics.ui.UIManager;
 import input.Chroma.ChromaManager;
 import input.MousePicker;
 import input.controller.ControllerManager;
@@ -20,8 +23,11 @@ import material.MaterialManager;
 import models.Model;
 import models.ModelManager;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.nanovg.NVGColor;
+import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL46;
 import particle.ParticleManager;
 import physics.PhysicsEngine;
 import platform.EnumDevelopment;
@@ -35,6 +41,9 @@ import steam.SteamManager;
 import util.StopwatchManager;
 import util.StringUtils;
 
+import java.awt.*;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -42,30 +51,33 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.system.MemoryUtil.NULL;
-import static org.lwjgl.system.MemoryUtil.memByteBuffer;
 
 public class Reactor {
 
     private static Window WINDOW;
     public static long WINDOW_POINTER;
-    public static long vg;
 
     //Engine Variables
     private static boolean INITIALIZED = false;
     private static boolean RUNNING = false;
 
-    //Global Variables
+    //Global Window Variables
     private static int     WIDTH        = 900;
     private static int     HEIGHT       = 900;
     private static String  TITLE        = "Reactor V1.0";
     private static boolean VSYNC        = false;
     private static boolean FULLSCREEN   = false;
 
+    //Development status
+    private static EnumDevelopment level = EnumDevelopment.DEVELOPMENT;
+
     //GLOBAL flags
     private static boolean REACTOR_ENABLE_DIRECT_DRAW = false;
 
     //Local Static variables
     private static int     FRAMES = 0;
+
+    private static ByteBuffer fontBuffer;
 
     //Interface Methods
     public static void setWindowSize(int width, int height){
@@ -94,12 +106,16 @@ public class Reactor {
     }
 
     public static void setDevelopmentLevel(EnumDevelopment dev){
-        PlatformManager.getInstance().setDevelopmentLevel(dev);
+        level = dev;
     }
 
     //Access these varaibels
     public static int getFPS(){
         return FRAMES;
+    }
+
+    static {
+        PlatformManager.initialize();
     }
 
     public static void initialize() {
@@ -157,15 +173,26 @@ public class Reactor {
 
                 //We have a known window size, a shader, and a GL context, we can make a window.
                 Renderer.initialize(WIDTH, HEIGHT);
+                UIManager.initialize();
+                FontLoader.initialize();
                 VAOManager.initialize();
                 SkyboxManager.initialize();
 
-                vg = NanoVGGL3.nvgCreate(NanoVGGL3.NVG_ANTIALIAS);
-                if (vg == NULL) {
-                    throw new RuntimeException("Could not init nanovg.");
-                }else{
-                    System.out.println("NanoVG handle:" + vg);
-                }
+                //Font
+                FontLoader.getInstance().loadFont("font/Roboto/Roboto-Regular.ttf", "roboto");
+
+//                int result = 0;
+//                try {
+//                    fontBuffer = StringUtils.loadRaw("font/Roboto/Roboto-Regular.ttf", 450 * 1024);
+//                    result = NanoVG.nvgCreateFontMem(UIManager.getInstance().getNanoVG(), "roboto", fontBuffer, 0);
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//                if(result < 0){
+//                    System.out.println("Font load error:" + result);
+//                }else{
+//                    System.out.println("Loaded font.");
+//                }
 
                 LogManager.initialize();
                 SteamManager.initialize();
@@ -187,7 +214,7 @@ public class Reactor {
                 ScriptingEngine.initialize();
 
                 //If we are in developent mode init the console.
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                if(isDev()) {
                     Editor.initialize();
                 }
 
@@ -374,7 +401,7 @@ public class Reactor {
 //        }
 //        test1.setPosition(pos);
 
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+        if(isDev()){
 //            StopwatchManager.getInstance().getTimer("tick_editor").start();
             Editor.getInstance().update(delta);
 //            StopwatchManager.getInstance().getTimer("tick_editor").start();
@@ -400,31 +427,17 @@ public class Reactor {
 
 //        StopwatchManager.getInstance().getTimer("render_editor").lapStart();
         //If Dev render UI
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+        if(isDev()){
             Editor.getInstance().preUIRender();
         }
 //        StopwatchManager.getInstance().getTimer("render_editor").stop();
 
         PhysicsEngine.getInstance().render();
-
-//        //UI
-//        NanoVG.nvgBeginFrame(vg, Renderer.getWIDTH(), Renderer.getHEIGHT(), 1);
-//
-//        NVGColor colorA = NVGColor.create();
-//
-//        NanoVG.nvgFontSize(vg, 18.0f);
-//        NanoVG.nvgFontFace(vg, "sans");
-//        NanoVG.nvgFillColor(vg, NanoVG.nvgRGBA((byte)255, (byte)255, (byte)255, (byte)64, colorA));
-//        NanoVG.nvgTextAlign(vg, NanoVG.NVG_ALIGN_RIGHT | NanoVG.NVG_ALIGN_MIDDLE);
-//        NanoVG.nvgText(vg, 129, 129, "test");
-//
-//        NanoVG.nvgEndFrame(vg);
-
         Renderer.getInstance().postpare();
 
         //If Dev render UI
 //        StopwatchManager.getInstance().getTimer("render_editor").lapStart();
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+        if(isDev()){
             Editor.getInstance().render();
         }
 //        StopwatchManager.getInstance().getTimer("render_editor").stop();
@@ -436,7 +449,7 @@ public class Reactor {
         SpriteBinder.getInstance().onShutdown();
         SoundEngine.getInstance().onShutdown();
         ChromaManager.getInstance().onShutdown();
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+        if(isDev()) {
             Editor.getInstance().onShutdown();
         }
         VAOManager.getInstance().onShutdown();
@@ -572,6 +585,14 @@ public class Reactor {
 
     public static boolean canDirectDraw(){
         return REACTOR_ENABLE_DIRECT_DRAW;
+    }
+
+    public static boolean isDev(){
+        return level.equals(EnumDevelopment.DEVELOPMENT);
+    }
+
+    public static long getVg(){
+        return UIManager.getInstance().getNanoVG();
     }
 
 }

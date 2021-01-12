@@ -262,16 +262,15 @@ public class Editor {
         Keyboard.getInstance().addPressCallback(Keyboard.P, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+                if(Reactor.isDev()){
 //                    saveProject();
-                    PlatformManager.getInstance().setDevelopmentLevel(EnumDevelopment.PRODUCTION);
+                    Reactor.setDevelopmentLevel(EnumDevelopment.PRODUCTION);
                     onPlay();
                 }else{
 //                    loadProject();
-                    PlatformManager.getInstance().setDevelopmentLevel(EnumDevelopment.DEVELOPMENT);
+                    Reactor.setDevelopmentLevel((EnumDevelopment.DEVELOPMENT));
                     onExitPlay();
                 }
-                System.out.println("Pressed new state is:"+ PlatformManager.getInstance().getDevelopmentStatus());
                 return null;
             }
         });
@@ -279,7 +278,7 @@ public class Editor {
         MousePicker.getInstance().addCallback(new Callback() {
             @Override
             public Object callback(Object... objects) {
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+                if(Reactor.isDev()) {
                     int button = (int) objects[0];
                     int action = (int) objects[1];
 
@@ -420,7 +419,7 @@ public class Editor {
     }
 
     public void preUIRender(){
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+        if(Reactor.isDev()){
             //Draw Axis
             int size = 4096;
             DirectDraw.getInstance().drawLine(new Vector3f(-size, 0, 0), new Vector3f(size, 0, 0), new Vector3f(1, 0, 0));
@@ -736,6 +735,10 @@ public class Editor {
 
     public void onEditorFocus(Callback c){
         this.onEditorCallbacks.addLast(c);
+    }
+
+    public void onClone(Callback c){
+        this.entityEditor.addOnClone(c);
     }
 
     public Collection<Entity> getSelectedEntities() {

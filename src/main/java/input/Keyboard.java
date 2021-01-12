@@ -1,7 +1,6 @@
 package input;
 
 import editor.Editor;
-import engine.Engine;
 import engine.Reactor;
 import imgui.ImGui;
 import input.Chroma.ChromaManager;
@@ -15,7 +14,7 @@ import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class Keyboard extends Engine {
+public class Keyboard {
 
     private static Keyboard keyboard;
     private boolean[] keys = new boolean[1024]; // No out of bounds
@@ -108,7 +107,7 @@ public class Keyboard extends Engine {
                     }
                 }
 
-                if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)){
+                if(Reactor.isDev()){
                     Editor.getInstance().sendKeyEvent(window, key, scancode, action, mods);
                 }
             }
@@ -116,7 +115,6 @@ public class Keyboard extends Engine {
 
     }
 
-    @Override
     public void onShutdown() {
 
     }

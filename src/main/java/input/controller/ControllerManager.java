@@ -5,9 +5,6 @@
  */
 package input.controller;
 
-
-import engine.Engine;
-import org.joml.Vector2f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWJoystickCallbackI;
 import util.Callback;
@@ -24,7 +21,7 @@ import static com.codedisaster.steamworks.SteamRemoteStorage.WorkshopFileType.Ga
  *
  * @author Bailey
  */
-public class ControllerManager extends Engine {
+public class ControllerManager{
 
 
     private LinkedList<JavaController> controllers;
@@ -84,7 +81,6 @@ public class ControllerManager extends Engine {
         }
     }
 
-    @Override
     public void onShutdown() {
 
     }

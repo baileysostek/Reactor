@@ -2,11 +2,11 @@ package graphics.renderer;
 
 import camera.CameraManager;
 import camera.DynamicCamera;
-import engine.Engine;
 import engine.Reactor;
 import entity.Entity;
 import entity.EntityManager;
 import graphics.sprite.SpriteBinder;
+import graphics.ui.UIManager;
 import input.Keyboard;
 import lighting.DirectionalLight;
 import lighting.Light;
@@ -18,6 +18,8 @@ import models.AABB;
 import models.Joint;
 import models.ModelManager;
 import org.joml.*;
+import org.lwjgl.nanovg.NVGColor;
+import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.opengl.GL46;
 import platform.EnumDevelopment;
 import platform.PlatformManager;
@@ -32,7 +34,7 @@ import java.util.LinkedList;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public class Renderer extends Engine {
+public class Renderer{
 
     private static Renderer renderer;
 
@@ -65,10 +67,8 @@ public class Renderer extends Engine {
 
     private boolean fboBound = false;
 
-    VAO test;
-
     private Renderer(int width, int height){
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+        if(Reactor.isDev()) {
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 //            GLUtil.setupDebugMessageCallback();
         }
@@ -128,26 +128,19 @@ public class Renderer extends Engine {
 
     //Renders the supplied Entities with the
     public void render(){
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+        if(Reactor.isDev()) {
             frameBuffer.bindFrameBuffer();
             fboBound = true;
         }else{
+            GL46.glViewport(0, 0, WIDTH, HEIGHT);
             GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
         }
 
         GL46.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
         GL46.glEnable(GL46.GL_DEPTH_TEST);
-        GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT);
+        GL46.glEnable(GL46.GL_STENCIL_TEST);
+        GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT | GL46.GL_STENCIL_BUFFER_BIT);
 
-//        GL46.glEnable(GL46.GL_BLEND);
-//        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
-
-//        StopwatchManager.getInstance().getTimer("uploadUniforms").start();
-
-
-//        StopwatchManager.getInstance().getTimer("uploadUniforms").stop();
-
-//        StopwatchManager.getInstance().getTimer("sort").start();
         EntityManager.getInstance().resort();
 //        StopwatchManager.getInstance().getTimer("sort").stop();
 
@@ -159,57 +152,59 @@ public class Renderer extends Engine {
 //        int loads = 0;
 
 
-        int shaderID = ShaderManager.getInstance().getDefaultShader();
-
-        ShaderManager.getInstance().useShader(shaderID);
-
-        ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", CameraManager.getInstance().getActiveCamera().getPosition());
-        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
-        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"), false, projectionMatrix);
-
-        //Pos -2 is skybox
-        GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
-        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, SkyboxManager.getInstance().getSkyboxTexture());
-        GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
-
-        //-1 is closest probe to entity
-
-        //Compute per frame, refactor to per entity eventually
-        LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
-        int numDirectionalLights = Math.min(shadowCasters.size(), GL46.glGetInteger(GL46.GL_MAX_TEXTURE_IMAGE_UNITS) - TEXTURE_OFFSET);
-        for (int directionalLightIndex = 0; directionalLightIndex < numDirectionalLights; directionalLightIndex++) {
-
-            DirectionalLight shadowCaster = shadowCasters.get(directionalLightIndex);
-            //Bind and allocate this texture unit.
-            int textureUnit = TEXTURE_OFFSET + directionalLightIndex;
-            GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
-            int textureIndex = shadowCaster.getDepthBuffer().getDepthTexture();
-            GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
-
-            //Upload our uniforms.
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getPosition()).normalize());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getColor());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", directionalLightIndex, shadowCaster.getLightspaceTransform());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", directionalLightIndex, textureUnit);
-        }
-        ShaderManager.getInstance().loadUniformIntoActiveShader("numDirectionalLights", numDirectionalLights);
-
-
-        int index = 0;
-        for (Light l : LightingManager.getInstance().getClosestPointLights(4, new Vector3f(0))) {
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightPosition", index, l.getPosition());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightColor", index, l.getColor());
-            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightIntensity", index, l.getBrightness());
-            index++;
-        }
-        ShaderManager.getInstance().loadUniformIntoActiveShader("numPointLights", index);
-
         LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches = EntityManager.getInstance().getBatches();
 
         for(VAO vao : batches.keySet()) {
             LinkedHashMap<Material, LinkedList<Entity>> materialEntities = batches.get(vao);
             for(Material mat : materialEntities.keySet()){
+                int shaderID = mat.getShaderID();
+
+                ShaderManager.getInstance().useShader(shaderID);
+
+                ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", CameraManager.getInstance().getActiveCamera().getPosition());
+                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
+                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"), false, projectionMatrix);
+
+                //Pos -2 is skybox
+                GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
+                GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, SkyboxManager.getInstance().getSkyboxTexture());
+                GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
+
+                //-1 is closest probe to entity
+
+                //Compute per frame, refactor to per entity eventually
+                LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
+                int numDirectionalLights = Math.min(shadowCasters.size(), GL46.glGetInteger(GL46.GL_MAX_TEXTURE_IMAGE_UNITS) - TEXTURE_OFFSET);
+                for (int directionalLightIndex = 0; directionalLightIndex < numDirectionalLights; directionalLightIndex++) {
+
+                    DirectionalLight shadowCaster = shadowCasters.get(directionalLightIndex);
+                    //Bind and allocate this texture unit.
+                    int textureUnit = TEXTURE_OFFSET + directionalLightIndex;
+                    GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
+                    int textureIndex = shadowCaster.getDepthBuffer().getDepthTexture();
+                    GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
+
+                    //Upload our uniforms.
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", directionalLightIndex, new Vector3f(0).sub(shadowCaster.getPosition()).normalize());
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", directionalLightIndex, shadowCaster.getColor());
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", directionalLightIndex, shadowCaster.getLightspaceTransform());
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", directionalLightIndex, textureUnit);
+                }
+                ShaderManager.getInstance().loadUniformIntoActiveShader("numDirectionalLights", numDirectionalLights);
+
+
+                int index = 0;
+                for (Light l : LightingManager.getInstance().getClosestPointLights(4, new Vector3f(0))) {
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightPosition", index, l.getPosition());
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightColor", index, l.getColor());
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightIntensity", index, l.getBrightness());
+                    index++;
+                }
+                ShaderManager.getInstance().loadUniformIntoActiveShader("numPointLights", index);
+
                 loadMaterialIntoShader(shaderID, mat);
+
+                //Draw calls
                 vao.render(materialEntities.get(mat));
             }
         }
@@ -220,19 +215,24 @@ public class Renderer extends Engine {
         SkyboxManager.getInstance().render();
 
         //Render our lines!
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT) || Reactor.canDirectDraw()) {
+        if(Reactor.isDev() || Reactor.canDirectDraw()) {
             DirectDraw.getInstance().render();
         }
+
+        UIManager.getInstance().render();
 
         if(fboBound) {
             frameBuffer.unbindFrameBuffer();
             fboBound = false;
         }
 
-        GL46.glDisableVertexAttribArray(0);
-        GL46.glDisableVertexAttribArray(1);
-        GL46.glDisable(GL46.GL_DEPTH_TEST);
-        GL46.glDisable(GL46.GL_BLEND);
+//        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
+//        GL46.glDisable(GL46.GL_CULL_FACE);
+//        GL46.glCullFace(GL46.GL_BACK);
+//
+
+//        GL46.glDisable(GL46.GL_DEPTH_TEST);
+//        GL46.glDisable(GL46.GL_BLEND);
     }
 
     public FBO getFrameBuffer(){
@@ -247,7 +247,6 @@ public class Renderer extends Engine {
         resizeCallbacks.remove(resize);
     }
 
-    @Override
     public void onShutdown() {
 
     }

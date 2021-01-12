@@ -11,6 +11,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import util.Callback;
 
+import java.util.Collection;
 import java.util.LinkedList;
 
 public class ParticleSystem extends Entity {
@@ -367,6 +368,18 @@ public class ParticleSystem extends Entity {
         DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f(1), new Vector3f(1, 0, 0), 32, new Vector3f(1));
         DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f(1), new Vector3f(0, 1, 0), 32, new Vector3f(1));
         DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f(1), new Vector3f(0, 0, 1), 32, new Vector3f(1));
+    }
+
+    public void setStartColor(Vector3f color){
+        this.startColors.getData().clear();
+        this.startColors.getData().add(color);
+        this.updateSystem();
+    }
+
+    public void setStartColors(Collection<Vector3f> colors){
+        this.startColors.getData().clear();
+        this.startColors.setData(new LinkedList<>(colors));
+        this.updateSystem();
     }
 
     @Override

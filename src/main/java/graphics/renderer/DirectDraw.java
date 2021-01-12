@@ -551,7 +551,7 @@ public class DirectDraw {
     //Draw
     protected void render(){
         drawerLine.render();
-        if(PlatformManager.getInstance().getDevelopmentStatus().equals(EnumDevelopment.DEVELOPMENT)) {
+        if(Reactor.isDev()) {
             GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
         }
         drawTriangle.render();

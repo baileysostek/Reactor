@@ -2,7 +2,6 @@ package input;
 
 import camera.CameraManager;
 import editor.Editor;
-import engine.Engine;
 import engine.Reactor;
 import graphics.renderer.Renderer;
 import imgui.ImGui;
@@ -17,7 +16,7 @@ import java.nio.DoubleBuffer;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class MousePicker extends Engine {
+public class MousePicker{
 
     private static MousePicker mousePicker;
     private Vector3f ray = new Vector3f();
@@ -50,7 +49,9 @@ public class MousePicker extends Engine {
     private MousePicker(){
         GLFW.glfwSetMouseButtonCallback(Reactor.WINDOW_POINTER, (long window, int button, int action, int mods) -> {
             //Update Editor
-            Editor.getInstance().onClick(button, action, mods);
+            if(Reactor.isDev()) {
+                Editor.getInstance().onClick(button, action, mods);
+            }
             //Check for Intersection
             if(!ImGui.getIO().getWantCaptureMouse()){
                 if(action == GLFW.GLFW_PRESS){
@@ -78,7 +79,6 @@ public class MousePicker extends Engine {
         });
     }
 
-    @Override
     public void onShutdown() {
 
     }
