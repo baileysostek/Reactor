@@ -115,6 +115,10 @@ public class Timeline {
         return this.duration;
     }
 
+    public float getTime(){
+        return time;
+    }
+
     public void setLoop(EnumLoop loop) {
         this.loop = loop;
     }

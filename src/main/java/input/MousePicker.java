@@ -51,32 +51,37 @@ public class MousePicker{
             //Update Editor
             if(Reactor.isDev()) {
                 Editor.getInstance().onClick(button, action, mods);
-            }
-            //Check for Intersection
-            if(!ImGui.getIO().getWantCaptureMouse()){
-                if(action == GLFW.GLFW_PRESS){
-                    mouseKeys.put(button, true);
-                    if(button == GLFW.GLFW_MOUSE_BUTTON_1){
-                        mousePressed = true;
-                    }
+                //Check for Intersection
+                if(!ImGui.getIO().getWantCaptureMouse()){
+                    processMouse(window, button, action, mods);
                 }
-                if(action == GLFW.GLFW_RELEASE){
-                    mouseKeys.put(button, false);
-                    if(button == GLFW.GLFW_MOUSE_BUTTON_1){
-                        mousePressed = false;
-                    }
-                }
-                for(Callback c : callbacks){
-                    if(c != null) {
-                        c.callback(button, action);
-                    }
-                }
-
-                //Only for debug.
-                System.out.println("Mouse Pressed:" + button);
-
+            }else{
+                processMouse(window, button, action, mods);
             }
         });
+    }
+
+    private void processMouse(long window, int button, int action, int mods){
+        if(action == GLFW.GLFW_PRESS){
+            mouseKeys.put(button, true);
+            if(button == GLFW.GLFW_MOUSE_BUTTON_1){
+                mousePressed = true;
+            }
+        }
+        if(action == GLFW.GLFW_RELEASE){
+            mouseKeys.put(button, false);
+            if(button == GLFW.GLFW_MOUSE_BUTTON_1){
+                mousePressed = false;
+            }
+        }
+        for(Callback c : callbacks){
+            if(c != null) {
+                c.callback(button, action);
+            }
+        }
+
+        //Only for debug.
+        System.out.println("Mouse Pressed:" + button);
     }
 
     public void onShutdown() {

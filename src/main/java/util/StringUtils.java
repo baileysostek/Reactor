@@ -81,7 +81,11 @@ public class StringUtils {
         ByteBuffer buffer;
 
 //        String stringPath = resource.replaceFirst("/", "");
-        String stringPath = (PATH + resource).replaceAll("/", "\\\\");
+        while(resource.contains("//")){
+            resource = resource.replace("//", "/");
+        }
+
+        String stringPath = (resource).replaceAll("/", "\\\\");
 
         System.out.println("Try load:" + stringPath);
 
@@ -113,7 +117,7 @@ public class StringUtils {
         return buffer;
     }
 
-    private static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {
+    public static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {
         ByteBuffer newBuffer = BufferUtils.createByteBuffer(newCapacity);
         buffer.flip();
         newBuffer.put(buffer);

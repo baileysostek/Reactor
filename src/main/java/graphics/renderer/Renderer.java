@@ -7,27 +7,21 @@ import entity.Entity;
 import entity.EntityManager;
 import graphics.sprite.SpriteBinder;
 import graphics.ui.UIManager;
-import input.Keyboard;
 import lighting.DirectionalLight;
 import lighting.Light;
 import lighting.LightingManager;
 import material.Material;
-import material.MaterialManager;
 import math.MatrixUtils;
-import models.AABB;
-import models.Joint;
-import models.ModelManager;
-import org.joml.*;
-import org.lwjgl.nanovg.NVGColor;
-import org.lwjgl.nanovg.NanoVG;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
-import platform.EnumDevelopment;
-import platform.PlatformManager;
 import skybox.SkyboxManager;
 import util.Callback;
+import util.StopwatchManager;
 
-import java.lang.Math;
-import java.util.Collection;
+import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -67,6 +61,8 @@ public class Renderer{
 
     private boolean fboBound = false;
 
+    private Handshake cube;
+
     private Renderer(int width, int height){
         if(Reactor.isDev()) {
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
@@ -89,6 +85,52 @@ public class Renderer{
 
         //INIT our light.
         light = new DirectionalLight();
+
+        cube = new Handshake();
+        float[] defaultCubeMap = new float[]{
+                -1.0f,  1.0f, -1.0f,
+                -1.0f, -1.0f, -1.0f,
+                1.0f, -1.0f, -1.0f,
+                1.0f, -1.0f, -1.0f,
+                1.0f,  1.0f, -1.0f,
+                -1.0f,  1.0f, -1.0f,
+
+                -1.0f, -1.0f,  1.0f,
+                -1.0f, -1.0f, -1.0f,
+                -1.0f,  1.0f, -1.0f,
+                -1.0f,  1.0f, -1.0f,
+                -1.0f,  1.0f,  1.0f,
+                -1.0f, -1.0f,  1.0f,
+
+                1.0f, -1.0f, -1.0f,
+                1.0f, -1.0f,  1.0f,
+                1.0f,  1.0f,  1.0f,
+                1.0f,  1.0f,  1.0f,
+                1.0f,  1.0f, -1.0f,
+                1.0f, -1.0f, -1.0f,
+
+                -1.0f, -1.0f,  1.0f,
+                -1.0f,  1.0f,  1.0f,
+                1.0f,  1.0f,  1.0f,
+                1.0f,  1.0f,  1.0f,
+                1.0f, -1.0f,  1.0f,
+                -1.0f, -1.0f,  1.0f,
+
+                -1.0f,  1.0f, -1.0f,
+                1.0f,  1.0f, -1.0f,
+                1.0f,  1.0f,  1.0f,
+                1.0f,  1.0f,  1.0f,
+                -1.0f,  1.0f,  1.0f,
+                -1.0f,  1.0f, -1.0f,
+
+                -1.0f, -1.0f, -1.0f,
+                -1.0f, -1.0f,  1.0f,
+                1.0f, -1.0f, -1.0f,
+                1.0f, -1.0f, -1.0f,
+                -1.0f, -1.0f,  1.0f,
+                1.0f, -1.0f,  1.0f
+        };
+        cube.addAttributeList("aPos", defaultCubeMap, EnumGLDatatype.VEC3);
     }
 
     public static void initialize(int width, int height){
@@ -139,6 +181,8 @@ public class Renderer{
         GL46.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
         GL46.glEnable(GL46.GL_DEPTH_TEST);
         GL46.glEnable(GL46.GL_STENCIL_TEST);
+        GL46.glEnable(GL46.GL_CULL_FACE);
+        GL46.glCullFace(GL46.GL_BACK);
         GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT | GL46.GL_STENCIL_BUFFER_BIT);
 
         EntityManager.getInstance().resort();
@@ -154,7 +198,12 @@ public class Renderer{
 
         LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches = EntityManager.getInstance().getBatches();
 
+        int numDrawCalls = 0;
+
         for(VAO vao : batches.keySet()) {
+            if(vao == null){
+                continue;
+            }
             LinkedHashMap<Material, LinkedList<Entity>> materialEntities = batches.get(vao);
             for(Material mat : materialEntities.keySet()){
                 int shaderID = mat.getShaderID();
@@ -206,20 +255,25 @@ public class Renderer{
 
                 //Draw calls
                 vao.render(materialEntities.get(mat));
+                numDrawCalls++;
             }
         }
+
+        UIManager.getInstance().drawString(128, 4, "Batches:" + numDrawCalls);
+
     }
 
     public void postpare(){
-        //Render our Skybox
-        SkyboxManager.getInstance().render();
-
         //Render our lines!
+        StopwatchManager.getInstance().getTimer("render_direct").start();
         if(Reactor.isDev() || Reactor.canDirectDraw()) {
             DirectDraw.getInstance().render();
         }
+        StopwatchManager.getInstance().getTimer("render_direct").stop();
 
+        StopwatchManager.getInstance().getTimer("render_hud").start();
         UIManager.getInstance().render();
+        StopwatchManager.getInstance().getTimer("render_hud").stop();
 
         if(fboBound) {
             frameBuffer.unbindFrameBuffer();
@@ -272,14 +326,15 @@ public class Renderer{
     }
 
     //Preview with default shader
-    public int generateRenderedPreview(Entity entity) {
-        return generateRenderedPreview(entity.getMaterial().getShaderID(), entity);
-    }
 
-    public int generateRenderedPreview(int shaderID, Entity entity) {
+    public int generateRenderedPreview(Entity entity) {
 
         if(entity == null){
             return SpriteBinder.getInstance().getFileNotFoundID();
+        }
+
+        if(entity.getModel() == null){
+            return entity.getTextureID();
         }
 
         //TODO lookup table for FBOS
@@ -304,75 +359,47 @@ public class Renderer{
         preview.bindFrameBuffer();
 
         GL46.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-        ShaderManager.getInstance().useShader(shaderID);
         GL46.glEnable(GL46.GL_DEPTH_TEST);
         GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT);
 
         GL46.glEnable(GL46.GL_BLEND);
         GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
 
-        ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", cam.getPosition());
-        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, cam.getTransform());
-        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"),false, new Matrix4f().ortho(-max, max, -max, max, 0.1f, 1024).get(new float[16]));
-
-        //Pos -2 is skybox
-        GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
-        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, SkyboxManager.getInstance().getSkyboxTexture());
-        GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
-
-        light.setPosition(new Vector3f(max/2f, max, max));
-
-        //Bind and allocate this texture unit.
-        int textureUnit = TEXTURE_OFFSET + 0;
-        GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
-        int textureIndex = light.getDepthBuffer().getDepthTexture();
-        GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
-
-        //Upload our uniforms.
-        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", 0, new Vector3f(0).sub(light.getPosition()).normalize());
-        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", 0, light.getColor());
-        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", 0, light.getLightspaceTransform());
-        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", 0, textureUnit);
-
         if(entity.getModel() != null) {
-//                StopwatchManager.getInstance().getTimer("uploadUniforms").lapStart();
-            ShaderManager.getInstance().loadHandshakeIntoShader(shaderID, entity.getModel().getHandshake());
-
             Material material = entity.getMaterial();
+            int shaderID = material.getShaderID();
+            VAO vao = entity.getModel().getVAO();
+
+            ShaderManager.getInstance().useShader(shaderID);
+
+            ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", cam.getPosition());
+            GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, cam.getTransform());
+            GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"),false, new Matrix4f().ortho(-max, max, -max, max, 0.1f, 1024).get(new float[16]));
+
+            //Pos -2 is skybox
+            GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
+            GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, SkyboxManager.getInstance().getSkyboxTexture());
+            GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
+
+            light.setPosition(new Vector3f(max/2f, max, max));
+
+            //Bind and allocate this texture unit.
+            int textureUnit = TEXTURE_OFFSET + 0;
+            GL46.glActiveTexture(GL46.GL_TEXTURE0 + textureUnit);
+            int textureIndex = light.getDepthBuffer().getDepthTexture();
+            GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureIndex);
+
+            //Upload our uniforms.
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunAngle", 0, new Vector3f(0).sub(light.getPosition()).normalize());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", 0, light.getColor());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", 0, light.getLightspaceTransform());
+            ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", 0, textureUnit);
 
             loadMaterialIntoShader(shaderID, material);
 
-            if (entity.hasAttribute("t_scale")) {
-                ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", entity.getAttribute("t_scale").getData());
-            } else {
-                ShaderManager.getInstance().loadUniformIntoActiveShader("t_scale", new org.joml.Vector2f(1.0f));
-            }
-
-            if (entity.hasAttribute("t_offset")) {
-                ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", entity.getAttribute("t_offset").getData());
-            } else {
-                ShaderManager.getInstance().loadUniformIntoActiveShader("t_offset", new org.joml.Vector2f(0.0f));
-            }
-
-            if (entity.hasAttribute("mat_m")) {
-                ShaderManager.getInstance().loadUniformIntoActiveShader("mat_m", entity.getAttribute("mat_m").getData());
-            } else {
-                ShaderManager.getInstance().loadUniformIntoActiveShader("mat_m", 0.5f);
-            }
-
-            if (entity.hasAttribute("mat_r")) {
-                ShaderManager.getInstance().loadUniformIntoActiveShader("mat_r", entity.getAttribute("mat_r").getData());
-            } else {
-                ShaderManager.getInstance().loadUniformIntoActiveShader("mat_r", 0.5f);
-            }
-//                StopwatchManager.getInstance().getTimer("uploadUniforms").stop();
-
-            //Mess with uniforms
-            GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "transformation"), false, entity.getTransform().get(new float[16]));
-//                StopwatchManager.getInstance().getTimer("drawCalls").lapStart();
-            GL46.glDrawArrays(RENDER_TYPE, 0, entity.getModel().getNumIndicies());
-//                StopwatchManager.getInstance().getTimer("drawCalls").stop();
-
+            LinkedList<Entity> entities = new LinkedList<>();
+            entities.add(entity);
+            vao.render(entities);
         }
 
         //Render our Skybox

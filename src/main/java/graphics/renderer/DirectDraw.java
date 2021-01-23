@@ -551,11 +551,9 @@ public class DirectDraw {
     //Draw
     protected void render(){
         drawerLine.render();
-        if(Reactor.isDev()) {
-            GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
-        }
+        GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
         drawTriangle.render();
-        drawSprite.render();
+//        drawSprite.render();
     }
 
     //Singleton stuff.

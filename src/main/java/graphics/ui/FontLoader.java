@@ -22,7 +22,7 @@ public class FontLoader{
     public void loadFont(String filePath, String id){
         int result = 0;
         try {
-            ByteBuffer fontBuffer = StringUtils.loadRaw(filePath, 450 * 1024);
+            ByteBuffer fontBuffer = StringUtils.loadRaw(StringUtils.getRelativePath() + filePath, 450 * 1024);
             result = NanoVG.nvgCreateFontMem(UIManager.getInstance().getNanoVG(), id, fontBuffer, 0);
             loadedFonts.put(id, fontBuffer);
         } catch (IOException e) {

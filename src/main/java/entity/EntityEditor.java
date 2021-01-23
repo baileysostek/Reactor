@@ -707,6 +707,7 @@ public class EntityEditor extends UIComponet {
             for(Entity e: selectedEntities.keySet()){
                 e.renderInEditor(true);
                 DirectDraw.getInstance().drawAABB(e, new Vector3f(1));
+                DirectDraw.getInstance().drawBones(e);
             }
 
             Vector3f YELLOW = new Vector3f(1, 1, 0);

@@ -46,14 +46,7 @@ uniform int  numPointLights;
 uniform samplerCube nearestProbe;
 uniform samplerCube skybox;
 
-uniform float mat_m;
-uniform float mat_r;
-
 layout( location = 0 ) out vec4 gl_FragColor;
-
-vec3 getReflection(){
-    return texture(skybox, passReflectNormal).xyz;
-}
 
 float ShadowCalculation(int index)
 {
@@ -119,9 +112,6 @@ void main(void){
     float ao       = texture(ambientOcclusionID, passCoords).r;
     float roughness= texture(roughnessID, passCoords).r;
 
-    metallic  = mat_m;
-    roughness = mat_r;
-
 //    albedo.xyz = mix(albedo.xyz, getReflection(), metallic);
 
     //If this is a transparent pixel, dont do anything
@@ -131,6 +121,8 @@ void main(void){
 
     vec3 N = normalize(passNormal);
     vec3 V = normalize(passCamPos - WorldPos);
+
+    float NdotV = max(dot(N, V), 0.000001);
 
     vec3 F0 = vec3(0.04);
     F0      = mix(F0, albedo.xyz, metallic);
@@ -186,15 +178,25 @@ void main(void){
         float denominator = numDirectionalLights * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
         vec3 specular     = (numerator / max(denominator, 0.001));
 
+        float shadow = -ShadowCalculation(i);
+
         float NdotL = max(dot(N, L), 0.0);
         Lo += (kD * albedo.xyz / PI + specular) * radiance * NdotL;
     }
 
-    // ambient
-    vec3 ambient = vec3(0.15) * albedo.xyz * ao;
+
+    //Get Ambient from IBL
+    vec3 F = fresnelSchlick(NdotV, F0);
+    vec3 kD = (1.0 - F) * (1.0 - metallic);
+    vec3 diffuse = texture(skybox, N).rgb * albedo.rgb * kD;
+
+    vec3 ambient = diffuse * ao;
+
     vec3 color   = ambient + Lo;
 
+    //HDR tonemapping
     color = color / (color + vec3(1.0));
+    //Gama correct
     color = pow(color, vec3(1.0/2.2));
 
     gl_FragColor = vec4(color, 1);

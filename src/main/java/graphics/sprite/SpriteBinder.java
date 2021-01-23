@@ -1,12 +1,21 @@
 package graphics.sprite;
 
+import camera.CameraManager;
+import graphics.renderer.*;
+import models.Model;
+import models.ModelManager;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.nanovg.NSVGImage;
 import org.lwjgl.nanovg.NanoSVG;
 import org.lwjgl.opengl.GL46;
+import org.lwjgl.stb.STBImage;
 import org.lwjgl.stb.STBImageResize;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+import skybox.SkyboxManager;
 import util.StringUtils;
 
 import javax.imageio.ImageIO;
@@ -17,6 +26,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.HashMap;
@@ -46,8 +57,57 @@ public class SpriteBinder {
     private Sprite roughnessDefault;
     private Sprite aoDefault;
 
-    private SpriteBinder(){
+    private Handshake cube;
 
+    private SpriteBinder(){
+        cube = new Handshake();
+
+        float SIZE = 500f;
+
+        float[] defaultCubeMap = new float[]{
+            -SIZE,  SIZE, -SIZE,
+            -SIZE, -SIZE, -SIZE,
+            SIZE, -SIZE, -SIZE,
+            SIZE, -SIZE, -SIZE,
+            SIZE,  SIZE, -SIZE,
+            -SIZE,  SIZE, -SIZE,
+
+            -SIZE, -SIZE,  SIZE,
+            -SIZE, -SIZE, -SIZE,
+            -SIZE,  SIZE, -SIZE,
+            -SIZE,  SIZE, -SIZE,
+            -SIZE,  SIZE,  SIZE,
+            -SIZE, -SIZE,  SIZE,
+
+            SIZE, -SIZE, -SIZE,
+            SIZE, -SIZE,  SIZE,
+            SIZE,  SIZE,  SIZE,
+            SIZE,  SIZE,  SIZE,
+            SIZE,  SIZE, -SIZE,
+            SIZE, -SIZE, -SIZE,
+
+            -SIZE, -SIZE,  SIZE,
+            -SIZE,  SIZE,  SIZE,
+            SIZE,  SIZE,  SIZE,
+            SIZE,  SIZE,  SIZE,
+            SIZE, -SIZE,  SIZE,
+            -SIZE, -SIZE,  SIZE,
+
+            -SIZE,  SIZE, -SIZE,
+            SIZE,  SIZE, -SIZE,
+            SIZE,  SIZE,  SIZE,
+            SIZE,  SIZE,  SIZE,
+            -SIZE,  SIZE,  SIZE,
+            -SIZE,  SIZE, -SIZE,
+
+            -SIZE, -SIZE, -SIZE,
+            -SIZE, -SIZE,  SIZE,
+            SIZE, -SIZE, -SIZE,
+            SIZE, -SIZE, -SIZE,
+            -SIZE, -SIZE,  SIZE,
+            SIZE, -SIZE,  SIZE
+        };
+        cube.addAttributeList("aPos", defaultCubeMap, EnumGLDatatype.VEC3);
     }
 
     private void postInit(){
@@ -323,7 +383,11 @@ public class SpriteBinder {
             for (int i = 0; i < 6; i++) {
                 int[] pixels = cubemapTarget.getPixels();
                 ByteBuffer buffer = ByteBuffer.allocateDirect(pixels.length * 4);
+
                 for (int pixel : pixels) {
+
+//                    pixel = (r.nextInt()) | 0xFF000000;
+
                     buffer.put((byte) ((pixel >> 16) & 0xFF));
                     buffer.put((byte) ((pixel >> 8) & 0xFF));
                     buffer.put((byte) (pixel & 0xFF));
@@ -365,9 +429,147 @@ public class SpriteBinder {
         GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_LINEAR);
         GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_LINEAR);
 
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_S, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_T, GL46.GL_CLAMP_TO_EDGE);
+
         extraIDS.addLast(textureID);
 
         return textureID;
+    }
+
+    public int loadCubeMapHDR(String location){
+        int hdrTextureID = this.genTexture();
+
+        IntBuffer width     = BufferUtils.createIntBuffer(1);
+        IntBuffer height    = BufferUtils.createIntBuffer(1);
+        IntBuffer channels  = BufferUtils.createIntBuffer(1);
+
+        String resourcePath = StringUtils.getRelativePath()+ "textures/IBL/" + location;
+
+        System.out.println("Resource:" + resourcePath);
+
+        FloatBuffer textureData = STBImage.stbi_loadf(resourcePath , width, height, channels, 3);
+
+        //TODO add if has data in buffer.
+        GL46.glActiveTexture(GL46.GL_TEXTURE0);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, hdrTextureID);
+        GL46.glTexImage2D(GL46.GL_TEXTURE_2D, 0, GL46.GL_RGB16F, width.get(0), height.get(0), 0, GL46.GL_RGB, GL46.GL_FLOAT, textureData);
+
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_WRAP_S, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_WRAP_T, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_LINEAR);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_2D, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_LINEAR);
+
+        STBImage.stbi_image_free(textureData);
+
+        //Create our cubemap texture with no data inside it.
+        int envCubemap = this.genTexture();
+        GL46.glActiveTexture(GL46.GL_TEXTURE0);
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, envCubemap);
+        for(int i = 0; i < 6; i++){
+            GL46.glTexImage2D(GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL46.GL_RGB16F, 512, 512, 0, GL46.GL_RGB, GL46.GL_FLOAT, (FloatBuffer) null);
+        }
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_S, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_T, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_R, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_LINEAR);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_LINEAR);
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, 0);
+
+        //PBR create projection and view matrices for the six cubemap faces
+        Matrix4f captureProjection = new Matrix4f().perspective((float) Math.toRadians(90f), 1.0f, 0.1f, 10f);
+
+        Matrix4f[] captureViews = new Matrix4f[]{
+            new Matrix4f().lookAt(new Vector3f(0f, 0f, 0f), new Vector3f( 1f, 0f, 0f), new Vector3f(0f, -1f,  0f)),
+            new Matrix4f().lookAt(new Vector3f(0f, 0f, 0f), new Vector3f(-1f, 0f, 0f), new Vector3f(0f, -1f,  0f)),
+            new Matrix4f().lookAt(new Vector3f(0f, 0f, 0f), new Vector3f(0f,  1f, 0f), new Vector3f(0f,  0f,  1f)),
+            new Matrix4f().lookAt(new Vector3f(0f, 0f, 0f), new Vector3f(0f, -1f, 0f), new Vector3f(0f,  0f, -1f)),
+            new Matrix4f().lookAt(new Vector3f(0f, 0f, 0f), new Vector3f(0f, 0f,  1f), new Vector3f(0f, -1f,  0f)),
+            new Matrix4f().lookAt(new Vector3f(0f, 0f, 0f), new Vector3f(0f, 0f, -1f), new Vector3f(0f, -1f,  0f)),
+        };
+
+        //Render HDR equirectangular environment map to cubemap equivalent
+        int equirectangularShader = ShaderManager.getInstance().loadShader("equirectangular");
+        ShaderManager.getInstance().useShader(equirectangularShader);
+        ShaderManager.getInstance().loadUniformIntoActiveShader("equirectangularMap", 0);
+        ShaderManager.getInstance().loadUniformIntoActiveShader("projection", captureProjection);
+        GL46.glActiveTexture(GL46.GL_TEXTURE0);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, hdrTextureID);
+
+        //PBR setup framebuffer used to blur our images
+        int cubeFBO = GL46.glGenFramebuffers();
+        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, cubeFBO);
+        GL46.glDrawBuffer(GL46.GL_COLOR_ATTACHMENT0);
+
+        int cubeRBO = GL46.glGenRenderbuffers();
+        GL46.glBindRenderbuffer(GL46.GL_RENDERBUFFER, cubeRBO);
+        GL46.glRenderbufferStorage(GL46.GL_RENDERBUFFER, GL46.GL_DEPTH_COMPONENT24, 512, 512);
+        GL46.glFramebufferRenderbuffer(GL46.GL_FRAMEBUFFER, GL46.GL_DEPTH_ATTACHMENT, GL46.GL_RENDERBUFFER, cubeRBO);
+
+        GL46.glViewport(0, 0, 512, 512);
+        for(int i = 0; i < 6; i++){
+            GL46.glFramebufferTexture2D(GL46.GL_FRAMEBUFFER, GL46.GL_COLOR_ATTACHMENT0, GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
+            ShaderManager.getInstance().loadUniformIntoActiveShader("view", captureViews[i]);
+            renderCube(equirectangularShader);
+        }
+        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
+//
+//        //PBR create texture for convoluted cubemap
+//        int irradianceMap = this.genTexture();
+//        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, irradianceMap);
+//        for(int i = 0; i < 6; i++){
+//            GL46.glTexImage2D(GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL46.GL_RGB16F, 32, 32, 0, GL46.GL_RGB, GL46.GL_FLOAT, (ByteBuffer) null);
+//        }
+//        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_S, GL46.GL_CLAMP_TO_EDGE);
+//        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_T, GL46.GL_CLAMP_TO_EDGE);
+//        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_R, GL46.GL_CLAMP_TO_EDGE);
+//        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_LINEAR);
+//        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_LINEAR);
+//
+//        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, cubeFBO);
+//
+//        //PBR convolute to create an irradiance cubemap
+//        int irradianceShader = ShaderManager.getInstance().loadShader("irradiance");
+//        ShaderManager.getInstance().useShader(irradianceShader);
+//        ShaderManager.getInstance().loadUniformIntoActiveShader("environmentMap", 0);
+//        ShaderManager.getInstance().loadUniformIntoActiveShader("projection", captureProjection);
+//        GL46.glActiveTexture(GL46.GL_TEXTURE0);
+//        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, envCubemap);
+//
+//        GL46.glViewport(0, 0, 32, 32);
+//        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, cubeFBO);
+//        for(int i = 0; i < 6; i++){
+//            ShaderManager.getInstance().loadUniformIntoActiveShader("view", captureViews[i]);
+//            GL46.glFramebufferTexture2D(GL46.GL_FRAMEBUFFER, GL46.GL_COLOR_ATTACHMENT0, GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
+//            GL46.glClear(GL46.GL_COLOR_BUFFER_BIT);
+//            renderCube(irradianceShader);
+//        }
+//        GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
+
+
+        GL46.glDeleteFramebuffers(cubeFBO);
+        GL46.glDeleteRenderbuffers(cubeRBO);
+
+//        extraIDS.addLast(irradianceMap);
+        extraIDS.addLast(hdrTextureID);
+        extraIDS.addLast(envCubemap);
+        GL46.glViewport(0, 0, Renderer.getWIDTH(), Renderer.getHEIGHT());
+
+        return envCubemap;
+    }
+
+    public void renderCube(int shader){
+        GL46.glDisable(GL46.GL_CULL_FACE);
+
+
+        ShaderManager.getInstance().loadHandshakeIntoShader(shader, cube);
+        //Render
+        GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, 36);
+
+        GL46.glUseProgram(0);
+
+        //Overall GL config
+        GL46.glEnable(GL46.GL_CULL_FACE);
     }
 
     public static SpriteBinder getInstance(){

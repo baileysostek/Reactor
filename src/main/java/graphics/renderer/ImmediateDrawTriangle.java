@@ -11,39 +11,65 @@ import java.util.LinkedList;
 public class ImmediateDrawTriangle {
     private int lineShaderID = 0;
 
-    //Represents the items in world.
-    private LinkedList<Float> positions = new LinkedList<>();
-    private HashMap<Integer, Float> colors    = new HashMap<Integer, Float>();
+    private int MAX_LINES = 2048;
+
+    float[] positionsF;
+    float[] colorsF;
+
+    private int drawIndex = 0;
+
+    private boolean expand = false;
+
+    private Handshake handshake;
 
     protected ImmediateDrawTriangle(){
         lineShaderID = ShaderManager.getInstance().loadShader("vector");
+        handshake = new Handshake();
+
+        resize();
+    }
+
+    private void resize(){
+        positionsF = new float[MAX_LINES * 9];
+        colorsF    = new float[MAX_LINES * 9];
+
+        for(int i = 0; i < (MAX_LINES * 9); i++){
+            positionsF[i] = 0f;
+            colorsF[i]    = 0f;
+        }
     }
 
 
     public DrawIndex drawTriangle(Vector3f p1, Vector3f p2, Vector3f p3, Vector3f color) {
-        int start_size = positions.size();
-        positions.addLast(p1.x());
-        positions.addLast(p1.y());
-        positions.addLast(p1.z());
-        positions.addLast(p2.x());
-        positions.addLast(p2.y());
-        positions.addLast(p2.z());
-        positions.addLast(p3.x());
-        positions.addLast(p3.y());
-        positions.addLast(p3.z());
+        if(drawIndex >= MAX_LINES){
+            expand = true;
+            return new DrawIndex(0, 0, 0,  0);
+        }
 
-        int start_color = colors.size();
-        colors.put(colors.size(), color.x());
-        colors.put(colors.size(), color.y());
-        colors.put(colors.size(), color.z());
-        colors.put(colors.size(), color.x());
-        colors.put(colors.size(), color.y());
-        colors.put(colors.size(), color.z());
-        colors.put(colors.size(), color.x());
-        colors.put(colors.size(), color.y());
-        colors.put(colors.size(), color.z());
+        positionsF[drawIndex * 9 + 0] = (p1.x());
+        positionsF[drawIndex * 9 + 1] = (p1.y());
+        positionsF[drawIndex * 9 + 2] = (p1.z());
+        positionsF[drawIndex * 9 + 3] = (p2.x());
+        positionsF[drawIndex * 9 + 4] = (p2.y());
+        positionsF[drawIndex * 9 + 5] = (p2.z());
+        positionsF[drawIndex * 9 + 6] = (p3.x());
+        positionsF[drawIndex * 9 + 7] = (p3.y());
+        positionsF[drawIndex * 9 + 8] = (p3.z());
 
-        return new DrawIndex(start_size, 9, start_color,  9);
+        colorsF[drawIndex * 9 + 0] = (color.x());
+        colorsF[drawIndex * 9 + 1] = (color.y());
+        colorsF[drawIndex * 9 + 2] = (color.z());
+        colorsF[drawIndex * 9 + 3] = (color.x());
+        colorsF[drawIndex * 9 + 4] = (color.y());
+        colorsF[drawIndex * 9 + 5] = (color.z());
+        colorsF[drawIndex * 9 + 6] = (color.x());
+        colorsF[drawIndex * 9 + 7] = (color.y());
+        colorsF[drawIndex * 9 + 8] = (color.z());
+
+        DrawIndex data = new DrawIndex(drawIndex, 9, drawIndex,  9);
+        drawIndex++;
+
+        return data;
     }
 
     public void render(){
@@ -66,19 +92,7 @@ public class ImmediateDrawTriangle {
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lineShaderID, "projectionMatrix"),false, Renderer.getInstance().getProjectionMatrix());
 
         Handshake handshake = new Handshake();
-        float[] positionsF = new float[positions.size()];
-        int index = 0;
-        for(float p : positions){
-            positionsF[index] = p;
-            index++;
-        }
 
-        float[] colorsF = new float[colors.size()];
-        index = 0;
-        for(float c : colors.values()){
-            colorsF[index] = c;
-            index++;
-        }
         handshake.addAttributeList("position", positionsF, EnumGLDatatype.VEC3);
         handshake.addAttributeList("color", colorsF, EnumGLDatatype.VEC3);
 
@@ -87,23 +101,39 @@ public class ImmediateDrawTriangle {
 
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lineShaderID, "viewMatrix"), false, CameraManager.getInstance().getActiveCamera().getTransform());
 
-        GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, positions.size() / EnumGLDatatype.VEC3.sizePerVertex);
+        GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, drawIndex * 3);
 
         GL46.glUseProgram(0);
 
         //Clear what was rendered this frame, for next frame.
-        positions.clear();
-        colors.clear();
 
         //Overall GL config
         GL46.glEnable(GL46.GL_CULL_FACE);
+
+        //Clear what was rendered this frame, for next frame.
+        handshake.clear();
+
+        drawIndex = 0;
+
+        //Check about expand
+        if(expand){
+            MAX_LINES *= 2;
+            resize();
+            expand = false;
+        }
     }
 
     public void recolor(int start, int length, Vector3f color){
-        for(int i = 0; i < length / 3; i++){
-            colors.put(((i * 3) + 0) + start, color.x);
-            colors.put(((i * 3) + 1) + start, color.y);
-            colors.put(((i * 3) + 2) + start, color.z);
-        }
+        colorsF[((start * 9) + 0)] = color.x;
+        colorsF[((start * 9) + 1)] = color.y;
+        colorsF[((start * 9) + 2)] = color.z;
+//
+        colorsF[((start * 9) + 3)] = color.x;
+        colorsF[((start * 9) + 4)] = color.y;
+        colorsF[((start * 9) + 5)] = color.z;
+
+        colorsF[((start * 9) + 6)] = color.x;
+        colorsF[((start * 9) + 7)] = color.y;
+        colorsF[((start * 9) + 8)] = color.z;
     }
 }

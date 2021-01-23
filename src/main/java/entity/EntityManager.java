@@ -3,6 +3,7 @@ package entity;
 import com.google.gson.JsonObject;
 import engine.Reactor;
 import graphics.renderer.VAO;
+import input.Keyboard;
 import input.MousePicker;
 import material.Material;
 import org.joml.Intersectionf;
@@ -110,6 +111,23 @@ public class EntityManager {
         return entities;
     }
 
+    public synchronized LinkedList<Entity> getEntitiesOfTypeDescendedFrom(Entity ancestor, Class ... types){
+        LinkedList<Entity> entities = new LinkedList<>();
+
+        for(Class additionalType : types){
+            if(this.typedEntities.containsKey(additionalType)) {
+                LinkedList<Entity> possibleHits = new LinkedList<>(this.typedEntities.get(additionalType));
+                for(Entity child : possibleHits){
+                    if(child.isDecendedFrom(ancestor)){
+                        entities.add(child);
+                    }
+                }
+            }
+        }
+
+        return entities;
+    }
+
     //Once per insert
     private void sortEntities() {
 //        Collections.sort(entities, new Comparator<Entity>() {
@@ -136,7 +154,13 @@ public class EntityManager {
         sync();
         if(!Reactor.isDev()) {
             for (Entity e : new LinkedList<>(entities)) {
-                e.selfUpdate(delta);
+                if(e.hasAttribute("update")) {
+                    if ((boolean) e.getAttribute("update").getData()) {
+                        e.selfUpdate(delta);
+                    }
+                }else{
+                    e.selfUpdate(delta);
+                }
             }
         }else{
             for (Entity e : new LinkedList<>(entities)) {
@@ -307,6 +331,8 @@ public class EntityManager {
                             batches.get(id).remove(e);
                         }
                     }
+
+                    Keyboard.getInstance().removeCallbacksTiedToEntity(e);
 
                     e.onRemove();
                     //TODO refactor maybe?
