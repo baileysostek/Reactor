@@ -3,6 +3,7 @@ package lighting;
 import entity.Entity;
 import entity.EntityManager;
 import graphics.renderer.ShaderManager;
+import graphics.sprite.SpriteBinder;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
 
@@ -17,6 +18,8 @@ public class LightingManager {
     private LinkedList<Light> lights        = new LinkedList<>();
     private LinkedList<DirectionalLight> shadowCasters = new LinkedList<>();
     private LinkedList<PointLight> pointLights = new LinkedList<>();
+
+    private final int LIGHT_BULB_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/lightbulb.svg", 1, 1f, 96f);
 
     //Lock for locking our entity set
     private Lock lock;
@@ -99,6 +102,10 @@ public class LightingManager {
         } finally {
             lock.unlock();
         }
+    }
+
+    public int getLightBulbSVG(){
+        return LIGHT_BULB_SVG;
     }
 
     public void remove(Light light) {

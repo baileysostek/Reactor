@@ -19,6 +19,7 @@ import org.joml.Vector3f;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Locale;
 
 public class WorldOutliner extends UIComponet {
 
@@ -109,7 +110,7 @@ public class WorldOutliner extends UIComponet {
         }
         count++;
         //Drag container
-        if(parent.getName().toLowerCase().contains(filterString)) {
+        if(parent.getName().toLowerCase().contains(filterString.toLowerCase())) {
             ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getColumnWidth(), 16);
             int selected = ImGuiSelectableFlags.AllowDoubleClick;
             ImGui.image(parent.getTextureID(), 16, 16);

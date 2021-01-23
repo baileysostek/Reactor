@@ -1,6 +1,7 @@
 package sound;
 
 import camera.CameraManager;
+import graphics.sprite.SpriteBinder;
 import org.joml.Vector3f;
 import org.lwjgl.openal.*;
 import org.lwjgl.stb.STBVorbis;
@@ -29,6 +30,8 @@ public class SoundEngine{
 
     private final long context;
     private final long device;
+
+    private final int VOLUME_UP_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/volume-up.svg", 1, 1f, 96f);
 
     private SoundEngine() {
         String defaultDeviceName = ALC10.alcGetString(0, ALC10.ALC_DEFAULT_DEVICE_SPECIFIER);
@@ -171,5 +174,9 @@ public class SoundEngine{
 
     public static SoundEngine getInstance(){
         return soundEngine;
+    }
+
+    public int getSoundEmitterSVG() {
+        return VOLUME_UP_SVG;
     }
 }

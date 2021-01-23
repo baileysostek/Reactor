@@ -90,7 +90,7 @@ public class MaterialManager {
         }
 
         //Ask the renderer to draw our material nicely.
-        return Renderer.getInstance().generateRenderedPreview(material.getShaderID(), preview);
+        return Renderer.getInstance().generateRenderedPreview(preview);
     }
 
     public void updateMapping(String oldName, String newName){

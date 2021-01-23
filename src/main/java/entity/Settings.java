@@ -40,7 +40,7 @@ public class Settings extends UIComponet{
         int flags = ImGuiWindowFlags.NoCollapse;
         ImGui.beginChild(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight(),  true, flags);
         AttributeRenderer.renderAttributes(attribtues);
-//        ImGui.showDemoWindow();
+        ImGui.showDemoWindow();
         ImGui.endChild();
     }
 

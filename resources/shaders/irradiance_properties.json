@@ -1,0 +1,20 @@
+{
+  "Name":"vector",
+  "Version": "#version 400",
+  "Vertex":{
+    "Attributes": {
+      "aPos": "vec3"
+    },
+    "Uniforms": {
+      "projection":"mat4",
+      "view":"mat4"
+    },
+    "Varying": {
+    }
+  },
+  "Fragment":{
+    "Uniforms": {
+      "environmentMap": "sampler2D"
+    }
+  }
+}

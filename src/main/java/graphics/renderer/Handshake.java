@@ -35,6 +35,15 @@ public class Handshake implements Serializable<Handshake> {
 
     }
 
+    public void addAttributeList(String name, Buffer data, EnumGLDatatype datatype){
+
+        //Buffer into our buffers
+        bufferedAttributes.put(name, new SerializableBuffer(data, datatype));
+        bufferedSizes.put(name, datatype);
+        bufferNameIndexes.addLast(name);
+
+    }
+
     public void addAttributeList(String name, SerializableBuffer buffer){
         //Buffer into our buffers
         bufferedAttributes.put(name, buffer);

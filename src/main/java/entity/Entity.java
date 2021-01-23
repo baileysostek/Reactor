@@ -390,6 +390,11 @@ public class Entity implements Transformable, Serializable<Entity> {
         if(this.getMaterials().getData().size() > 0){
             return this.getMaterials().getData().getFirst().getAlbedoID();
         }
+
+        if(this.hasAttribute("textureID")){
+            return (int) this.getAttribute("textureID").getData();
+        }
+
         return SpriteBinder.getInstance().getFileNotFoundID();
     }
 
@@ -470,6 +475,37 @@ public class Entity implements Transformable, Serializable<Entity> {
     //Parent
     public final Entity getParent(){
         return this.parent;
+    }
+
+    /*
+        This checks to see if this entity is decended from the decendant check.
+     */
+    public final boolean isDecendedFrom(Entity decendant){
+        //Null Check
+        if(decendant == null){
+            return false;
+        }
+
+        //If we dont have a parent we are decended from nothing.
+        if(this.parent == null){
+            return false;
+        }else{
+            if(this.parent.equals(decendant)){
+                return true;
+            }
+        }
+
+        Entity grandparent = this.parent.getParent();
+
+        while(grandparent != null){
+            if(grandparent.equals(decendant)){
+                return true;
+            }
+
+            grandparent = grandparent.getParent();
+        }
+
+        return false;
     }
 
     public final void setParent(Entity parent){

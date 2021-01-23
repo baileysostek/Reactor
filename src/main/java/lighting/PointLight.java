@@ -10,7 +10,7 @@ import org.joml.Vector3f;
 public class PointLight extends Light {
 
     public PointLight(){
-        super.setTexture(SpriteBinder.getInstance().loadSVG("engine/svg/lightbulb.svg", 1, 1, 96f));
+
     }
 
     @Override

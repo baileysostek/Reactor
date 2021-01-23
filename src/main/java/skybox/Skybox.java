@@ -9,6 +9,7 @@ import graphics.sprite.SpriteBinder;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import particle.ParticleSystem;
+import sound.SoundEngine;
 import util.Callback;
 
 public class Skybox extends Entity {
@@ -55,6 +56,14 @@ public class Skybox extends Entity {
 
     @Override
     public void onAdd(){
+        super.setTexture(SkyboxManager.getInstance().getSkyboxSVG());
+        this.getAttribute("textureID").subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                skyBoxTexture = (int) Skybox.this.getAttribute("textureID").getData();
+                return null;
+            }
+        });
         SkyboxManager.getInstance().addSkybox(this);
     }
 

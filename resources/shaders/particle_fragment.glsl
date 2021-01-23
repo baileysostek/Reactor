@@ -1,7 +1,12 @@
 
 #version 410
-layout(location = 0) in vec4 passColor;
+
+in vec4 passColor;
+in vec2 passCoords;
+
+uniform sampler2D textureID;
 
 void main(void){
-    gl_FragColor = vec4(normalize(passColor.xyz), 1);
+    vec4 albedo = texture(textureID, passCoords);
+    gl_FragColor = vec4(albedo.xyz * passColor.xyz, passColor.a);
 }

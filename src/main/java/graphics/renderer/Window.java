@@ -1,5 +1,6 @@
 package graphics.renderer;
 
+import engine.Reactor;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWImage;
@@ -36,19 +37,6 @@ public class Window {
     private int vSync = 0;
 
     private float aspectRatio = 1;
-
-    public Window(int width, int height){
-        this.width = width;
-        this.height = height;
-        setup();
-    }
-
-    public Window(int width, int height, boolean fullscreen){
-        this.width = width;
-        this.height = height;
-        this.fullscreen = fullscreen;
-        setup();
-    }
 
     public Window(int width, int height, boolean fullscreen, boolean resize){
         this.width = width;
@@ -100,8 +88,8 @@ public class Window {
             ByteBuffer icon16;
             ByteBuffer icon32;
             try {
-                icon16 = StringUtils.loadRaw(path, 2048);
-                icon32 = StringUtils.loadRaw(path, 4096);
+                icon16 = StringUtils.loadRaw(StringUtils.getRelativePath() + path, 2048);
+                icon32 = StringUtils.loadRaw(StringUtils.getRelativePath() + path, 4096);
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -147,15 +135,27 @@ public class Window {
             glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // the window will be resizable
         }
 
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+        if(Reactor.isDev()) {
+            glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+        }
 
         //Disable top window bar
 //        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
         // Create the window
-        this.window_p = glfwCreateWindow(this.width, this.height, this.title, NULL, NULL);
-        if ( window_p == NULL )
-            throw new RuntimeException("Failed to create the GLFW window");
+        if(fullscreen) {
+            long monitor = glfwGetPrimaryMonitor();
+            GLFWVidMode mode = glfwGetVideoMode(monitor);
+            this.width = mode.width();
+            this.height = mode.height();
+            this.window_p = glfwCreateWindow(this.width, this.height, this.title, monitor, NULL);
+            if (window_p == NULL)
+                throw new RuntimeException("Failed to create the GLFW window");
+        }else{
+            this.window_p = glfwCreateWindow(this.width, this.height, this.title, NULL, NULL);
+            if (window_p == NULL)
+                throw new RuntimeException("Failed to create the GLFW window");
+        }
 
         // Setup a key callback. It will be called every time a key is pressed, repeated or released.
         glfwSetKeyCallback(window_p, (window, key, scancode, action, mods) -> {
@@ -205,5 +205,17 @@ public class Window {
 
     public long getWindow_p(){
         return this.window_p;
+    }
+
+    public void setFullscreen(boolean full) {
+        this.fullscreen = full;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public int getHeight() {
+        return this.height;
     }
 }

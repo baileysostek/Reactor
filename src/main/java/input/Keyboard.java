@@ -2,6 +2,7 @@ package input;
 
 import editor.Editor;
 import engine.Reactor;
+import entity.Entity;
 import imgui.ImGui;
 import input.Chroma.ChromaManager;
 import org.lwjgl.glfw.GLFW;
@@ -20,6 +21,8 @@ public class Keyboard {
     private boolean[] keys = new boolean[1024]; // No out of bounds
     private LinkedList<Callback>[] pressedCallbacks  = new LinkedList[keys.length];
     private LinkedList<Callback>[] releasedCallbacks = new LinkedList[keys.length];
+
+    private HashMap<Entity, LinkedList<Callback>> entityCallbacks = new HashMap<>();
 
     //Hahsing to store where a callback lives
     private HashMap<Callback, Integer> keyLookup = new HashMap<>();
@@ -51,6 +54,20 @@ public class Keyboard {
     public static final int X = KeyEvent.VK_X;
     public static final int Y = KeyEvent.VK_Y;
     public static final int Z = KeyEvent.VK_Z;
+
+    //Function keys
+    public static final int F1  = GLFW.GLFW_KEY_F1;
+    public static final int F2  = GLFW.GLFW_KEY_F2;
+    public static final int F3  = GLFW.GLFW_KEY_F3;
+    public static final int F4  = GLFW.GLFW_KEY_F4;
+    public static final int F5  = GLFW.GLFW_KEY_F5;
+    public static final int F6  = GLFW.GLFW_KEY_F6;
+    public static final int F7  = GLFW.GLFW_KEY_F7;
+    public static final int F8  = GLFW.GLFW_KEY_F8;
+    public static final int F9  = GLFW.GLFW_KEY_F9;
+    public static final int F10 = GLFW.GLFW_KEY_F10;
+    public static final int F11 = GLFW.GLFW_KEY_F11;
+    public static final int F12 = GLFW.GLFW_KEY_F12;
 
     //Numbers
     public static final int ONE     = GLFW.GLFW_KEY_1;
@@ -90,29 +107,35 @@ public class Keyboard {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
 //                System.out.println(key);
-                if(!ImGui.getIO().getWantTextInput()) {
-                    if (key < keys.length && key >= 0) {
-                        if (action == GLFW.GLFW_RELEASE) {
-                            keys[key] = false;
-                            for (Callback c : releasedCallbacks[key]) {
-                                c.callback();
-                            }
-                        } else {
-                            keys[key] = true;
-                    ChromaManager.getInstance().setKeyColor(key, 0, 0, 255);
-                            for (Callback c : pressedCallbacks[key]) {
-                                c.callback();
-                            }
-                        }
-                    }
-                }
 
                 if(Reactor.isDev()){
+                    if(!ImGui.getIO().getWantTextInput()) {
+                        processKeyEvent(window, key, scancode, action, mods);
+                    }
                     Editor.getInstance().sendKeyEvent(window, key, scancode, action, mods);
+                }else{
+                    processKeyEvent(window, key, scancode, action, mods);
                 }
             }
         });
 
+    }
+
+    private void processKeyEvent(long window, int key, int scancode, int action, int mods){
+        if (key < keys.length && key >= 0) {
+            if (action == GLFW.GLFW_RELEASE) {
+                keys[key] = false;
+                for (Callback c : releasedCallbacks[key]) {
+                    c.callback();
+                }
+            } else {
+                keys[key] = true;
+                ChromaManager.getInstance().setKeyColor(key, 0, 0, 255);
+                for (Callback c : pressedCallbacks[key]) {
+                    c.callback();
+                }
+            }
+        }
     }
 
     public void onShutdown() {
@@ -133,11 +156,44 @@ public class Keyboard {
         this.pressedCallbacks[key].add(callback);
     }
 
+    public void addPressCallbackTiedToEntity(Entity entity, int key, Callback callback){
+        addPressCallback(key, callback);
+        linkEntityToCallback(entity, callback);
+    }
+
     public void addReleaseCallback(int key, Callback callback){
         //index where this callback lives
         keyLookup.put(callback, key);
         //Set the callback
         this.releasedCallbacks[key].add(callback);
+    }
+
+    public void addReleaseCallbackTiedToEntity(Entity entity, int key, Callback callback){
+        addReleaseCallback(key, callback);
+        linkEntityToCallback(entity, callback);
+    }
+
+    private void linkEntityToCallback(Entity entity, Callback callback){
+        if(!this.entityCallbacks.containsKey(entity)){
+            this.entityCallbacks.put(entity, new LinkedList<Callback>());
+        }
+        this.entityCallbacks.get(entity).add(callback);
+    }
+
+    public void removeCallbacksTiedToEntity(Entity e) {
+        if(this.entityCallbacks.containsKey(e)){
+            for(Callback c : this.entityCallbacks.get(e)){
+                int index = keyLookup.get(c);
+                if(pressedCallbacks[index].contains(c)){
+                    pressedCallbacks[index].remove(c);
+                }
+                if(releasedCallbacks[index].contains(c)){
+                    releasedCallbacks[index].remove(c);
+                }
+                keyLookup.remove(c);
+            }
+            this.entityCallbacks.remove(e);
+        }
     }
 
     public void switchCallbackKey(Callback callback, int key) {

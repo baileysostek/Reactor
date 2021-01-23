@@ -2,6 +2,8 @@ package sound;
 
 import entity.Entity;
 import entity.component.Attribute;
+import graphics.sprite.SpriteBinder;
+import lighting.LightingManager;
 import org.joml.Vector3f;
 import org.lwjgl.openal.AL10;
 import org.lwjgl.openal.AL11;
@@ -34,6 +36,7 @@ public class SoundEmitter extends Entity {
 
     @Override
     public void onAdd() {
+        super.setTexture(SoundEngine.getInstance().getSoundEmitterSVG());
         //Add self to LightingManager
         if(this.hasAttribute("updateInEditor")) {
             this.getAttribute("updateInEditor").setVisible(false).setData(true);

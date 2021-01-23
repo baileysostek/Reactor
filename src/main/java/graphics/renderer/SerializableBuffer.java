@@ -22,6 +22,11 @@ public class SerializableBuffer implements Serializable<SerializableBuffer> {
         this.type = type;
     }
 
+    public SerializableBuffer(Buffer data, EnumGLDatatype type) {
+        this.buffer = data;
+        this.type = type;
+    }
+
     //Used Exclusively for deserialization
     public SerializableBuffer() {}
 

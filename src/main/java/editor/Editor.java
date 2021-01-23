@@ -30,6 +30,7 @@ import platform.PlatformManager;
 import serialization.SerializationHelper;
 import util.Callback;
 import util.Debouncer;
+import util.StopwatchManager;
 import util.StringUtils;
 
 import java.util.Collection;
@@ -85,6 +86,7 @@ public class Editor {
     //Camera constants
     private float rotationSpeed = 45f;
     private float cameraSpeed = 0.1f;
+
 
     private enum RightClickAction{
         ORBIT,
@@ -271,6 +273,30 @@ public class Editor {
                     Reactor.setDevelopmentLevel((EnumDevelopment.DEVELOPMENT));
                     onExitPlay();
                 }
+                return null;
+            }
+        });
+
+        Keyboard.getInstance().addPressCallback(Keyboard.F3, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                Reactor.DEBUG_DRAW = !Reactor.DEBUG_DRAW;
+                return null;
+            }
+        });
+
+        Keyboard.getInstance().addPressCallback(Keyboard.I, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                saveProject();
+                return null;
+            }
+        });
+
+        Keyboard.getInstance().addPressCallback(Keyboard.U, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                loadProject();
                 return null;
             }
         });

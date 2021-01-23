@@ -64,9 +64,10 @@ public class EntityRegistry extends UIComponet {
         Entity whiteCube = new Entity();
         whiteCube.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
         whiteCube.getAttribute("name").setData("Cube");
-        Material mat1 = MaterialManager.getInstance().generateMaterial(MaterialManager.getInstance().getDefaultMaterial());
-        mat1.setAlbedoID(SpriteBinder.getInstance().load("white.png").getTextureID());
-        whiteCube.setMaterial(mat1);
+//        Material mat1 = MaterialManager.getInstance().generateMaterial(SpriteBinder.getInstance().loadCubeMapHDR("Newport_Loft/Newport_Loft_Ref.hdr"));
+//        mat1.setShader("pbr");
+//        mat1.setAlbedoID(SpriteBinder.getInstance().load("white.png").getTextureID());
+//        whiteCube.setMaterial(mat1);
         addEntity("Geometry", whiteCube);
 
         Entity sphere = new Entity();
@@ -83,16 +84,16 @@ public class EntityRegistry extends UIComponet {
         quad.getAttribute("name").setData("Quad");
         addEntity("Geometry", quad);
 
-        Entity dragon = new Entity();
-        dragon.setModel(ModelManager.getInstance().loadModel("dragon.obj").getFirst());
-        dragon.getAttribute("name").setData("Dragon");
-        Material mat2 = MaterialManager.getInstance().generateMaterial(MaterialManager.getInstance().getDefaultMaterial());
-        mat2.setShader("main");
-        dragon.setMaterial(mat2);
-        addEntity("Geometry", dragon);
+//        Entity dragon = new Entity();
+//        dragon.setModel(ModelManager.getInstance().loadModel("dragon.obj").getFirst());
+//        dragon.getAttribute("name").setData("Dragon");
+//        Material mat2 = MaterialManager.getInstance().generateMaterial(MaterialManager.getInstance().getDefaultMaterial());
+//        mat2.setShader("main");
+//        dragon.setMaterial(mat2);
+//        addEntity("Geometry", dragon);
 
 //        Entity cerberus = new Entity();
-//        cerberus.setModel(ModelManager.getInstance().loadModel("Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX").getFirst());
+//        cerberus.setModel(ModelManager.getInstance().loadModel("Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX").getFirst());rende
 //        cerberus.setScale(0.1f);
 //        cerberus.setRotation(new Vector3f(-90, 0, 0));
 //        cerberus.getAttribute("name").setData("Cerberus");
@@ -101,9 +102,22 @@ public class EntityRegistry extends UIComponet {
 //        mat3.setNormalID(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_N.png").getTextureID());
 //        mat3.setMetallicID(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_M.png").getTextureID());
 //        mat3.setRoughnessID(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_R.png").getTextureID());
-//        mat3.setShader("main");
+//        mat3.setShader("pbr");
 //        cerberus.setMaterial(mat3);
-//        addEntity("Geometry", cerberus);
+//        addEntity("PBR", cerberus);
+
+//        Entity mask = new Entity();
+//        mask.setModel(ModelManager.getInstance().loadModel("HelmetPresentationLightMap.fbx").getFirst());
+//        mask.getAttribute("name").setData("Mask");
+//        Material mat4 = MaterialManager.getInstance().generateMaterial(MaterialManager.getInstance().getDefaultMaterial());
+//        mat4.setAlbedoID(SpriteBinder.getInstance().load("Mask/BaseColor.png").getTextureID());
+//        mat4.setNormalID(SpriteBinder.getInstance().load("Mask/NormalMap.png").getTextureID());
+//        mat4.setMetallicID(SpriteBinder.getInstance().load("Mask/Metalness.png").getTextureID());
+//        mat4.setRoughnessID(SpriteBinder.getInstance().load("Maks/Roughness.png").getTextureID());
+//        mat4.setAmbientOcclusionID(SpriteBinder.getInstance().load("Mask/AOMap.png").getTextureID());
+//        mat4.setShader("pbr");
+//        mask.setMaterial(mat4);
+//        addEntity("PBR", mask);
 
         Material brick = MaterialManager.getInstance().generateMaterial(SpriteBinder.getInstance().load("normal.png"));
         brick.setNormalID(SpriteBinder.getInstance().load("white_normal.png").getTextureID());

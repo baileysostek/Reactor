@@ -4,6 +4,7 @@ import camera.CameraManager;
 import graphics.renderer.Handshake;
 import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
+import graphics.sprite.SpriteBinder;
 import models.ModelManager;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -27,6 +28,7 @@ public class ParticleManager {
     private float[] positions;
     private float[] scales;
     private float[] colors;
+    private float[] textureCore;
 
     private int vao_id;
     private int vbo_vertex;
@@ -34,9 +36,11 @@ public class ParticleManager {
     private int vbo_rot;
     private int vbo_color;
     private int vbo_scale;
-    private int vbo_matrix;
+    private int vbo_texture;
 
     private int shaderID;
+
+    private int textureID;
 
     private boolean startIndicesDirty = false;
 
@@ -46,21 +50,28 @@ public class ParticleManager {
         // The VBO containing the 4 vertices of the particles.
         // Thanks to instancing, they will be shared by all particles.
 
-        Handshake shape = ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst().getHandshake();
-        FloatBuffer positions_data = ((FloatBuffer) shape.getAttribute("vPosition")).asReadOnlyBuffer();
-        verticies = new float[positions_data.remaining()];
-        positions_data.get(verticies);
+//        Handshake shape = ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst().getHandshake();
+//        FloatBuffer positions_data = ((FloatBuffer) shape.getAttribute("vPosition")).asReadOnlyBuffer();
+//        verticies = new float[positions_data.remaining()];
+//        positions_data.get(verticies);
 
-//        verticies = new float[]{
-//            -0.5f, -0.5f, -0.5f,
-//            0.5f, -0.5f, -0.5f,
-//            -0.5f, 0.5f, -0.5f,
-//            0.5f, 0.5f, -0.5f,
-////            -0.5f, -0.5f, 0.5f,
-////            0.5f, -0.5f, 0.5f,
-////            -0.5f, 0.5f, 0.5f,
-////            0.5f, 0.5f, 0.5f,
-//        };
+
+        //Texture atlas for rendering this system
+        textureID = SpriteBinder.getInstance().load("particles/flame_04.png").getTextureID();
+
+        verticies = new float[]{
+            -0.5f, -0.5f, 0, // -,- top left
+             0.5f, -0.5f, 0, // +,- top right
+            -0.5f,  0.5f, 0, // -,+ bottom left
+             0.5f,  0.5f, 0, // +,+ bottom right
+        };
+
+        textureCore = new float[]{
+            0, 0, // -,- top left
+            1, 0, // +,- top right
+            0, 1, // -,+ bottom left
+            1, 1, // +,+ bottom right
+        };
 
         positions = new float[MAX_PARTICLES * 3];
         scales    = new float[MAX_PARTICLES * 3];
@@ -113,6 +124,13 @@ public class ParticleManager {
         GL46.glBufferData(GL46.GL_ARRAY_BUFFER, scales, GL46.GL_STREAM_DRAW);
         GL46.glVertexAttribPointer(3, 3, GL46.GL_FLOAT, false, 0, 0);
 
+        // The VBO containing the texture coordinates of the particles
+        vbo_texture = GL46.glGenBuffers();
+        GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_texture);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, textureCore, GL46.GL_STATIC_DRAW);
+        GL46.glVertexAttribPointer(4, 2, GL46.GL_FLOAT, false, 0, 0);
+
+
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
         GL46.glBindVertexArray(0);
     }
@@ -135,6 +153,17 @@ public class ParticleManager {
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "projection"),false, Renderer.getInstance().getProjectionMatrix());
 
+        //Bind the texture atlas.
+        GL46.glActiveTexture(GL46.GL_TEXTURE0);
+        GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureID);
+        GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "textureID"), 0);
+
+        //blending
+        GL46.glEnable(GL46.GL_BLEND);
+        GL46.glDepthMask(false);
+        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE);
+
+        //Bind the VAO
         GL46.glBindVertexArray(vao_id);
 
         // 1rst attribute buffer : vertices
@@ -146,18 +175,27 @@ public class ParticleManager {
 //        // 4th attribute buffer : particles' scale
         GL46.glEnableVertexAttribArray(3);
 
+        GL46.glEnableVertexAttribArray(4);
+
         GL46.glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
         GL46.glVertexAttribDivisor(1, 1); // positions : one per quad (its center) -> 1
         GL46.glVertexAttribDivisor(2, 1); // color : one per quad -> 1
         GL46.glVertexAttribDivisor(3, 1); // scale : one per quad -> 1
 
+        GL46.glVertexAttribDivisor(4, 0); // texture coords : four per quad -> 0
+
         int toRender = getAllocatedParticles();
         GL46.glDrawArraysInstanced(GL46.GL_TRIANGLE_STRIP, 0, verticies.length / 3, toRender);
+
+        //Disable blend
+        GL46.glDisable(GL46.GL_BLEND);
+        GL46.glDepthMask(true);
 
         GL46.glDisableVertexAttribArray(0);
         GL46.glDisableVertexAttribArray(1);
         GL46.glDisableVertexAttribArray(2);
         GL46.glDisableVertexAttribArray(3);
+        GL46.glDisableVertexAttribArray(4);
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
         GL46.glBindVertexArray(0);

@@ -7,6 +7,7 @@ import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
+import material.MaterialManager;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL46;
 
@@ -25,12 +26,15 @@ public class SkyboxManager {
 
     private int defaultSkyboxTexture;
 
+    private final int CLOUD_SUN_RAIN_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/cloud-sun-rain.svg", 1, 1f, 96f);
+
     private static SkyboxManager skyboxManager;
 
     private SkyboxManager(){
         skyShaderID = ShaderManager.getInstance().loadShader("sky");
 
         defaultSkyboxTexture = SpriteBinder.getInstance().generateCubeMap(new Vector4f(0, 0, 0, 1));
+//        defaultSkyboxTexture = SpriteBinder.getInstance().loadCubeMapHDR("Newport_Loft/Newport_Loft_Ref.hdr");
 
         handshake = new Handshake();
         positionsF = new float[]{
@@ -164,5 +168,9 @@ public class SkyboxManager {
 
     public int getDefaultTexture() {
         return this.defaultSkyboxTexture;
+    }
+
+    public int getSkyboxSVG() {
+        return CLOUD_SUN_RAIN_SVG;
     }
 }

@@ -3,6 +3,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import entity.Entity;
 import entity.component.Attribute;
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
@@ -87,8 +88,9 @@ public class ShaderManager {
             //Check that log exists
             if (compileBuffer[0] > 0) {
                 String errorMesssage = GL46.glGetShaderInfoLog(fragmentShader);
-                String lineNumber = errorMesssage.substring(errorMesssage.indexOf("(")+ 1, errorMesssage.indexOf(")"));
-                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + "shaders/" + name + "_fragment.glsl:" + lineNumber + " | " + GL46.glGetShaderInfoLog(fragmentShader));
+//                String lineNumber = errorMesssage.substring(errorMesssage.indexOf("(")+ 1, errorMesssage.indexOf(")"));
+//                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + "shaders/" + name + "_fragment.glsl:" + lineNumber + " | " + GL46.glGetShaderInfoLog(fragmentShader));
+                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + "shaders/" + name + "_fragment.glsl:" + errorMesssage + " | " + GL46.glGetShaderInfoLog(fragmentShader));
                 //Cleanup our broken shader
                 GL46.glDeleteShader(vertexShader);
                 System.exit(0);
@@ -295,8 +297,14 @@ public class ShaderManager {
                 break;
             }
             case MAT4: {
-                float[] matrix = (float[])uniform;
-                GL46.glUniformMatrix4fv(location, false, matrix);
+                if(uniform instanceof float[]) {
+                    float[] matrix = (float[]) uniform;
+                    GL46.glUniformMatrix4fv(location, false, matrix);
+                }else{
+                    float[] matrix = new float[16];
+                    ((Matrix4f)uniform).get(matrix);
+                    GL46.glUniformMatrix4fv(location, false, matrix);
+                }
                 break;
             }
             case SAMPLER2D : {

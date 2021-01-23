@@ -9,16 +9,24 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.assimp.*;
 import util.StringUtils;
 
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+
+import static org.lwjgl.system.MemoryUtil.*;
+import static util.StringUtils.resizeBuffer;
 
 //Singleton design pattern
 public class ModelManager {
@@ -35,7 +43,7 @@ public class ModelManager {
 
     private ModelManager(){
         //TODO fix
-        DEFAULT_MODEL = loadModel("sphere_smooth.tek").get(0);
+        DEFAULT_MODEL = loadModel("sphere_smooth.tek").getFirst();
     }
 
     //For now just obj files
@@ -76,9 +84,44 @@ public class ModelManager {
 
                 AIPropertyStore store = Assimp.aiCreatePropertyStore();
 
+//                AIFileIO fileIO = AIFileIO.create().OpenProc((pFileIO, fileName, openMode) -> {
+//                    ByteBuffer buffer;
+//                    String fileNameUtf8 = memUTF8(fileName);
+//                    try {
+//                        buffer = StringUtils.loadRaw(fileNameUtf8, 1024 * 150);
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                        throw new RuntimeException("Could not open file: " + fileNameUtf8);
+//                    }
+//
+//                    return AIFile.create()
+//                            .ReadProc((pFile, pBuffer, size, count) -> {
+//                                long max = Math.min(buffer.remaining(), size * count);
+//                                memCopy(memAddress(buffer) + buffer.position(), pBuffer, max);
+//                                return max;
+//                            })
+//                            .SeekProc((pFile, offset, origin) -> {
+//                                if (origin == Assimp.aiOrigin_CUR) {
+//                                    buffer.position(buffer.position() + (int) offset);
+//                                } else if (origin == Assimp.aiOrigin_SET) {
+//                                    buffer.position((int) offset);
+//                                } else if (origin == Assimp.aiOrigin_END) {
+//                                    buffer.position(buffer.limit() + (int) offset);
+//                                }
+//                                return 0;
+//                            }).FileSizeProc(pFile -> buffer.limit()).address();
+//                }).CloseProc((pFileIO, pFile) -> {
+//                    AIFile aiFile = AIFile.create(pFile);
+//
+//                    aiFile.ReadProc().free();
+//                    aiFile.SeekProc().free();
+//                    aiFile.FileSizeProc().free();
+//                });
+
                 AIScene aiScene = Assimp.aiImportFileExWithProperties(resourceName,
 //                                Assimp.aiProcess_JoinIdenticalVertices |
-                         Assimp.aiProcess_Triangulate |
+                        Assimp.aiProcess_Triangulate |
+//                                Assimp.aiProcess_FlipWindingOrder |
 //                                Assimp.aiProcess_GenSmoothNormals|
                                 Assimp.aiProcess_FlipUVs |
                                 Assimp.aiProcess_CalcTangentSpace |
@@ -93,6 +136,7 @@ public class ModelManager {
 
                 if (aiScene == null) {
                     System.out.println("Error loading:" + fileExtension);
+                    System.err.println(Assimp.aiGetErrorString());
                     LinkedList<Model> out = new LinkedList();
                     out.add(DEFAULT_MODEL);
                     return out;
@@ -138,10 +182,10 @@ public class ModelManager {
 
     private Matrix4f toJOML(AIMatrix4x4 matrix){
         return new Matrix4f(
-            matrix.a1(), matrix.b1(), matrix.c1(), matrix.d1(),
-            matrix.a2(), matrix.b2(), matrix.c2(), matrix.d2(),
-            matrix.a3(), matrix.b3(), matrix.c3(), matrix.d3(),
-            matrix.a4(), matrix.b4(), matrix.c4(), matrix.d4()
+                matrix.a1(), matrix.b1(), matrix.c1(), matrix.d1(),
+                matrix.a2(), matrix.b2(), matrix.c2(), matrix.d2(),
+                matrix.a3(), matrix.b3(), matrix.c3(), matrix.d3(),
+                matrix.a4(), matrix.b4(), matrix.c4(), matrix.d4()
         );
     }
 
@@ -252,6 +296,30 @@ public class ModelManager {
         HashMap<String, Joint> joints = new HashMap<>();
 
         try {
+            //Allocate our textures
+            int numMaterials = scene.mNumMaterials();
+            PointerBuffer aiMaterials = scene.mMaterials();
+            for (int i = 0; i < numMaterials; i++) {
+                AIMaterial material = AIMaterial.create(aiMaterials.get(i)); // wrap raw pointer in AIMaterial instance
+
+                // Method 1: use aiGetMaterial<property> functions, e.g.
+                int texCount = Assimp.aiGetMaterialTextureCount(material, Assimp.aiTextureType_DIFFUSE);
+
+                // Method 2: Parse material properties manually
+                PointerBuffer properties = material.mProperties(); // array of pointers to AIMaterialProperty structs
+                for ( int j = 0; j < properties.remaining(); j++ ) {
+                    AIMaterialProperty prop = AIMaterialProperty.create(properties.get(j));
+                    // parse property
+                    prop.mKey().dataString();
+                    String name = prop.mKey().dataString();
+                    if(name.contains("file")) {
+                        String propValue = StandardCharsets.UTF_8.decode(prop.mData()).toString();
+                        System.out.println("Texture file:" + propValue);
+                    }
+                }
+            }
+
+            //Load our mesh
             for (int meshIndex = 0; meshIndex < scene.mNumMeshes(); meshIndex++) {
                 AIMesh mesh = AIMesh.create(scene.mMeshes().get(meshIndex));
 
@@ -326,8 +394,7 @@ public class ModelManager {
                 //Determine Animations
                 calculateAnimations(scene, joints);
 
-                //TODO refactor to grouped model.
-                Model model = new Model(this.getNextID(), modelPath, modelHandshake, mesh.mNumFaces() * 3, new Vector3f[]{new Vector3f(min.x(), min.y(), min.z()), new Vector3f(max.x(), max.y(), max.z())});
+                Model model = new Model(this.getNextID(), modelPath, modelHandshake, vPositions.length / 3, new Vector3f[]{new Vector3f(min.x(), min.y(), min.z()), new Vector3f(max.x(), max.y(), max.z())});
                 model.setJoints(new LinkedList<>(joints.values()));
                 model.setRootJoint(root);
                 LinkedList<Animation> animations = calculateAnimations(scene, joints);
@@ -347,6 +414,41 @@ public class ModelManager {
         }
 
         return out;
+    }
+
+    private static ByteBuffer ioResourceToByteBuffer(String resource, int bufferSize) throws IOException {
+        ByteBuffer buffer;
+        URL url = Thread.currentThread().getContextClassLoader().getResource(resource);
+        if (url == null)
+            throw new IOException("Classpath resource not found: " + resource);
+        File file = new File(url.getFile());
+        if (file.isFile()) {
+            FileInputStream fis = new FileInputStream(file);
+            FileChannel fc = fis.getChannel();
+            buffer = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+            fc.close();
+            fis.close();
+        } else {
+            buffer = BufferUtils.createByteBuffer(bufferSize);
+            InputStream source = url.openStream();
+            if (source == null)
+                throw new FileNotFoundException(resource);
+            try {
+                byte[] buf = new byte[8192];
+                while (true) {
+                    int bytes = source.read(buf, 0, buf.length);
+                    if (bytes == -1)
+                        break;
+                    if (buffer.remaining() < bytes)
+                        buffer = resizeBuffer(buffer, Math.max(buffer.capacity() * 2, buffer.capacity() - buffer.remaining() + bytes));
+                    buffer.put(buf, 0, bytes);
+                }
+                buffer.flip();
+            } finally {
+                source.close();
+            }
+        }
+        return buffer;
     }
 
 

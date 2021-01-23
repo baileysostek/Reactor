@@ -1,6 +1,8 @@
 package lighting;
 
+import com.google.gson.JsonObject;
 import entity.component.Attribute;
+import entity.component.AttributeUtils;
 import graphics.renderer.DirectDraw;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
@@ -8,6 +10,7 @@ import graphics.sprite.SpriteBinder;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import particle.ParticleSystem;
 import util.Callback;
 
 public class DirectionalLight extends Light {
