@@ -16,6 +16,7 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL46;
 import skybox.SkyboxManager;
 import util.Callback;
@@ -271,22 +272,29 @@ public class Renderer{
         }
         StopwatchManager.getInstance().getTimer("render_direct").stop();
 
+        //Start HUD timer
         StopwatchManager.getInstance().getTimer("render_hud").start();
+        //Generate our HudDrawCalls and then draw them.
         UIManager.getInstance().render();
+        //Return GL to a known state
+        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
+        GL46.glEnable(GL46.GL_CULL_FACE);
+        GL46.glCullFace(GL46.GL_BACK);
+        GL46.glFrontFace(GL46.GL_CCW);
+        GL46.glEnable(GL46.GL_BLEND);
+        GL46.glDisable(GL46.GL_DEPTH_TEST);
+        GL46.glDisable(GL46.GL_SCISSOR_TEST);
+        GL46.glColorMask(true, true, true, true);
+        GL46.glStencilMask(0xffffffff);
+        GL46.glStencilOp(GL46.GL_KEEP, GL46.GL_KEEP, GL46.GL_KEEP);
+        GL46.glStencilFunc(GL46.GL_ALWAYS, 0, 0xffffffff);
+        //Stop the timer
         StopwatchManager.getInstance().getTimer("render_hud").stop();
 
         if(fboBound) {
             frameBuffer.unbindFrameBuffer();
             fboBound = false;
         }
-
-//        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
-//        GL46.glDisable(GL46.GL_CULL_FACE);
-//        GL46.glCullFace(GL46.GL_BACK);
-//
-
-//        GL46.glDisable(GL46.GL_DEPTH_TEST);
-//        GL46.glDisable(GL46.GL_BLEND);
     }
 
     public FBO getFrameBuffer(){

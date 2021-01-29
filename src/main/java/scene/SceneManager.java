@@ -56,9 +56,9 @@ public class SceneManager {
             if(this.loadedScene != null) {
                 this.loadedScene.onUnload();
             }
+            this.loadedScene = scene;
+            this.loadedScene.onLoad();
         }
-        this.loadedScene = scene;
-        this.loadedScene.onLoad();
     }
 
     //Singleton

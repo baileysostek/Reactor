@@ -17,6 +17,7 @@ import graphics.sprite.SpriteBinder;
 import graphics.ui.FontLoader;
 import graphics.ui.UIManager;
 import input.Chroma.ChromaManager;
+import input.Keyboard;
 import input.MousePicker;
 import input.controller.ControllerManager;
 import lighting.LightingManager;
@@ -25,6 +26,7 @@ import material.Material;
 import material.MaterialManager;
 import models.Model;
 import models.ModelManager;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -43,6 +45,7 @@ import scripting.ScriptingEngine;
 import skybox.SkyboxManager;
 import sound.SoundEngine;
 import steam.SteamManager;
+import util.Callback;
 import util.StopwatchManager;
 import util.StringUtils;
 
@@ -286,10 +289,10 @@ public class Reactor {
 //                EntityManager.getInstance().addEntity(sun);
 //                Entity drag = new Entity();
 //
-                Sprite sprite = new Sprite(1,1);
-                sprite.setPixelColor(0,0, Colors.RED);
-                sprite.flush();
-//
+//                Sprite sprite = new Sprite(1,1);
+//                sprite.setPixelColor(0,0, Colors.RED);
+//                sprite.flush();
+////
 //                float size = 7f;
 ////
 //                LinkedList<Entity> group = new LinkedList<Entity>();
@@ -363,7 +366,16 @@ public class Reactor {
                 StopwatchManager.getInstance().addTimer("render_direct");
 
                 StopwatchManager.getInstance().addTimer("reactor_internal");
+                StopwatchManager.getInstance().addTimer("reactor_internal_poll");
+                StopwatchManager.getInstance().addTimer("reactor_internal_swap_buffers");
 
+                Keyboard.getInstance().addPressCallback(Keyboard.F3, new Callback() {
+                    @Override
+                    public Object callback(Object... objects) {
+                        Reactor.DEBUG_DRAW = !Reactor.DEBUG_DRAW;
+                        return null;
+                    }
+                });
             }
         }
     }
@@ -396,10 +408,14 @@ public class Reactor {
 
                 render();
 
-                StopwatchManager.getInstance().getTimer("reactor_internal").start();
+                StopwatchManager.getInstance().getTimer("reactor_internal_swap_buffers").start();
                 glfwSwapBuffers(WINDOW_POINTER); // swap the color buffer //Actual render call
+                StopwatchManager.getInstance().getTimer("reactor_internal_swap_buffers").stop();
+                StopwatchManager.getInstance().getTimer("reactor_internal_poll").start();
                 glfwPollEvents();
+                StopwatchManager.getInstance().getTimer("reactor_internal_poll").stop();
 
+                StopwatchManager.getInstance().getTimer("reactor_internal").start();
                 frames++;
 
                 last = now;
@@ -637,7 +653,6 @@ public class Reactor {
 //        Editor.getInstance().addComponent(new Image(test.getTextureID()));
 
 //        Editor.getInstance().addComponent(new EntityEditor());
-
 
 
 

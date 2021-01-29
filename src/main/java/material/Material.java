@@ -26,8 +26,8 @@ public class Material implements Serializable<Material> {
     private int normalID;
     private int roughnessID;
 
-    //Attributes that this material loads into its shader.
-    private HashMap<String, Attribute> attributes = new HashMap<>();
+//    //Attributes that this material loads into its shader.
+//    private HashMap<String, Attribute> attributes = new HashMap<>();
 
     //String representing the shader that is used to render this material.
     private Attribute<String> shaderName;
@@ -154,12 +154,114 @@ public class Material implements Serializable<Material> {
     @Override
     public JsonObject serialize(JsonObject meta) {
         JsonObject out = new JsonObject();
-//        out.addProperty("name", name);
-        return null;
+        out.addProperty("name", this.name.getData());
+
+        //IF this material was generated from source files, add references to those source files, otherwise add a serialized instance of the string.
+        String albedoSource = SpriteBinder.getInstance().lookupFileFromTextureID(this.albedoID);
+        if(albedoSource != null || this.albedoID == SpriteBinder.getInstance().getFileNotFoundID()) {
+            out.addProperty("albedoID", albedoSource);
+        }else{
+            Sprite sprite = SpriteBinder.getInstance().getSprite(this.albedoID);
+            int hash = sprite.hashCode();
+            out.addProperty("albedoID", hash);
+            if(meta.has("sprites")){
+                meta.get("sprites").getAsJsonObject().add(hash+"", sprite.serialize());
+            }
+        }
+
+        String metallicSource = SpriteBinder.getInstance().lookupFileFromTextureID(this.metallicID);
+        if(metallicSource != null || this.metallicID == SpriteBinder.getInstance().getFileNotFoundID()) {
+            out.addProperty("metallicID", metallicSource);
+        }else{
+            Sprite sprite = SpriteBinder.getInstance().getSprite(this.metallicID);
+            int hash = sprite.hashCode();
+            out.addProperty("metallicID", hash);
+            if(meta.has("sprites")){
+                meta.get("sprites").getAsJsonObject().add(hash+"", sprite.serialize());
+            }
+        }
+
+        String ambientOcclusionSource = SpriteBinder.getInstance().lookupFileFromTextureID(this.ambientOcclusionID);
+        if(ambientOcclusionSource != null || this.ambientOcclusionID == SpriteBinder.getInstance().getFileNotFoundID()) {
+            out.addProperty("ambientOcclusionID", ambientOcclusionSource);
+        }else{
+            Sprite sprite = SpriteBinder.getInstance().getSprite(this.ambientOcclusionID);
+            int hash = sprite.hashCode();
+            out.addProperty("ambientOcclusionID", hash);
+            if(meta.has("sprites")){
+                meta.get("sprites").getAsJsonObject().add(hash+"", sprite.serialize());
+            }
+        }
+
+        String normalSource = SpriteBinder.getInstance().lookupFileFromTextureID(this.normalID);
+        if(normalSource != null || this.normalID == SpriteBinder.getInstance().getFileNotFoundID()) {
+            out.addProperty("normalID", normalSource);
+        }else{
+            Sprite sprite = SpriteBinder.getInstance().getSprite(this.normalID);
+            int hash = sprite.hashCode();
+            out.addProperty("normalID", hash);
+            if(meta.has("sprites")){
+                meta.get("sprites").getAsJsonObject().add(hash+"", sprite.serialize());
+            }
+        }
+
+        String roughnessSource = SpriteBinder.getInstance().lookupFileFromTextureID(this.roughnessID);
+        if(roughnessSource != null || this.roughnessID == SpriteBinder.getInstance().getFileNotFoundID()) {
+            out.addProperty("roughnessID", roughnessSource);
+        }else{
+            Sprite sprite = SpriteBinder.getInstance().getSprite(this.roughnessID);
+            int hash = sprite.hashCode();
+            out.addProperty("roughnessID", hash);
+            if(meta.has("sprites")){
+                meta.get("sprites").getAsJsonObject().add(hash+"", sprite.serialize());
+            }
+        }
+
+        out.addProperty("shaderName", this.shaderName.getData());
+
+        return out;
     }
 
     @Override
     public Material deserialize(JsonObject data) {
+
+        if(data.has("name")){
+            this.name.setData(data.get("name").getAsString());
+        }
+
+        if(data.has("albedoID")){
+            if(!data.get("albedoID").isJsonNull()){
+                this.albedoID = SpriteBinder.getInstance().load(data.get("albedoID").getAsString()).getTextureID();
+            }
+        }
+
+        if(data.has("metallicID")){
+            if(!data.get("metallicID").isJsonNull()){
+                this.metallicID = SpriteBinder.getInstance().load(data.get("metallicID").getAsString()).getTextureID();
+            }
+        }
+
+        if(data.has("ambientOcclusionID")){
+            if(!data.get("ambientOcclusionID").isJsonNull()){
+                this.ambientOcclusionID = SpriteBinder.getInstance().load(data.get("ambientOcclusionID").getAsString()).getTextureID();
+            }
+        }
+
+        if(data.has("normalID")){
+            if(!data.get("normalID").isJsonNull()){
+                this.normalID = SpriteBinder.getInstance().load(data.get("normalID").getAsString()).getTextureID();
+            }
+        }
+
+        if(data.has("roughnessID")){
+            if(!data.get("roughnessID").isJsonNull()){
+                this.roughnessID = SpriteBinder.getInstance().load(data.get("roughnessID").getAsString()).getTextureID();
+            }
+        }
+
+        if(data.has("shaderName")){
+            this.shaderName.setData(data.get("shaderName").getAsString());
+        }
 
         return this;
     }

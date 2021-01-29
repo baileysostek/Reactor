@@ -46,8 +46,6 @@ uniform int  numPointLights;
 uniform samplerCube nearestProbe;
 uniform samplerCube skybox;
 
-layout( location = 0 ) out vec4 gl_FragColor;
-
 float ShadowCalculation(int index)
 {
     vec3 pos = passPosLightSpace[index].xyz * 0.5 + 0.5;

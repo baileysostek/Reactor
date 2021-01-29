@@ -1,12 +1,17 @@
 package lighting;
 
+import camera.CameraManager;
 import entity.Entity;
 import entity.EntityManager;
 import graphics.renderer.ShaderManager;
+import graphics.renderer.VAO;
 import graphics.sprite.SpriteBinder;
+import material.Material;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
+import skybox.SkyboxManager;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -25,8 +30,8 @@ public class LightingManager {
     private Lock lock;
 
     private LightingManager(){
-        lightDepth = ShaderManager.getInstance().loadShader("depth");
-        lock = new ReentrantLock();
+        lightDepth  = ShaderManager.getInstance().loadShader("depth");
+        lock        = new ReentrantLock();
     }
 
     //Here we prepare everything we need this frame
@@ -46,18 +51,35 @@ public class LightingManager {
 
         ShaderManager.getInstance().loadUniformIntoActiveShader("lightSpaceMatrix", directionalLight.getLightspaceTransform());
 
-        //Render all entities
-        EntityManager.getInstance().resort();
+//        //Render all entities
+//        EntityManager.getInstance().resort();
+//
+//        for(Entity entity : EntityManager.getInstance().getEntities()){
+//            if(entity.getModel() != null) {
+//
+//                ShaderManager.getInstance().loadHandshakeIntoShader(lightDepth, entity.getModel().getHandshake());
+//
+//                //Mess with uniforms
+//                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lightDepth, "model"), false, entity.getTransform().get(new float[16]));
+//                GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, entity.getModel().getNumIndicies());
+//            }
+//        }
 
-        for(Entity entity : EntityManager.getInstance().getEntities()){
-            if(entity.getModel() != null) {
-
-                ShaderManager.getInstance().loadHandshakeIntoShader(lightDepth, entity.getModel().getHandshake());
-
-                //Mess with uniforms
-                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lightDepth, "model"), false, entity.getTransform().get(new float[16]));
-                GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, entity.getModel().getNumIndicies());
+        LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches = EntityManager.getInstance().getBatches();
+        int numDrawCalls = 0;
+        for(VAO vao : batches.keySet()) {
+            if(vao == null){
+                continue;
             }
+            LinkedList<Entity> rendered = new LinkedList<>();
+            LinkedHashMap<Material, LinkedList<Entity>> materialEntities = batches.get(vao);
+            for(LinkedList<Entity> material : materialEntities.values()) {
+                rendered.addAll(material);
+            }
+            if(rendered.size() > 0) {
+                vao.render(rendered);
+            }
+            rendered.clear();
         }
 
         directionalLight.getDepthBuffer().unbindFrameBuffer();

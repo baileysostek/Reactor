@@ -108,10 +108,14 @@ public class EntityEditor extends UIComponet {
                         if (button == MousePicker.MOUSE_LEFT) {
                             //On Release Set selected to none
                             if (action == GLFW.GLFW_RELEASE) {
-                                //Call the callbacks
-                                for (Callback c : onActionStop) {
-                                    c.callback(selectedTool, selectedEntities.keySet());
+                                //We didnt stop an action if we are doing nothing...
+                                if(!selectedTool.equals(NONE)){
+                                    //Call the callbacks
+                                    for (Callback c : onActionStop) {
+                                        c.callback(selectedTool, selectedEntities.keySet());
+                                    }
                                 }
+
                                 //Deselect the tool
                                 selectedTool = NONE;
                                 hasReleased = true;

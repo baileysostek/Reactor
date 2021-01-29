@@ -1,5 +1,6 @@
 package material;
 
+import com.google.gson.JsonObject;
 import entity.Entity;
 import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
@@ -56,6 +57,12 @@ public class MaterialManager {
 
         addMaterial(material);
 
+        return material;
+    }
+
+    public Material generateMaterial(JsonObject serialzedData){
+        Material material = new Material().deserialize(serialzedData);
+        addMaterial(material);
         return material;
     }
 

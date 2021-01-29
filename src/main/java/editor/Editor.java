@@ -26,11 +26,9 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import platform.EnumDevelopment;
-import platform.PlatformManager;
 import serialization.SerializationHelper;
 import util.Callback;
 import util.Debouncer;
-import util.StopwatchManager;
 import util.StringUtils;
 
 import java.util.Collection;
@@ -277,18 +275,11 @@ public class Editor {
             }
         });
 
-        Keyboard.getInstance().addPressCallback(Keyboard.F3, new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                Reactor.DEBUG_DRAW = !Reactor.DEBUG_DRAW;
-                return null;
-            }
-        });
-
         Keyboard.getInstance().addPressCallback(Keyboard.I, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                saveProject();
+                JsonObject data = EntityManager.getInstance().serialize();
+                System.out.println(data);
                 return null;
             }
         });
@@ -296,7 +287,8 @@ public class Editor {
         Keyboard.getInstance().addPressCallback(Keyboard.U, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                loadProject();
+                JsonObject data = EntityManager.getInstance().serialize();
+                EntityManager.getInstance().deserializeAndClear(data);
                 return null;
             }
         });
@@ -372,9 +364,9 @@ public class Editor {
         io.setDisplaySize(Renderer.getInstance().getWIDTH(), Renderer.getInstance().getHEIGHT());
         io.setDisplayFramebufferScale((float) 1, (float) 1);
         Vector2f mousePos = new Vector2f(MousePicker.getInstance().getScreenCoords());
-        //Y axis garbo
-        mousePos.sub(0, Renderer.getInstance().getHEIGHT());
-        mousePos.mul(1, -1);
+//        //Y axis garbo
+//        mousePos.sub(0, Renderer.getInstance().getHEIGHT());
+//        mousePos.mul(1, -1);
 
         //Mouse input
         io.setMousePos((float) mousePos.x(), (float) mousePos.y());

@@ -555,17 +555,17 @@ public class Entity implements Transformable, Serializable<Entity> {
 
         if(meta == null){
             meta = new JsonObject();
-            meta.add("names", new JsonArray());
-            meta.add("models", new JsonArray());
-            meta.add("materials", new JsonArray());
+            meta.add("sprites",   new JsonObject());
+            meta.add("materials", new JsonObject());
+            meta.add("models",    new JsonArray());
 
             out.add("meta", meta);
         }
-        meta.get("names").getAsJsonArray().add(this.getName());
+
+//        meta.get("models").getAsJsonArray().add(this.getModel().get);
 
         //Add our Model if it exists
         if(this.model != null) {
-
             out.add("model", this.model.serialize());
         }
         //Create a json object to hold our attributes
@@ -579,6 +579,19 @@ public class Entity implements Transformable, Serializable<Entity> {
 
         //Add our attributes to out
         out.add("attributes", attributesObject);
+
+        //Materials
+        //Loop through our materials and add our materials to our output object
+        LinkedList<Material> materials = (LinkedList<Material>)this.getAttribute("materials").getData();
+        JsonArray materialsJson = new JsonArray(materials.size());
+        if(this.attributes.containsKey("materials")){
+            for(Material mat : materials){
+                JsonObject serializedMaterial = mat.serialize(meta);
+                meta.get("materials").getAsJsonObject().add(mat.getName(),serializedMaterial);
+                materialsJson.add(mat.getName());
+            }
+        }
+        out.add("materials", materialsJson);
 
         //TODO better serialization of components
         //Create a json object to hold our components
@@ -651,9 +664,6 @@ public class Entity implements Transformable, Serializable<Entity> {
                     e.printStackTrace();
                 }
             }
-//            for(Component c : this.components){
-//                c.postInitialize();
-//            }
         }
         //If we have a sprite
         if(data.has("image")) {
