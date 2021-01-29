@@ -85,7 +85,6 @@ public class Editor {
     private float rotationSpeed = 45f;
     private float cameraSpeed = 0.1f;
 
-
     private enum RightClickAction{
         ORBIT,
         FIRST_PERSON
@@ -96,6 +95,9 @@ public class Editor {
     //Hooks for editor
     private LinkedList<Callback> onPlayCallbacks   = new LinkedList<>();
     private LinkedList<Callback> onEditorCallbacks = new LinkedList<>();
+
+    //History
+    private LinkedList<JsonObject> history = new LinkedList<>();
 
     int gameWindowID = 0;
 
@@ -246,6 +248,15 @@ public class Editor {
 
         //populate our editor
         entityEditor = new EntityEditor();
+
+        entityEditor.addOnActionStart(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                history.push(EntityManager.getInstance().serialize());
+                return null;
+            }
+        });
+
         addComponent(EnumEditorLocation.RIGHT, entityEditor);
         WorldOutliner worldOutliner = new WorldOutliner(entityEditor);
         addComponent(EnumEditorLocation.LEFT_TAB, worldOutliner);
@@ -275,11 +286,12 @@ public class Editor {
             }
         });
 
-        Keyboard.getInstance().addPressCallback(Keyboard.I, new Callback() {
+        Keyboard.getInstance().addPressCallback(Keyboard.Z, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                JsonObject data = EntityManager.getInstance().serialize();
-                System.out.println(data);
+                if(history.size() > 0) {
+                    EntityManager.getInstance().deserializeAndClear(history.pop());
+                }
                 return null;
             }
         });
@@ -722,6 +734,10 @@ public class Editor {
         io.setKeyShift(io.getKeysDown(GLFW_KEY_LEFT_SHIFT) || io.getKeysDown(GLFW_KEY_RIGHT_SHIFT));
         io.setKeyAlt(io.getKeysDown(GLFW_KEY_LEFT_ALT) || io.getKeysDown(GLFW_KEY_RIGHT_ALT));
         io.setKeySuper(io.getKeysDown(GLFW_KEY_LEFT_SUPER) || io.getKeysDown(GLFW_KEY_RIGHT_SUPER));
+    }
+
+    public void clearSelectedEntities() {
+        this.entityEditor.clearSelected();
     }
 
     //Callback registry

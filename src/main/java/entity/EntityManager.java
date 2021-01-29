@@ -3,6 +3,7 @@ package entity;
 import camera.CameraManager;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import editor.Editor;
 import engine.Reactor;
 import graphics.renderer.VAO;
 import input.Keyboard;
@@ -86,13 +87,7 @@ public class EntityManager {
     }
 
     public void clearEntities(){
-        this.entities.clear();
-        for(LinkedList batch : batches.values()){
-            batch.clear();
-        }
-        for(LinkedList<Entity> typeList : typedEntities.values()){
-            typeList.clear();
-        }
+        this.removeEntitySync(this.entities);
     }
 
     public LinkedList<Entity> getEntities(){
@@ -543,6 +538,9 @@ public class EntityManager {
     }
 
     public void deserializeAndClear(JsonObject data){
+        if(Reactor.isDev()){
+            Editor.getInstance().clearSelectedEntities();
+        }
         this.clearEntities();
         this.sync();
         deserialize(data);
