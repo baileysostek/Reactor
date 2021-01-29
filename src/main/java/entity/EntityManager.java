@@ -1,15 +1,17 @@
 package entity;
 
+import camera.CameraManager;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import engine.Reactor;
 import graphics.renderer.VAO;
 import input.Keyboard;
 import input.MousePicker;
 import material.Material;
-import org.joml.Intersectionf;
+import material.MaterialManager;
 import org.joml.Vector3f;
-import platform.EnumDevelopment;
-import platform.PlatformManager;
+import serialization.SerializationHelper;
+import util.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -85,6 +87,9 @@ public class EntityManager {
 
     public void clearEntities(){
         this.entities.clear();
+        for(LinkedList batch : batches.values()){
+            batch.clear();
+        }
         for(LinkedList<Entity> typeList : typedEntities.values()){
             typeList.clear();
         }
@@ -356,6 +361,10 @@ public class EntityManager {
     }
 
     public void removeEntity(Entity toRemove) {
+        if(toRemove == null){
+            return;
+        }
+
         lock.lock();
         try {
             if(this.entities.contains(toRemove)) {
@@ -462,4 +471,86 @@ public class EntityManager {
         }
         return out;
     }
+
+    //Serialization
+    public JsonObject serialize(){
+        //Update our Project file
+        JsonObject projectFile = new JsonObject();
+        //TODO re-implement this so that it saves as much memory as possible.
+        JsonArray entities = new JsonArray(getEntities().size());
+
+        JsonObject meta = new JsonObject();
+
+        //These provide a meta-object that we can store copies of values such that the same data isnt serialized multiple times creating a huge file.
+        meta.add("sprites",   new JsonObject());
+        meta.add("materials", new JsonObject());
+        meta.add("models",    new JsonArray());
+
+        for(Entity e : getEntities()){
+            if(!e.hasParent()) {
+                JsonObject entityData = new JsonObject();
+                entityData.addProperty("class", e.getClass().getName());
+                entityData.add("value", e.serialize(meta));
+                entities.add(entityData);
+            }
+        }
+
+        projectFile.add("meta", meta);
+        projectFile.add("entities", entities);
+        projectFile.add("camera", CameraManager.getInstance().getActiveCamera().serialize());
+
+        StringUtils.write(projectFile.toString(), "test.json");
+
+        return projectFile;
+    }
+
+    public void deserialize(JsonObject data){
+        //First we Parse the Metadata
+        if(data.has("meta")){
+            JsonObject meta = data.get("meta").getAsJsonObject();
+            for(String key : meta.getAsJsonObject().keySet()){
+                if(key.equals("materials")){
+                    JsonObject materials = meta.get("materials").getAsJsonObject();
+                    for(String name : materials.keySet()){
+                        Material material = MaterialManager.getInstance().generateMaterial(materials.get(name).getAsJsonObject());
+                    }
+                }
+            }
+        }
+        //Set those entities
+        if(data.has("entities")){
+            JsonArray entities = data.getAsJsonArray("entities");
+            for (int i = 0; i < entities.size(); i++) {
+                if (entities.get(i).getAsJsonObject().has("class")) {
+                    try {
+                        Class<?> classType = Class.forName(entities.get(i).getAsJsonObject().get("class").getAsString());
+                        Entity entity = ((Entity) SerializationHelper.getGson().fromJson(entities.get(i).getAsJsonObject().get("value"), classType)).deserialize(entities.get(i).getAsJsonObject().get("value").getAsJsonObject());
+
+                        EntityManager.getInstance().addEntity(entity);
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        //Camera garbo
+    }
+
+    public void deserialize(String data){
+        JsonObject object = StringUtils.loadJson(data);
+        deserialize(object);
+    }
+
+    public void deserializeAndClear(JsonObject data){
+        this.clearEntities();
+        this.sync();
+        deserialize(data);
+    }
+
+    public void deserializeAndClear(String file){
+        JsonObject object = StringUtils.loadJson(file);
+        deserializeAndClear(object);
+    }
+
 }

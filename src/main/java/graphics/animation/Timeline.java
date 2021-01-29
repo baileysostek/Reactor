@@ -34,6 +34,12 @@ public class Timeline {
         this.running = true;
         this.time = 0f;
         closedList.clear();
+        for(Callback c : callbacks.keySet()){
+            if(callbacks.get(c) == 0){
+                c.callback();
+                closedList.add(c);
+            }
+        }
     }
 
     public void pause(){
@@ -113,6 +119,15 @@ public class Timeline {
 
     public float getDuration() {
         return this.duration;
+    }
+
+    public void removeCallback(Callback callback){
+        if(this.callbacks.containsKey(callback)){
+            this.callbacks.remove(callback);
+        }
+        if(this.closedList.contains(callback)){
+            this.closedList.remove(callback);
+        }
     }
 
     public float getTime(){

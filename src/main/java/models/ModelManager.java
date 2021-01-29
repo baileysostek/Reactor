@@ -343,8 +343,18 @@ public class ModelManager {
                     //Get ref to vector
                     AIVector3D position = mesh.mVertices().get(i);
                     AIVector3D normal = mesh.mNormals().get(i);
-                    AIVector3D tangent = mesh.mTangents().get(i);
-                    AIVector3D bitangent = mesh.mBitangents().get(i);
+                    AIVector3D tangent = null;
+                    try{
+                        tangent = mesh.mTangents().get(i);
+                    }catch (NullPointerException e){
+                        System.out.println("Error: Imported model does not have tangent data encorporated.");
+                    }
+                    AIVector3D bitangent = null;
+                    try{
+                        tangent = mesh.mBitangents().get(i);
+                    }catch (NullPointerException e){
+                        System.out.println("Error: Imported model does not have tangent data encorporated.");
+                    }
 
                     AIVector3D texture = null;
                     if (mesh.mTextureCoords(0) != null) {
@@ -360,13 +370,25 @@ public class ModelManager {
                     vNormals[(i * 3) + 1] = normal.y();
                     vNormals[(i * 3) + 2] = normal.z();
 
-                    vTangents[(i * 3) + 0] = tangent.x();
-                    vTangents[(i * 3) + 1] = tangent.y();
-                    vTangents[(i * 3) + 2] = tangent.z();
+                    if(tangent != null) {
+                        vTangents[(i * 3) + 0] = tangent.x();
+                        vTangents[(i * 3) + 1] = tangent.y();
+                        vTangents[(i * 3) + 2] = tangent.z();
+                    }else{
+                        vTangents[(i * 3) + 0] = 0;
+                        vTangents[(i * 3) + 1] = 0;
+                        vTangents[(i * 3) + 2] = 0;
+                    }
 
-                    vBiTangents[(i * 3) + 0] = bitangent.x();
-                    vBiTangents[(i * 3) + 1] = bitangent.y();
-                    vBiTangents[(i * 3) + 2] = bitangent.z();
+                    if(bitangent != null) {
+                        vBiTangents[(i * 3) + 0] = bitangent.x();
+                        vBiTangents[(i * 3) + 1] = bitangent.y();
+                        vBiTangents[(i * 3) + 2] = bitangent.z();
+                    }else{
+                        vBiTangents[(i * 3) + 0] = 0;
+                        vBiTangents[(i * 3) + 1] = 0;
+                        vBiTangents[(i * 3) + 2] = 0;
+                    }
 
                     if (texture != null) {
                         vTextures[(i * 2) + 0] = texture.x();

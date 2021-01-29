@@ -62,6 +62,16 @@ public class DirectionalLight extends Light {
         viewMatrix = new Matrix4f().lookAt(new Vector3f(this.getPosition()), new Vector3f((Vector3f) this.getAttribute("targetPoint").getData()), new Vector3f(0, 1, 0));
     }
 
+    public void setFrustum(float x, float y, float z){
+        this.setFrustum(new Vector3f(x, y, z));
+    }
+
+    public void setFrustum(Vector3f frustum){
+        if(this.hasAttribute("frustum")) {
+            this.getAttribute("frustum").setData(frustum);
+        }
+    }
+
     @Override
     public void renderInEditor(boolean selected){
         DirectDraw.getInstance().drawArrow(new Vector3f(this.getPosition()), new Vector3f(0, 0, 0).sub(this.getPosition()).normalize().add(this.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, (Vector3f) this.getAttribute("color").getData());

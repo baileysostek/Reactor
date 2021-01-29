@@ -3,9 +3,11 @@ package input;
 import camera.CameraManager;
 import editor.Editor;
 import engine.Reactor;
+import entity.Entity;
 import graphics.renderer.Renderer;
 import imgui.ImGui;
 import models.AABB;
+import models.Model;
 import org.joml.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
@@ -74,7 +76,7 @@ public class MousePicker{
                 mousePressed = false;
             }
         }
-        for(Callback c : callbacks){
+        for(Callback c : new LinkedList<>(callbacks)){
             if(c != null) {
                 c.callback(button, action);
             }
@@ -125,8 +127,6 @@ public class MousePicker{
         MouseY -= MouseOffsetY;
 
         resetOffset();
-
-
     }
 
     public Vector3f calculateMouseRay() {
@@ -175,7 +175,8 @@ public class MousePicker{
     }
 
     public Vector2f getScreenCoords(){
-        return new Vector2f(MouseX, (Renderer.getInstance().getHEIGHT() * ScreenScaleY) - MouseY);
+//        return new Vector2f(MouseX, (Renderer.getInstance().getHEIGHT() * ScreenScaleY) - MouseY);
+        return new Vector2f(MouseX, MouseY);
     }
 
     public Vector2f getGLScreenCoords(){
@@ -280,6 +281,10 @@ public class MousePicker{
         }
     }
 
+    public static Vector3f rayHitsAABB(Vector3f pos, Vector3f dir, Vector3f[] aabb) {
+        return rayHitsAABB(pos, dir, aabb[0], aabb[1]);
+    }
+
     public static Vector3f rayHitsAABB(Vector3f pos, Vector3f dir, AABB aabb) {
         return rayHitsAABB(pos, dir, aabb.getMIN(), aabb.getMAX());
     }
@@ -296,5 +301,63 @@ public class MousePicker{
         }else{
             return null;
         }
+    }
+
+    public static Vector3f rayHitsEntity(Vector3f pos, Vector3f dir, Entity entity){
+//        Vector3f broadPhase = rayHitsAABB(pos, dir, entity.getAABB());
+//        if(broadPhase != null){
+
+            System.out.println("Narrow phase");
+
+            //Invert Pos
+            pos = new Vector3f(pos).mul(-1);
+
+            float length = 0;
+
+            float epsilon = 0.1f;
+
+            Model model = entity.getModel();
+            float[] faceData = model.getHandshake().getAttributeRaw("vPosition");
+
+            Vector4f p1 = new Vector4f();
+            Vector4f p2 = new Vector4f();
+            Vector4f p3 = new Vector4f();
+
+            for(int i = 0; i < faceData.length / 9; i++){
+                p1.x = faceData[i * 9 + 0]; // P1 x
+                p1.y = faceData[i * 9 + 1]; // P1 y
+                p1.z = faceData[i * 9 + 2]; // P1 z
+                p1.w = 1.0f;
+
+                p2.x = faceData[i * 9 + 3]; // P2 x
+                p2.y = faceData[i * 9 + 4]; // P2 y
+                p2.z = faceData[i * 9 + 5]; // P2 z
+                p2.w = 1.0f;
+
+                p3.x = faceData[i * 9 + 6]; // P3 x
+                p3.y = faceData[i * 9 + 7]; // P3 y
+                p3.z = faceData[i * 9 + 8]; // P3 z
+                p3.w = 1.0f;
+
+                //Transform
+                p1 = p1.mul(entity.getTransform());
+                p2 = p2.mul(entity.getTransform());
+                p3 = p3.mul(entity.getTransform());
+
+                length = Intersectionf.intersectRayTriangle(
+                    pos.x, pos.y, pos.z,
+                    dir.x, dir.y, dir.z,
+                    p1.x, p1.y, p1.z,
+                    p2.x, p2.y, p2.z,
+                    p3.x, p3.y, p3.z
+                , epsilon);
+
+                if(length > 0){
+                    // point(t) = origin + t * dir of the point of intersection.
+                    return new Vector3f(dir).mul(length).add(pos);
+                }
+            }
+//        }
+        return null;
     }
 }

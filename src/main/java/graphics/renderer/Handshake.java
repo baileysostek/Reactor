@@ -55,6 +55,10 @@ public class Handshake implements Serializable<Handshake> {
         return bufferedAttributes.get(attribute).getBuffer();
     }
 
+    public float[] getAttributeRaw(String attribute) {
+        return bufferedAttributes.get(attribute).getRaw();
+    }
+
     public int getAttributeDataLength(String attribute) {
         return bufferedAttributes.get(attribute).getRaw().length;
     }
