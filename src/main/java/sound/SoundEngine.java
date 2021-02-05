@@ -33,6 +33,7 @@ public class SoundEngine{
 
     private final int VOLUME_UP_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/volume-up.svg", 1, 1f, 96f);
 
+    /*SG*/
     private SoundEngine() {
         String defaultDeviceName = ALC10.alcGetString(0, ALC10.ALC_DEFAULT_DEVICE_SPECIFIER);
         device = ALC10.alcOpenDevice(defaultDeviceName);

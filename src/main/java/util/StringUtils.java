@@ -155,9 +155,13 @@ public class StringUtils {
         }
     }
 
+    public static void write(String[] data, String filePath){
+        write(unify(data), filePath);
+    }
+
 
     //Take a String array and smoosh it into a single string.
-    public String unify(String[] data){
+    public static String unify(String[] data){
         String out = "";
         for(String s : data){
             out = out + s;

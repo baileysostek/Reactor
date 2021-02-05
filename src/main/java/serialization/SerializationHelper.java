@@ -156,6 +156,69 @@ public class SerializationHelper {
         }
     }
 
+    public static JsonObject differ(JsonObject source, JsonObject other){
+        JsonObject out = new JsonObject();
+
+        //Loop through source
+        for(String key : source.keySet()){
+            if(other.has(key)){
+                //Check if differ
+                differHelper(source.get(key), other.get(key), key, out);
+            }
+        }
+
+        for(String key : other.keySet()){
+            if(source.has(key)){
+                //Check if differ
+                differHelper(source.get(key), other.get(key), key, out);
+            }else{
+                out.add(key, other.get(key));
+            }
+        }
+
+        return out;
+    }
+
+    private static void differHelper(JsonElement source, JsonElement other, String key, JsonObject out){
+        if(source.isJsonObject() && other.isJsonObject()){
+            JsonObject objectCompare =  differ(source.getAsJsonObject(), other.getAsJsonObject());
+            if(objectCompare.size() > 0){
+                out.add(key, objectCompare);
+            }
+        }else if(source.isJsonArray() && other.isJsonArray()){
+            JsonArray sourceArray = source.getAsJsonArray();
+            JsonArray otherArray = other.getAsJsonArray();
+            if(sourceArray.size() != otherArray.size()){
+                out.add(key, other);
+            }else{
+                int maxSize = Math.max(sourceArray.size(), otherArray.size());
+                JsonObject arrayCompare = new JsonObject();
+                for(int i = 0; i < maxSize; i++){
+                    if(i < sourceArray.size()) {
+                        JsonElement sourceArrayElement = (sourceArray.size()) > i ? sourceArray.get(i) : new JsonObject();
+                        JsonElement otherArrayElement = (otherArray.size()) > i ? otherArray.get(i) : new JsonObject();
+                        differHelper(sourceArrayElement, otherArrayElement, i + "", arrayCompare);
+                    }else{
+                        arrayCompare.add(i + "", otherArray.get(i));
+                    }
+                }
+
+                if(arrayCompare.size() > 0) {
+                    JsonArray outArray = new JsonArray(maxSize);
+                    for (String subKey : arrayCompare.keySet()) {
+                        outArray.add(arrayCompare.get(subKey));
+                    }
+
+                    out.add(key, outArray);
+                }
+            }
+        }else{
+            if(!(source.equals(other))) {
+                out.add(key, other);
+            }
+        }
+    }
+
     public static Object toClass(JsonObject object) {
         // Gotta have a value
         if(object.has("value")){
