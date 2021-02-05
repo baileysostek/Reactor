@@ -290,7 +290,10 @@ public class Editor {
             @Override
             public Object callback(Object... objects) {
                 if(history.size() > 0) {
-                    EntityManager.getInstance().deserializeAndClear(history.pop());
+                    JsonObject top = history.pop();
+                    JsonObject differ = SerializationHelper.differ(EntityManager.getInstance().serialize(), top);
+                    System.out.println("Differences:" + differ.toString());
+                    EntityManager.getInstance().deserializeAndClear(top);
                 }
                 return null;
             }

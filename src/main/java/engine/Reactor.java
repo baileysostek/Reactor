@@ -4,6 +4,7 @@ import camera.CameraManager;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import editor.DocumentationGenerator;
 import editor.Editor;
 import entity.Entity;
 import entity.EntityManager;
@@ -289,44 +290,44 @@ public class Reactor {
 //                EntityManager.getInstance().addEntity(sun);
 //                Entity drag = new Entity();
 //
-//                Sprite sprite = new Sprite(1,1);
-//                sprite.setPixelColor(0,0, Colors.RED);
-//                sprite.flush();
+                Sprite sprite = new Sprite(1,1);
+                sprite.setPixelColor(0,0, Colors.RED);
+                sprite.flush();
 ////
-//                float size = 7f;
-////
-//                LinkedList<Entity> group = new LinkedList<Entity>();
+                float size = 3f;
 //
-//                for(int m = 0; m < size; m++){
-//                    for(int r = 0; r < size; r++){
-//                        Entity sphere = new Entity();
-//                        sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
-//                        sphere.setPosition(new Vector3f(r * 2.25f, m * 2.25f, 0));
-//                        Material matTest = MaterialManager.getInstance().generateMaterial(sprite);
-//
-//                        Sprite metallic = new Sprite(1,1);
-//                        metallic.setPixelColor(0,0, new Vector4f(new Vector3f((float)(m + 1) / (size + 1f)), 1));
-//                        metallic.flush();
-//
-//                        matTest.setMetallicID(metallic.getTextureID());
-//
-//                        Sprite roughness = new Sprite(1,1);
-//                        roughness.setPixelColor(0,0, new Vector4f(new Vector3f((float)(r + 1) / (size + 1f)), 1));
-//                        roughness.flush();
-//
-//                        matTest.setRoughnessID(roughness.getTextureID());
-//
-//                        matTest.setShader("pbr");
-//
-//                        sphere.addAttribute(new Attribute<Float>("metallic", (float)(m + 1) / (size + 1f)));
-//                        sphere.addAttribute(new Attribute<Float>("reflective", (float)(r + 1) / (size + 1f)));
-//
-//                        sphere.setMaterial(matTest);
-//                        group.add(sphere);
-//                    }
-//                }
-//
-//                EntityManager.getInstance().addEntity(group);
+                LinkedList<Entity> group = new LinkedList<Entity>();
+
+                for(int m = 0; m < size; m++){
+                    for(int r = 0; r < size; r++){
+                        Entity sphere = new Entity();
+                        sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
+                        sphere.setPosition(new Vector3f(r * 2.25f, m * 2.25f, 0));
+                        Material matTest = MaterialManager.getInstance().generateMaterial(sprite);
+
+                        Sprite metallic = new Sprite(1,1);
+                        metallic.setPixelColor(0,0, new Vector4f(new Vector3f((float)(m + 1) / (size + 1f)), 1));
+                        metallic.flush();
+
+                        matTest.setMetallicID(metallic.getTextureID());
+
+                        Sprite roughness = new Sprite(1,1);
+                        roughness.setPixelColor(0,0, new Vector4f(new Vector3f((float)(r + 1) / (size + 1f)), 1));
+                        roughness.flush();
+
+                        matTest.setRoughnessID(roughness.getTextureID());
+
+                        matTest.setShader("pbr");
+
+                        sphere.addAttribute(new Attribute<Float>("metallic", (float)(m + 1) / (size + 1f)));
+                        sphere.addAttribute(new Attribute<Float>("reflective", (float)(r + 1) / (size + 1f)));
+
+                        sphere.setMaterial(matTest);
+                        group.add(sphere);
+                    }
+                }
+
+                EntityManager.getInstance().addEntity(group);
 //
 //                drag.setTexture(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_A.png"));
 //                drag.setMetallic(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_M.png"));
@@ -376,6 +377,8 @@ public class Reactor {
                         return null;
                     }
                 });
+
+                DocumentationGenerator.generateDocumentation();
             }
         }
     }
