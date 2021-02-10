@@ -5,10 +5,12 @@ import graphics.renderer.Handshake;
 import graphics.renderer.VAO;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.assimp.AIBone;
 import serialization.Serializable;
 import util.FileObject;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 public class Model implements Serializable<Model> {
@@ -21,8 +23,10 @@ public class Model implements Serializable<Model> {
     private AABB aabb = new AABB();
 
     public Joint rootJoint;
-    public LinkedList<Joint> joints = new LinkedList<Joint>();
-    public Animation animation;
+    public LinkedHashMap<String, Joint> joints = new LinkedHashMap<>();
+    public LinkedHashMap<String, Animation> animations = new LinkedHashMap<>();
+
+    public LinkedHashMap<String, Matrix4f> boneOffsets = new LinkedHashMap<>();
 
     //VAO
     private Handshake handshake;
@@ -40,12 +44,21 @@ public class Model implements Serializable<Model> {
         this.path           = path;
     }
 
-    public Model(int id, String path, Handshake handshake, int numIndicies, Vector3f[] AABB){
+    public Model(int id, String path, Handshake handshake, int numIndicies, Vector3f[] AABB, Joint rootJoint, LinkedHashMap<String, Animation> animations, LinkedHashMap<String, Matrix4f> boneOffsets, LinkedHashMap<String, Joint> joints){
         this.id             = id;
         this.path           = path;
         this.handshake      = handshake;
         this.numIndicies    = numIndicies;
         aabb = new AABB(AABB[0], AABB[1]);
+
+        this.rootJoint = rootJoint;
+
+        this.animations.clear();
+        this.animations = animations;
+
+        this.boneOffsets = boneOffsets;
+
+        this.joints = joints;
 
         vao = new VAO(this);
     }
@@ -91,7 +104,7 @@ public class Model implements Serializable<Model> {
         return this;
     }
 
-    public void setJoints(LinkedList<Joint> joints) {
+    public void setJoints(LinkedHashMap<String, Joint> joints) {
         this.joints = joints;
     }
 
@@ -108,8 +121,15 @@ public class Model implements Serializable<Model> {
         return rootJoint;
     }
 
-    public HashMap<String, Matrix4f> getAnimatedBoneTransforms() {
-        return animation.getBoneTransformsForTime(time);
+    public LinkedHashMap<String, Matrix4f> getAnimatedBoneTransforms() {
+        int index = 0;
+        for(Animation anim : animations.values()){
+            if(index == animations.size() - 1) {
+                return anim.getBoneTransformsForTime(time);
+            }
+            index++;
+        }
+        return null;
     }
 
     public String getPath(){
@@ -118,5 +138,13 @@ public class Model implements Serializable<Model> {
 
     public VAO getVAO() {
         return vao;
+    }
+
+    public double getTime(){
+        return time;
+    }
+
+    public void setBoneOffsets(LinkedHashMap<String, Matrix4f> boneOffsets) {
+        this.boneOffsets = boneOffsets;
     }
 }

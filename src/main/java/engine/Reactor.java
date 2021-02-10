@@ -22,6 +22,7 @@ import input.Keyboard;
 import input.MousePicker;
 import input.controller.ControllerManager;
 import lighting.LightingManager;
+import lighting.PointLight;
 import logging.LogManager;
 import material.Material;
 import material.MaterialManager;
@@ -43,6 +44,7 @@ import platform.EnumPlatform;
 import platform.PlatformManager;
 import scene.SceneManager;
 import scripting.ScriptingEngine;
+import skybox.Skybox;
 import skybox.SkyboxManager;
 import sound.SoundEngine;
 import steam.SteamManager;
@@ -328,6 +330,24 @@ public class Reactor {
                 }
 
                 EntityManager.getInstance().addEntity(group);
+
+
+//                Entity animatedModel = new Entity();
+//                animatedModel.setModel(ModelManager.getInstance().loadModel("pilot.dae"));
+//                animatedModel.addAttribute(new Attribute("updateInEditor", true));
+//                EntityManager.getInstance().addEntity(animatedModel);
+
+                Entity animatedMode2 = new Entity();
+                animatedMode2.setModel(ModelManager.getInstance().loadModel("character.dae"));
+                animatedMode2.addAttribute(new Attribute("updateInEditor", true));
+                animatedMode2.setPosition(-8, 0, 0);
+                animatedMode2.setRotation(new Vector3f(-90, 0, 0));
+                EntityManager.getInstance().addEntity(animatedMode2);
+
+                EntityManager.getInstance().addEntity(new Skybox());
+
+                EntityManager.getInstance().addEntity(new PointLight());
+
 //
 //                drag.setTexture(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_A.png"));
 //                drag.setMetallic(SpriteBinder.getInstance().load("Cerberus_by_Andrew_Maximov/Textures/Cerberus_M.png"));

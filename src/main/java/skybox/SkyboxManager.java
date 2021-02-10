@@ -33,8 +33,8 @@ public class SkyboxManager {
     private SkyboxManager(){
         skyShaderID = ShaderManager.getInstance().loadShader("sky");
 
-        defaultSkyboxTexture = SpriteBinder.getInstance().generateCubeMap(new Vector4f(1, 1, 1, 1));
-//        defaultSkyboxTexture = SpriteBinder.getInstance().loadCubeMapHDR("Newport_Loft/Newport_Loft_Ref.hdr");
+//        defaultSkyboxTexture = SpriteBinder.getInstance().generateCubeMap(new Vector4f(1, 1, 1, 1));
+        defaultSkyboxTexture = SpriteBinder.getInstance().loadCubeMapHDR("Newport_Loft/Newport_Loft_Ref.hdr");
 
         handshake = new Handshake();
         positionsF = new float[]{

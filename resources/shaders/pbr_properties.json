@@ -15,7 +15,8 @@
       "cameraPos": "vec3",
       "t_offset":"vec2",
       "t_scale": "vec2",
-      "lightSpaceMatrix": "mat4"
+      "lightSpaceMatrix": "mat4",
+      "jointTransforms": "mat4"
     },
     "Varying": {
 

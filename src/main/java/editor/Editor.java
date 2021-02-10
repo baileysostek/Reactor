@@ -291,9 +291,25 @@ public class Editor {
             public Object callback(Object... objects) {
                 if(history.size() > 0) {
                     JsonObject top = history.pop();
-                    JsonObject differ = SerializationHelper.differ(EntityManager.getInstance().serialize(), top);
-                    System.out.println("Differences:" + differ.toString());
-                    EntityManager.getInstance().deserializeAndClear(top);
+                    JsonObject differ = SerializationHelper.differ(top, EntityManager.getInstance().serialize());
+
+                    System.out.println("Differ:" + differ);
+
+                    if(differ.has("entities") && differ.get("entities").isJsonObject()){
+                        for(String key : differ.get("entities").getAsJsonObject().keySet()){
+                            Entity targetEntity = EntityManager.getInstance().getEntities().get(Integer.parseInt(key));
+
+                            JsonObject attributes = differ.get("entities").getAsJsonObject().get(key).getAsJsonObject().get("value").getAsJsonObject().get("attributes").getAsJsonObject();
+                            for(String attributeName : attributes.keySet()){
+                                JsonObject source = targetEntity.getAttribute(attributeName).serialize();
+                                JsonObject target = attributes.get(attributeName).getAsJsonObject();
+
+                                targetEntity.getAttribute(attributeName).deserialize(SerializationHelper.merge(source, target));
+
+                            }
+                        }
+                    }
+//                    EntityManager.getInstance().deserializeAndClear(top);
                 }
                 return null;
             }

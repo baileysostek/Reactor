@@ -1,8 +1,14 @@
 package editor;
 
+import camera.CameraManager;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import entity.Entity;
 import entity.EntityManager;
+import graphics.animation.Timeline;
+import graphics.renderer.DirectDraw;
+import lighting.LightingManager;
+import sound.SoundEngine;
 import util.StringUtils;
 
 import java.awt.event.KeyEvent;
@@ -17,7 +23,16 @@ public class DocumentationGenerator {
         JsonObject documentation = new JsonObject();
 
         LinkedList<Object> documentedClasses = new LinkedList<>();
+
+        //Add all of our classes
         documentedClasses.add(EntityManager.getInstance());
+        documentedClasses.add(CameraManager.getInstance());
+        documentedClasses.add(Editor.getInstance());
+        documentedClasses.add(new Entity());
+        documentedClasses.add(new Timeline());
+        documentedClasses.add(DirectDraw.getInstance());
+        documentedClasses.add(LightingManager.getInstance());
+        documentedClasses.add(SoundEngine.getInstance());
 
         for(Object object : documentedClasses){
             Class objectClass = object.getClass();
