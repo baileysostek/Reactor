@@ -56,7 +56,7 @@ public class EntityRegistry extends UIComponet {
 
     private int scale = 64;
 
-    public EntityRegistry(EntityEditor editor){
+    protected EntityRegistry(EntityEditor editor){
 
         svgTest = SpriteBinder.getInstance().loadSVG("engine/svg/radiation.svg", 1, 1, 96);
 

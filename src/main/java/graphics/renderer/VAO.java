@@ -2,11 +2,15 @@ package graphics.renderer;
 
 import entity.Entity;
 import entity.component.Attribute;
+import input.Keyboard;
 import material.MaterialManager;
+import models.Animation;
+import models.Joint;
 import models.Model;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL46;
 import particle.Particle;
 
@@ -23,7 +27,8 @@ public class VAO {
     private static final int MAX_VBO_ALLOCATION = 4;
     private final int VAO_DI;
 
-    private HashMap<String, EnumGLDatatype> uniforms = new HashMap<>();
+    private LinkedHashMap<String, EnumGLDatatype> uniforms = new LinkedHashMap<>();
+    private HashMap<String, Float> uniformDefaults = new HashMap<>();
 
     /*
         NOTE the only thing that is crucial is that index 0 of this array contains the triangulated model data such that VBO[0] / 3 = #of trinagles to render.
@@ -37,10 +42,18 @@ public class VAO {
     // The number of faces stored in the indices list of this VAO, should be numIndices / 3
     private int numFaces = 0;
 
+    // User for animation data
+    private boolean animated = false;
+
+    //Store our animations
+    Model model;
+
     public VAO(Model model){
         //Create our vao
         VAO_DI = VAOManager.getInstance().genVertexArrays();
         GL46.glBindVertexArray(VAO_DI);
+
+        this.model = model;
 
         //Our attributes
         String[] attributes = new String[]{
@@ -49,10 +62,17 @@ public class VAO {
             "vTangent",
             "vBitangent",
             "vTexture",
+            "vBoneIndices",
+            "vBoneWeights",
         };
 
         //Any uniform loads go here.
         registerUniform("transform", EnumGLDatatype.MAT4);
+        registerUniform("jointIndices", EnumGLDatatype.VEC3);
+        registerUniform("boneWeights", EnumGLDatatype.VEC3, 1f / (float)EnumGLDatatype.VEC3.sizePerVertex);
+
+        //Lets see if we are animated
+        this.animated = model.animations.size() > 0;
 
         //Load some data in there!
         Handshake shape = model.getHandshake();
@@ -78,6 +98,7 @@ public class VAO {
                 //make a VBO to hold our data
                 VBO vbo = new VBO(vbo_data, size, shape.getAttributeDataLength(name), name);
 
+                System.out.println("Allocating space for [" + name +"] at index:" + (index));
                 vbo_indices.put(name, vbo);
 
                 //Check if this is the first time, if it is define the face count.
@@ -118,14 +139,15 @@ public class VAO {
                     registerUniform(uniqueName, EnumGLDatatype.findSuitable(uniformSizeSquared));
 
                     //Now we need to register this VBO in our lookup table so that when uploading uniform data we will be able to get the base uniform type IE mat4 mat3 sampler[] ect.
+                    System.out.println("Allocating space for [" + name +"] at index:" + (index + i));
                     vbo_lookup.put(vbo, new VBO(-1, this.uniforms.get(name).sizePerVertex, -1, name));
 
                     //Buffer this.
                     vbo_uniforms.put(uniqueName, vbo);
                 }
 
-                //Increase domain of index by uniformSizeSquared
-                index+=uniformSizeSquared;
+                //Increase domain of index by uniformSizeSquared - an offset of 1 because we increment by 1 in the last step.
+                index += (uniformSizeSquared - 1);
 
                 //We dont want to try to enable an array element that is not present so we need to remove the base uniform.
                 this.uniforms.remove(name);
@@ -134,7 +156,14 @@ public class VAO {
 
             }else{
                 //Load a normal uniform
-                vbo_lookup.put(allocateUniform(name, index), new VBO(-1, this.uniforms.get(name).sizePerVertex, -1, name));
+                System.out.println("Allocating space for [" + name +"] at index:" + index);
+                VBO dataBuffer = new VBO(-1, this.uniforms.get(name).sizePerVertex, -1, name);
+                if(uniformDefaults.containsKey(name)){
+                    float defaultValue = uniformDefaults.get(name);
+                    dataBuffer.setDefaultValue(defaultValue);
+                    System.out.println("Default Value for [" + name +"] = " + defaultValue);
+                }
+                vbo_lookup.put(allocateUniform(name, index), dataBuffer);
             }
             index++;
         }
@@ -153,6 +182,12 @@ public class VAO {
         //make a VBO to hold our data
         VBO vbo = new VBO(vbo_data, this.uniforms.get(name).sizePerVertex, -1, name);
 
+        if(uniformDefaults.containsKey(name)){
+            float defaultValue = uniformDefaults.get(name);
+            vbo.setDefaultValue(defaultValue);
+            System.out.println("Default Value for [" + name +"] = " + defaultValue);
+        }
+
         //Buffer this.
         vbo_uniforms.put(name, vbo);
 
@@ -161,6 +196,12 @@ public class VAO {
 
     private void registerUniform(String uniformName, EnumGLDatatype datatype){
         this.uniforms.put(uniformName, datatype);
+        this.uniformDefaults.put(uniformName, 0f);
+    }
+
+    private void registerUniform(String uniformName, EnumGLDatatype datatype, float defaultData){
+        this.uniforms.put(uniformName, datatype);
+        this.uniformDefaults.put(uniformName, defaultData);
     }
 
     /*
@@ -211,7 +252,6 @@ public class VAO {
                         //TODO maybe transpose
                         entityData = e.getTransform();
                         data = VAOManager.getInstance().attributeToFloat(entityData, trueUniformSize);
-
                     }else if(e.hasAttribute(attributeName)){
                         entityData = e.getAttribute(attributeName).getData();
                         data = VAOManager.getInstance().attributeToFloat(entityData, trueUniformSize);
@@ -248,16 +288,26 @@ public class VAO {
                 //Lets build our buffer!
 
                 float[] uniformData = new float[renderCount * vbo.vertexStride];
-
                 //TODO check that the entitiy has an attribute of name name to load here.
-
                 int entityIndex = 0;
-                for (Entity e : toRender) {
-                    Vector3f pos = e.getPosition();
 
-                    uniformData[(entityIndex * vbo.vertexStride) + 0] = pos.x;
-                    uniformData[(entityIndex * vbo.vertexStride) + 1] = pos.y;
-                    uniformData[(entityIndex * vbo.vertexStride) + 2] = pos.z;
+                float[] data = new float[vbo.vertexStride];
+
+                for (Entity e : toRender) {
+                    if(e.hasAttribute(attributeLookup)){
+                        Object entityData = e.getAttribute(attributeLookup).getData();
+                        data = VAOManager.getInstance().attributeToFloat(entityData, trueUniformSize);
+                        for(int i = 0; i < vbo.vertexStride; i++){
+                            uniformData[(entityIndex * vbo.vertexStride) + i] = data[i];
+                        }
+//                        System.out.println("Loading data for attribute: " + attributeLookup);
+                    }else{
+                        for(int i = 0; i < vbo.vertexStride; i++){
+                            uniformData[(entityIndex * vbo.vertexStride) + i] = vbo.defaultValue;
+                        }
+//                        System.out.println("Loading default data for attribute: " + attributeLookup + " = " + vbo.defaultValue);
+                    }
+
 
                     entityIndex++;
                 }
@@ -265,6 +315,37 @@ public class VAO {
                 GL46.glBufferData(GL46.GL_ARRAY_BUFFER, uniformData, GL46.GL_STREAM_DRAW);
             }
 
+        }
+
+        //IF this is an animated model load the bone transforms
+        loop:{
+            if (animated) {
+//                for (Animation animation : model.animations.values()) {
+//
+//                    LinkedHashMap<String, Matrix4f> posePositions = animation.getBoneTransformsForTime(model.getTime());
+//                    //Load from animation
+//                    int maxBones = 50;
+//                    int index = 0;
+//                    for(String boneName : posePositions.keySet()){
+//                        Matrix4f posePosition = posePositions.get(boneName);
+//                        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("jointTransforms", index, posePosition.mul(new Matrix4f(model.joints.get(boneName).getLocalBindTransform()).invert()));
+//                        index++;
+//                    }
+//                }
+                HashMap<String, Matrix4f> frames = model.getAnimatedBoneTransforms();
+                applyPoseToJoints(frames, model.rootJoint, new Matrix4f().identity());
+
+                for(Joint joint : model.joints.values()){
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("jointTransforms", joint.getIndex(), joint.getAnimationTransform());
+                }
+
+                break loop;
+            } else {
+                int maxBones = 50;
+                for (int i = 0; i < maxBones; i++) {
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("jointTransforms", i, new Matrix4f().identity());
+                }
+            }
         }
 
         // --------------       RENDERING CODE       ----------------
@@ -310,4 +391,33 @@ public class VAO {
     public int getID() {
         return VAO_DI;
     }
+
+//    private void calculateBonePositionHelper(Joint root, Matrix4f parentTransform, HashMap<String, Matrix4f> frames, HashMap<String, Matrix4f> out) {
+//        if(frames.containsKey(root.getName())) {
+//            Matrix4f animationOffset = new Matrix4f(frames.get(root.getName()));
+////            Matrix4f currentTransform = new Matrix4f(animationOffset).mul(parentTransform);
+//
+//            for (Joint childJoint : root.getChildren()) {
+//                calculateBonePositionHelper(childJoint, animationOffset, frames, out);
+//            }
+//
+//            out.put(root.getName(), new Matrix4f(parentTransform).mul(new Matrix4f(animationOffset)));
+////            out.put(root.getName(), new Matrix4f(parentTransform).invert().mul(currentTransform));
+//        }
+//    }
+
+
+    private void applyPoseToJoints(HashMap<String, Matrix4f> currentPose, Joint joint, Matrix4f parentTransform) {
+        if(currentPose.containsKey(joint.getName())) {
+            Matrix4f currentLocalTransform = currentPose.get(joint.getName());
+            Matrix4f currentTransform = new Matrix4f(parentTransform).mul(currentLocalTransform);
+            for (Joint childJoint : joint.getChildren()) {
+                applyPoseToJoints(currentPose, childJoint, currentTransform);
+            }
+            currentTransform = currentTransform.mul(joint.getLocalBindTransform());
+            joint.setAnimationTransform(currentTransform);
+        }
+    }
+
 }
+

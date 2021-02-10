@@ -2,8 +2,10 @@ package models;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 public class Animation {
@@ -28,9 +30,9 @@ public class Animation {
         }
     }
 
-    public HashMap<String, Matrix4f> getBoneTransformsForTime(double delta) {
-        delta %= timescale;
-        HashMap<String , Matrix4f> out = new HashMap<>();
+    public LinkedHashMap<String, Matrix4f> getBoneTransformsForTime(double delta_t) {
+        delta_t %= timescale;
+        LinkedHashMap<String , Matrix4f> out = new LinkedHashMap<>();
 
         for(String bone : keyFrames.keySet()){
             KeyFrame lowerKey = new KeyFrame(0, new Matrix4f().identity());
@@ -40,19 +42,19 @@ public class Animation {
 
             int index = 0;
             for(KeyFrame frame : keyFrames.get(bone)){
-                if(frame.timelinePosition > delta){
+                if(frame.timelinePosition > delta_t){
                     upperKey = frame;
                     if(index >= 1){
                         lowerKey = keyFrames.get(bone)[index - 1];
                     }
-                    deltaTime = (delta - lowerKey.timelinePosition) / (upperKey.timelinePosition - lowerKey.timelinePosition);
+                    deltaTime = (delta_t - lowerKey.timelinePosition) / (upperKey.timelinePosition - lowerKey.timelinePosition);
                     break;
                 }
                 index++;
             }
 
             if(upperKey != null) {
-                Matrix4f pos = new Matrix4f(lowerKey.position).lerp(upperKey.position, (float) deltaTime);
+                Matrix4f pos = new Matrix4f(lowerKey.position).lerp(new Matrix4f(upperKey.position), (float) deltaTime);
                 out.put(bone, pos);
             }
         }

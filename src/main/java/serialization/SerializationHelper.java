@@ -204,17 +204,20 @@ public class SerializationHelper {
                 }
 
                 if(arrayCompare.size() > 0) {
-                    JsonArray outArray = new JsonArray(maxSize);
-                    for (String subKey : arrayCompare.keySet()) {
-                        outArray.add(arrayCompare.get(subKey));
-                    }
-
-                    out.add(key, outArray);
+                    out.add(key, arrayCompare);
                 }
             }
         }else{
             if(!(source.equals(other))) {
-                out.add(key, other);
+                if(source.getAsJsonPrimitive().isNumber() && other.getAsJsonPrimitive().isNumber()){
+                    float sourceNumber = source.getAsFloat();
+                    float otherNumber  = other.getAsFloat();
+
+                    out.addProperty(key, sourceNumber - otherNumber);
+
+                }else {
+                    out.add(key, other);
+                }
             }
         }
     }
