@@ -38,7 +38,7 @@ public class Collision extends Component implements Collider {
     private EnumCollisionShape shape = EnumCollisionShape.CUBE;
 
     public Collision(){
-
+        super("Collision");
     }
 
     @Override

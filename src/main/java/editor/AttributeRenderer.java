@@ -419,6 +419,24 @@ public class AttributeRenderer{
                 return;
             }
 
+            if (attribute.getData() instanceof Double) {
+                double data = (double) attribute.getData();
+                ImDouble value = new ImDouble(data);
+
+                ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
+                if(attribute.getType().equals(EnumAttributeType.SLIDERS)){
+                    float[] sliderValue = new float[]{(float) data};
+                    ImGui.sliderFloat("", sliderValue, 0, 1);
+                    attribute.setData((double)sliderValue[0]);
+                }else{
+                    ImGui.inputDouble(attribute.getName(), value);
+                    attribute.setData(value.get());
+                }
+                ImGui.popItemWidth();
+
+                return;
+            }
+
             if (attribute.getData() instanceof String) {
                 String data = (String) attribute.getData();
                 ImString value = new ImString(data);

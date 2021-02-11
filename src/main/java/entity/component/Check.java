@@ -16,6 +16,7 @@ public class Check extends Component{
     private Attribute<Object> comparisonValue;
 
     public Check(){
+        super("Check");
         attributeName   = new Attribute<String>         (super.getID()+"attribute_name"   , null);
         check           = new Attribute<EnumComparison> (super.getID()+"comparison_type"  , EnumComparison.EQUAL);
         comparisonValue = new Attribute<Object>         (super.getID()+"comparison_value" , null);

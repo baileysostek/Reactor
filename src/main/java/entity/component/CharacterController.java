@@ -41,7 +41,7 @@ public class CharacterController extends Component implements Collider {
     private PairCachingGhostObject ghostObject;
 
     public CharacterController(){
-
+        super("Character Controller");
     }
 
     @Override

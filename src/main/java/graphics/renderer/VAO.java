@@ -332,7 +332,7 @@ public class VAO {
 //                        index++;
 //                    }
 //                }
-                HashMap<String, Matrix4f> frames = model.getAnimatedBoneTransforms();
+                HashMap<String, Matrix4f> frames = model.getAnimatedBoneTransforms("animation", (double)((Entity)toRender.toArray()[0]).getAttribute("animationIndex").getData());
                 applyPoseToJoints(frames, model.rootJoint, new Matrix4f().identity());
 
                 for(Joint joint : model.joints.values()){

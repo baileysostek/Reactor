@@ -120,7 +120,6 @@ public class ModelManager {
 //                });
 
                 AIScene aiScene = Assimp.aiImportFileExWithProperties(resourceName,
-//                                Assimp.aiProcess_JoinIdenticalVertices |
                         Assimp.aiProcess_Triangulate |
 //                                Assimp.aiProcess_FlipWindingOrder |
 //                                Assimp.aiProcess_GenSmoothNormals|
@@ -128,7 +127,7 @@ public class ModelManager {
                                 Assimp.aiProcess_CalcTangentSpace |
                                 Assimp.aiProcess_GenNormals |
                                 Assimp.aiProcess_GenUVCoords |
-//                                Assimp.aiProcess_LimitBoneWeights |
+                                Assimp.aiProcess_LimitBoneWeights |
                                 Assimp.aiProcess_FixInfacingNormals |
                                 Assimp.aiProcess_GenBoundingBoxes,
                         null,
@@ -440,7 +439,7 @@ public class ModelManager {
                 for(int i = 0; i < numVertices; i++){
                     //Indices //3 is max joints.
                     int[] indices = new int[]{0, 0, 0};
-                    float[] weights = new float[]{0, 0, 0};
+                    float[] weights = new float[]{1, 0, 0};
                     if(vertBones.containsKey(i)){
                         LinkedList<Integer> boneMapping = vertBones.get(i);
                         for(int j = 0; j < Math.min(boneMapping.size(), indices.length); j++){
