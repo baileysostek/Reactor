@@ -37,6 +37,8 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Model data for this entity
     private Model model;
+    private AnimationComponent animationComponent = null;
+
 
     //New entity template.
     public Entity(){
@@ -171,8 +173,28 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Add this component to an entity
     public void addComponent(Component component) {
-        this.components.add(component);
-        component.onAdd(this);
+        //Dont bother adding a null component.
+        if(component == null){
+            return;
+        }
+
+        //Make sure this component does not already exist on us. If it is added twice it will trigger the onUpdate method once per instance of the object.
+        if(!this.components.contains(component)) {
+            this.components.add(component);
+            component.onAdd(this);
+        }
+    }
+
+    public void removeComponent(Component component){
+
+        if(component == null){
+            return;
+        }
+
+        if(this.components.contains(component)){
+            component.onRemove();
+            this.components.remove(component);
+        }
     }
 
     protected final Collection<Component> getComponents(){
@@ -451,14 +473,23 @@ public class Entity implements Transformable, Serializable<Entity> {
     }
 
     public final Entity setModel(Model m) {
+
         this.model = m;
+
+        //Now set our animationComponent
+        removeComponent(animationComponent);
+        if(this.model.hasAnimations()) {
+            animationComponent = new AnimationComponent(this.model);
+            this.addComponent(animationComponent);
+        }
         return this;
     }
 
     public final void setModel(Collection<Model> models) {
 
         if(models.size() == 1){
-            setModel((Model) models.toArray()[0]);
+            Model ourModel = (Model) models.toArray()[0];
+            setModel(ourModel);
             return;
         }
 
@@ -771,5 +802,9 @@ public class Entity implements Transformable, Serializable<Entity> {
         for(Component c : components){
             c.onRemove();
         }
+    }
+
+    public boolean hasModel() {
+        return this.model != null;
     }
 }

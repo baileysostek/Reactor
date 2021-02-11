@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 public abstract class Component implements Serializable<Component>{
-    private int componentID;
+    private String componentName;
     protected Entity parent;
     private HashMap<String, Attribute> attributes = new HashMap<>();
 
@@ -22,15 +22,23 @@ public abstract class Component implements Serializable<Component>{
 //    private LinkedList<Event> events = new LinkedList<>();
     private HashMap<String, LinkedList<Event>> events = new HashMap<String, LinkedList<Event>>();
 
-    public Component(){
+    public Component(String componentName){
         ID = GLOBAL_ID;
         GLOBAL_ID++;
+        this.componentName = componentName;
     }
 
     //This is called when this component gets added to an entity
     public void onAdd(Entity e){
         parent = e;
-        syncAttributes(initialize());
+        LinkedList<Attribute> componentAttributes = initialize();
+        for(int i = 0; i < componentAttributes.size(); i++){
+            //TODO refactor to global string constant somewhere.
+            if(componentAttributes.get(i).getCategory().isEmpty()){
+                componentAttributes.get(i).setCategory(this.componentName);
+            }
+        }
+        syncAttributes(componentAttributes);
         setEventTargets(parent);
     }
 

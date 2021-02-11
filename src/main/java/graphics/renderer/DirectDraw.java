@@ -46,10 +46,13 @@ public class DirectDraw {
      */
 
     public void drawBones(Entity entity) {
-        if(entity.getModel() != null) {
+        if(entity.hasModel()) {
             if(entity.getModel().rootJoint != null) {
-                HashMap<String, Matrix4f> frames = entity.getModel().getAnimatedBoneTransforms();
-                drawBonesHelper(entity.getModel().getRootJoint(), entity.getTransform(), frames);
+                //TODO animation timeline
+                for(float i = 0; i < 1; i += 0.1f){
+                    HashMap<String, Matrix4f> frames = entity.getModel().getAnimatedBoneTransforms("animation", i);
+                    drawBonesHelper(entity.getModel().getRootJoint(), entity.getTransform(), frames);
+                }
             }
         }
     }

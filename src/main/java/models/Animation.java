@@ -1,8 +1,6 @@
 package models;
 
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -10,12 +8,13 @@ import java.util.LinkedList;
 
 public class Animation {
     public String name;
-    public double timescale = 1;
+
+    public double duration = 1;
 
     private HashMap<String, KeyFrame[]> keyFrames = new HashMap<>();
 
     public Animation(double timescale){
-        this.timescale = timescale;
+        this.duration = timescale;
     }
 
     public void importKeyFrames(HashMap<String, LinkedList<KeyFrame>> keyframes){
@@ -31,7 +30,8 @@ public class Animation {
     }
 
     public LinkedHashMap<String, Matrix4f> getBoneTransformsForTime(double delta_t) {
-        delta_t %= timescale;
+        delta_t *= duration;
+        delta_t %= duration;
         LinkedHashMap<String , Matrix4f> out = new LinkedHashMap<>();
 
         for(String bone : keyFrames.keySet()){
@@ -60,5 +60,9 @@ public class Animation {
         }
 
         return out;
+    }
+
+    public double getDuration() {
+        return duration;
     }
 }

@@ -26,13 +26,9 @@ public class Model implements Serializable<Model> {
     public LinkedHashMap<String, Joint> joints = new LinkedHashMap<>();
     public LinkedHashMap<String, Animation> animations = new LinkedHashMap<>();
 
-    public LinkedHashMap<String, Matrix4f> boneOffsets = new LinkedHashMap<>();
-
     //VAO
     private Handshake handshake;
     private VAO vao;
-
-    double time = 0;
 
     //Just used to create a new pointer so deserilize can be called
     public Model(int id){
@@ -55,8 +51,6 @@ public class Model implements Serializable<Model> {
 
         this.animations.clear();
         this.animations = animations;
-
-        this.boneOffsets = boneOffsets;
 
         this.joints = joints;
 
@@ -110,7 +104,7 @@ public class Model implements Serializable<Model> {
 
     //todo refactor
     public void update(double delta){
-        time+=delta;
+
     }
 
     public void setRootJoint(Joint joint) {
@@ -121,15 +115,13 @@ public class Model implements Serializable<Model> {
         return rootJoint;
     }
 
-    public LinkedHashMap<String, Matrix4f> getAnimatedBoneTransforms() {
-        int index = 0;
-        for(Animation anim : animations.values()){
-            if(index == animations.size() - 1) {
-                return anim.getBoneTransformsForTime(time);
-            }
-            index++;
+    public LinkedHashMap<String, Matrix4f> getAnimatedBoneTransforms(String animation, double deltaTime) {
+        if(animations.containsKey(animation)) {
+            return animations.get(animation).getBoneTransformsForTime(deltaTime);
+        }else{
+            //Get the first entry.
+            return ((Animation)animations.values().toArray()[0]).getBoneTransformsForTime(deltaTime);
         }
-        return null;
     }
 
     public String getPath(){
@@ -140,11 +132,11 @@ public class Model implements Serializable<Model> {
         return vao;
     }
 
-    public double getTime(){
-        return time;
+    public LinkedHashMap<String, Animation> getAnimations() {
+        return animations;
     }
 
-    public void setBoneOffsets(LinkedHashMap<String, Matrix4f> boneOffsets) {
-        this.boneOffsets = boneOffsets;
+    public boolean hasAnimations() {
+        return this.animations.size() > 0;
     }
 }

@@ -19,6 +19,7 @@ public class Interactable extends Component{
     private Callback distance_check_callback;
 
     public Interactable(){
+        super("Interactable");
         key   = new Attribute<Integer>("interactable_key"  , Keyboard.E);
         range = new Attribute<Float>  ("interactable_range", 2.5f);
 

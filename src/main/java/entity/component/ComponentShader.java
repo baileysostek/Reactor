@@ -9,6 +9,10 @@ public class ComponentShader extends Component {
     //Our attributes
     Attribute<String> shaderName = new Attribute<String>("Shader Name", "main");
 
+    public ComponentShader() {
+        super("Shader");
+    }
+
     @Override
     public void onRemove() {
 
