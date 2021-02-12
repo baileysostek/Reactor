@@ -121,8 +121,6 @@ public class ModelManager {
 
                 AIScene aiScene = Assimp.aiImportFileExWithProperties(resourceName,
                         Assimp.aiProcess_Triangulate |
-//                                Assimp.aiProcess_FlipWindingOrder |
-//                                Assimp.aiProcess_GenSmoothNormals|
                                 Assimp.aiProcess_FlipUVs |
                                 Assimp.aiProcess_CalcTangentSpace |
                                 Assimp.aiProcess_GenNormals |
@@ -345,63 +343,69 @@ public class ModelManager {
                 }
 
                 //For each vertex, get all data we need
-                for (int i = 0; i < mesh.mNumVertices(); i++) {
-                    //Get ref to vector
-                    AIVector3D position = mesh.mVertices().get(i);
-                    AIVector3D normal = mesh.mNormals().get(i);
-                    AIVector3D tangent = null;
-                    try{
-                        tangent = mesh.mTangents().get(i);
-                    }catch (NullPointerException e){
-                        System.out.println("Error: Imported model does not have tangent data encorporated.");
-                    }
-                    AIVector3D bitangent = null;
-                    try{
-                        tangent = mesh.mBitangents().get(i);
-                    }catch (NullPointerException e){
-                        System.out.println("Error: Imported model does not have tangent data encorporated.");
-                    }
+                for (int i = 0; i < mesh.mNumFaces(); i++) {
+                    AIFace face = mesh.mFaces().get(i);
+                    for(int faceVertexIndex = 0; faceVertexIndex < face.mNumIndices(); faceVertexIndex++){
+                        int index = face.mIndices().get(faceVertexIndex);
 
-                    AIVector3D texture = null;
-                    if (mesh.mTextureCoords(0) != null) {
-                        texture = mesh.mTextureCoords(0).get(i);
-                    }
+                        //Get ref to vector
+                        AIVector3D position = mesh.mVertices().get(index);
+                        AIVector3D normal = mesh.mNormals().get(index);
+                        AIVector3D tangent = null;
+                        try{
+                            tangent = mesh.mTangents().get(index);
+                        }catch (NullPointerException e){
+                            System.out.println("Error: Imported model does not have tangent data encorporated.");
+                        }
+                        AIVector3D bitangent = null;
+                        try{
+                            tangent = mesh.mBitangents().get(index);
+                        }catch (NullPointerException e){
+                            System.out.println("Error: Imported model does not have tangent data encorporated.");
+                        }
 
-                    //Add to our array
-                    vPositions[(i * 3) + 0] = position.x();
-                    vPositions[(i * 3) + 1] = position.y();
-                    vPositions[(i * 3) + 2] = position.z();
+                        AIVector3D texture = null;
+                        if (mesh.mTextureCoords(0) != null) {
+                            texture = mesh.mTextureCoords(0).get(index);
+                        }
 
-                    vNormals[(i * 3) + 0] = normal.x();
-                    vNormals[(i * 3) + 1] = normal.y();
-                    vNormals[(i * 3) + 2] = normal.z();
+                        //Add to our array
+                        vPositions[(i * 9) + (faceVertexIndex * 3) + 0] = position.x();
+                        vPositions[(i * 9) + (faceVertexIndex * 3) + 1] = position.y();
+                        vPositions[(i * 9) + (faceVertexIndex * 3) + 2] = position.z();
 
-                    if(tangent != null) {
-                        vTangents[(i * 3) + 0] = tangent.x();
-                        vTangents[(i * 3) + 1] = tangent.y();
-                        vTangents[(i * 3) + 2] = tangent.z();
-                    }else{
-                        vTangents[(i * 3) + 0] = 0;
-                        vTangents[(i * 3) + 1] = 0;
-                        vTangents[(i * 3) + 2] = 0;
-                    }
+                        vNormals[(i * 9) + (faceVertexIndex * 3) + 0] = normal.x();
+                        vNormals[(i * 9) + (faceVertexIndex * 3) + 1] = normal.y();
+                        vNormals[(i * 9) + (faceVertexIndex * 3) + 2] = normal.z();
 
-                    if(bitangent != null) {
-                        vBiTangents[(i * 3) + 0] = bitangent.x();
-                        vBiTangents[(i * 3) + 1] = bitangent.y();
-                        vBiTangents[(i * 3) + 2] = bitangent.z();
-                    }else{
-                        vBiTangents[(i * 3) + 0] = 0;
-                        vBiTangents[(i * 3) + 1] = 0;
-                        vBiTangents[(i * 3) + 2] = 0;
-                    }
+                        if(tangent != null) {
+                            vTangents[(i * 9) + (faceVertexIndex * 3) + 0] = tangent.x();
+                            vTangents[(i * 9) + (faceVertexIndex * 3) + 1] = tangent.y();
+                            vTangents[(i * 9) + (faceVertexIndex * 3) + 2] = tangent.z();
+                        }else{
+                            vTangents[(i * 9) + (faceVertexIndex * 3) + 0] = 0;
+                            vTangents[(i * 9) + (faceVertexIndex * 3) + 1] = 0;
+                            vTangents[(i * 9) + (faceVertexIndex * 3) + 2] = 0;
+                        }
 
-                    if (texture != null) {
-                        vTextures[(i * 2) + 0] = texture.x();
-                        vTextures[(i * 2) + 1] = texture.y();
-                    } else {
-                        vTextures[(i * 2) + 0] = 0;
-                        vTextures[(i * 2) + 1] = 0;
+                        if(bitangent != null) {
+                            vBiTangents[(i * 9) + (faceVertexIndex * 3) + 0] = bitangent.x();
+                            vBiTangents[(i * 9) + (faceVertexIndex * 3) + 1] = bitangent.y();
+                            vBiTangents[(i * 9) + (faceVertexIndex * 3) + 2] = bitangent.z();
+                        }else{
+                            vBiTangents[(i * 9) + (faceVertexIndex * 3) + 0] = 0;
+                            vBiTangents[(i * 9) + (faceVertexIndex * 3) + 1] = 0;
+                            vBiTangents[(i * 9) + (faceVertexIndex * 3) + 2] = 0;
+                        }
+
+                        if (texture != null) {
+                            vTextures[(i * 6) + (faceVertexIndex * 2) + 0] = texture.x();
+                            vTextures[(i * 6) + (faceVertexIndex * 2) + 1] = texture.y();
+                        } else {
+                            vTextures[(i * 6) + (faceVertexIndex * 2) + 0] = 0;
+                            vTextures[(i * 6) + (faceVertexIndex * 2) + 1] = 0;
+                        }
+
                     }
                 }
 
@@ -410,6 +414,7 @@ public class ModelManager {
                 HashMap<Integer, LinkedList<Integer>> vertBones = new HashMap<>();
                 HashMap<Integer, LinkedList<Float>> vertWeights = new HashMap<>();
 
+                //Num Faces * 3 = vertices * 3 = 3 weights per vertex
                 float[] vBoneIndices = new float[numVertices * 3];
                 float[] vBoneWeights = new float[numVertices * 3];
 
@@ -436,28 +441,35 @@ public class ModelManager {
                     }
                 }
 
-                for(int i = 0; i < numVertices; i++){
-                    //Indices //3 is max joints.
-                    int[] indices = new int[]{0, 0, 0};
-                    float[] weights = new float[]{1, 0, 0};
-                    if(vertBones.containsKey(i)){
-                        LinkedList<Integer> boneMapping = vertBones.get(i);
-                        for(int j = 0; j < Math.min(boneMapping.size(), indices.length); j++){
-                            indices[j] = boneMapping.get(j);
-                        }
-                        LinkedList<Float> boneWeights = vertWeights.get(i);
-                        for(int j = 0; j < Math.min(boneWeights.size(), weights.length); j++){
-                            weights[j] = boneWeights.get(j);
-                        }
-                    }
-                    vBoneIndices[(i * 3) + 0] = indices[0];
-                    vBoneIndices[(i * 3) + 1] = indices[1];
-                    vBoneIndices[(i * 3) + 2] = indices[2];
+                for(int i = 0; i < mesh.mNumFaces(); i++){
+                    AIFace face = mesh.mFaces().get(i);
+                    for(int faceSize = 0; faceSize < face.mNumIndices(); faceSize++){
+                        int faceIndex = face.mIndices().get(faceSize);
 
-                    vBoneWeights[(i * 3) + 0] = weights[0];
-                    vBoneWeights[(i * 3) + 1] = weights[1];
-                    vBoneWeights[(i * 3) + 2] = weights[2];
+                        //Indices //3 is max joints.
+                        int[] indices = new int[]{0, 0, 0};
+                        float[] weights = new float[]{1, 0, 0};
+                        if(vertBones.containsKey(faceIndex)){
+                            LinkedList<Integer> boneMapping = vertBones.get(faceIndex);
+                            for(int j = 0; j < Math.min(boneMapping.size(), indices.length); j++){
+                                indices[j] = boneMapping.get(j);
+                            }
+                            LinkedList<Float> boneWeights = vertWeights.get(faceIndex);
+                            for(int j = 0; j < Math.min(boneWeights.size(), weights.length); j++){
+                                weights[j] = boneWeights.get(j);
+                            }
+                        }
+                        vBoneIndices[(i * 9) + (faceSize * 3) + 0] = indices[0];
+                        vBoneIndices[(i * 9) + (faceSize * 3) + 1] = indices[1];
+                        vBoneIndices[(i * 9) + (faceSize * 3) + 2] = indices[2];
+
+                        vBoneWeights[(i * 9) + (faceSize * 3) + 0] = weights[0];
+                        vBoneWeights[(i * 9) + (faceSize * 3) + 1] = weights[1];
+                        vBoneWeights[(i * 9) + (faceSize * 3) + 2] = weights[2];
+                    }
                 }
+
+                System.out.println("Here");
 
 
                 Handshake modelHandshake = new Handshake();

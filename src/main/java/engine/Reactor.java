@@ -292,44 +292,44 @@ public class Reactor {
 //                EntityManager.getInstance().addEntity(sun);
 //                Entity drag = new Entity();
 //
-                Sprite sprite = new Sprite(1,1);
-                sprite.setPixelColor(0,0, Colors.RED);
-                sprite.flush();
-////
-                float size = 3f;
+//                Sprite sprite = new Sprite(1,1);
+//                sprite.setPixelColor(0,0, Colors.RED);
+//                sprite.flush();
 //
-                LinkedList<Entity> group = new LinkedList<Entity>();
-
-                for(int m = 0; m < size; m++){
-                    for(int r = 0; r < size; r++){
-                        Entity sphere = new Entity();
-                        sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
-                        sphere.setPosition(new Vector3f(r * 2.25f, m * 2.25f, 0));
-                        Material matTest = MaterialManager.getInstance().generateMaterial(sprite);
-
-                        Sprite metallic = new Sprite(1,1);
-                        metallic.setPixelColor(0,0, new Vector4f(new Vector3f((float)(m + 1) / (size + 1f)), 1));
-                        metallic.flush();
-
-                        matTest.setMetallicID(metallic.getTextureID());
-
-                        Sprite roughness = new Sprite(1,1);
-                        roughness.setPixelColor(0,0, new Vector4f(new Vector3f((float)(r + 1) / (size + 1f)), 1));
-                        roughness.flush();
-
-                        matTest.setRoughnessID(roughness.getTextureID());
-
-                        matTest.setShader("pbr");
-
-                        sphere.addAttribute(new Attribute<Float>("metallic", (float)(m + 1) / (size + 1f)));
-                        sphere.addAttribute(new Attribute<Float>("reflective", (float)(r + 1) / (size + 1f)));
-
-                        sphere.setMaterial(matTest);
-                        group.add(sphere);
-                    }
-                }
-
-                EntityManager.getInstance().addEntity(group);
+//                float size = 3f;
+//
+//                LinkedList<Entity> group = new LinkedList<Entity>();
+//
+//                for(int m = 0; m < size; m++){
+//                    for(int r = 0; r < size; r++){
+//                        Entity sphere = new Entity();
+//                        sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
+//                        sphere.setPosition(new Vector3f(r * 2.25f, m * 2.25f, 0));
+//                        Material matTest = MaterialManager.getInstance().generateMaterial(sprite);
+//
+//                        Sprite metallic = new Sprite(1,1);
+//                        metallic.setPixelColor(0,0, new Vector4f(new Vector3f((float)(m + 1) / (size + 1f)), 1));
+//                        metallic.flush();
+//
+//                        matTest.setMetallicID(metallic.getTextureID());
+//
+//                        Sprite roughness = new Sprite(1,1);
+//                        roughness.setPixelColor(0,0, new Vector4f(new Vector3f((float)(r + 1) / (size + 1f)), 1));
+//                        roughness.flush();
+//
+//                        matTest.setRoughnessID(roughness.getTextureID());
+//
+//                        matTest.setShader("pbr");
+//
+//                        sphere.addAttribute(new Attribute<Float>("metallic", (float)(m + 1) / (size + 1f)));
+//                        sphere.addAttribute(new Attribute<Float>("reflective", (float)(r + 1) / (size + 1f)));
+//
+//                        sphere.setMaterial(matTest);
+//                        group.add(sphere);
+//                    }
+//                }
+//
+//                EntityManager.getInstance().addEntity(group);
 
 
 //                Entity animatedModel = new Entity();
@@ -337,11 +337,16 @@ public class Reactor {
 //                animatedModel.addAttribute(new Attribute("updateInEditor", true));
 //                EntityManager.getInstance().addEntity(animatedModel);
 
+                Entity animatedModel = new Entity();
+                animatedModel.setModel(ModelManager.getInstance().loadModel("Running Forward Flip.fbx"));
+                animatedModel.addAttribute(new Attribute("updateInEditor", true));
+                animatedModel.setScale(0.1f);
+                EntityManager.getInstance().addEntity(animatedModel);
+
                 Entity animatedMode2 = new Entity();
-                animatedMode2.setModel(ModelManager.getInstance().loadModel("character.dae"));
+                animatedMode2.setModel(ModelManager.getInstance().loadModel("Pilot_LP_Animated.fbx"));
                 animatedMode2.addAttribute(new Attribute("updateInEditor", true));
                 animatedMode2.setPosition(-8, 0, 0);
-                animatedMode2.setRotation(new Vector3f(-90, 0, 0));
                 EntityManager.getInstance().addEntity(animatedMode2);
 
                 EntityManager.getInstance().addEntity(new Skybox());
