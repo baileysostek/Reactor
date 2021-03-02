@@ -147,4 +147,12 @@ public class MaterialManager {
     public Collection<Material> getAllMaterials() {
         return materials.values();
     }
+
+    public void updateShaderIndex(int old, int newVal) {
+        for(Material material : materials.values()){
+            if(material.getShaderID() == old){
+                material.setShader(newVal);
+            }
+        }
+    }
 }

@@ -27,7 +27,7 @@ public class DirectDraw {
 
         drawerLine = new ImmediateDrawLine();
         drawTriangle = new ImmediateDrawTriangle();
-        drawSprite = new ImmediateDrawSprite();
+//        drawSprite = new ImmediateDrawSprite();
 
     }
 
@@ -37,7 +37,7 @@ public class DirectDraw {
 
     //Quads and billboard
     public void drawBillboard(Vector3f pos, Vector2f scale, int texture){
-        drawSprite.drawSprite(pos, texture);
+//        drawSprite.drawSprite(pos, texture);
     }
 
 

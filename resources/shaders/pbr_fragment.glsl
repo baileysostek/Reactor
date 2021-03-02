@@ -9,12 +9,14 @@ precision highp float;
 precision highp sampler2D;
 
 #define maxLights 8
-#define maxPointLights 4
+#define maxPointLights 32
 #define specularStrength 0.1
 #define PI 3.14159265359
 
 // Inputs
 in vec3 passNormal;
+in vec3 passWeights;
+in vec3 passIndices;
 in vec2 passCoords;
 in vec3 passCamPos;
 in vec3 WorldPos;
@@ -43,8 +45,8 @@ uniform float lightIntensity[maxPointLights];
 uniform int  numPointLights;
 
 //Skybox and nearest Reflection probe
-uniform samplerCube nearestProbe;
 uniform samplerCube skybox;
+uniform samplerCube nearestProbe;
 
 float ShadowCalculation(int index)
 {
@@ -106,11 +108,12 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 void main(void){
     //Sample the Albedo texture
     vec4 albedo    = texture(textureID, passCoords);
+    albedo.rgb = passIndices.rgb;
     float metallic = texture(metallicID, passCoords).r;
     float ao       = texture(ambientOcclusionID, passCoords).r;
     float roughness= texture(roughnessID, passCoords).r;
 
-//    albedo.xyz = mix(albedo.xyz, getReflection(), metallic);
+    //    albedo.xyz = mix(albedo.xyz, getReflection(), metallic);
 
     //If this is a transparent pixel, dont do anything
     if(albedo.a < 0.5){
@@ -179,14 +182,16 @@ void main(void){
         float shadow = -ShadowCalculation(i);
 
         float NdotL = max(dot(N, L), 0.0);
-        Lo += (kD * albedo.xyz / PI + specular) * radiance * NdotL;
+        Lo += (kD * albedo.rgb / PI + specular) * radiance * NdotL;
     }
 
 
     //Get Ambient from IBL
     vec3 F = fresnelSchlick(NdotV, F0);
     vec3 kD = (1.0 - F) * (1.0 - metallic);
-    vec3 diffuse = texture(skybox, N).rgb * albedo.rgb * kD;
+    vec4 reflectionProbe = texture(nearestProbe, N * vec3(-1, -1, 1));
+    //    vec4 reflectionProbe = texture(nearestProbe, refract(N, V , 1) * vec3(-1, -1, 1));
+    vec3 diffuse = (texture(skybox, N).rgb + (reflectionProbe.rgb * reflectionProbe.a)).rgb * (albedo.rgb) * ( kD);
 
     vec3 ambient = diffuse * ao;
 

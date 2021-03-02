@@ -11,7 +11,7 @@ import particle.ParticleSystem;
 public abstract class Light extends Entity {
 
     Attribute<Vector3f> color        = new Attribute("color", new Vector3f(1)).setType(EnumAttributeType.COLOR);
-    Attribute<Vector3f> frustum      = new Attribute("frustum", new Vector3f(10, 1, 7.5f));
+    Attribute<Vector3f> frustum      = new Attribute("frustum", new Vector3f(10, 1, 16.0f));
     Attribute<Boolean>  castsShadows = new Attribute("castsShadows", false);
     Attribute<Float>    brightness   = new Attribute("brightness", (float) 10f);
 

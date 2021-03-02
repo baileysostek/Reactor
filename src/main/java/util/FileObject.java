@@ -4,6 +4,7 @@ package util;
 import java.io.File;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class FileObject{
@@ -14,12 +15,18 @@ public class FileObject{
     String relativePath;
     LinkedList<FileObject> children = new LinkedList<>();
 
+    private HashMap<EnumFileAction, LinkedList<Callback>> fileCallbacks = new HashMap<EnumFileAction, LinkedList<Callback>>();
+
     private DirectoryWatcher watcher;
 
     public FileObject(String directory){
+        //Get the file Object
         file = new File(StringUtils.getRelativePath()+directory);
+        //Define our name
         name = directory;
+        //Define our Path
         relativePath = directory;
+        //If we are a directory, get our children.
         if(file.isDirectory()){
             watcher = new DirectoryWatcher(directory);
             watcher.registerCallback(new Callback() {
@@ -34,12 +41,15 @@ public class FileObject{
                     WatchEvent.Kind<StandardWatchEventKinds> event = (WatchEvent.Kind<StandardWatchEventKinds>) objects[0];
                     //Create
                     if(event.equals(StandardWatchEventKinds.ENTRY_CREATE)){
-                        children.addLast(new FileObject(directory +"/"+ objects[1]));
+                        String newFileName = directory +"/"+ objects[1];
+                        children.addLast(new FileObject(newFileName));
+                        executeCallbacksFor(EnumFileAction.CREATE, newFileName);
                     }
                     //Delete
                     if(event.equals(StandardWatchEventKinds.ENTRY_DELETE)){
                         for(FileObject file : children){
                             if(file.getRelativePath().endsWith(objects[1].toString())){
+                                executeCallbacksFor(EnumFileAction.DELETE, objects[1].toString());
                                 children.remove(file);
                                 break;
                             }
@@ -47,8 +57,9 @@ public class FileObject{
                     }
                     //Modify
                     if(event.equals(StandardWatchEventKinds.ENTRY_MODIFY)){
-                        System.out.println("File:" + relativePath + "/" + fileName);
-                        StringUtils.recacheFile(relativePath + "/" + fileName);
+                        String modifiedFileName = relativePath + "/" + fileName;
+                        executeCallbacksFor(EnumFileAction.MODIFY, modifiedFileName);
+                        StringUtils.recacheFile(modifiedFileName);
                     }
                     return null;
                 }
@@ -87,15 +98,26 @@ public class FileObject{
         return name;
     }
 
-//    public String getData(){
-//        return this.data;
-//    }
-
     public String getFileExtension(){
         return fileExtension;
     }
 
     public String getRelativePath() {
         return relativePath;
+    }
+
+    private void executeCallbacksFor(EnumFileAction action, Object ... args){
+        if(this.fileCallbacks.containsKey(action)){
+            for(Callback callback : this.fileCallbacks.get(action)){
+                callback.callback(args);
+            }
+        }
+    }
+
+    public void registerCallback(EnumFileAction action, Callback callback) {
+        if(!this.fileCallbacks.containsKey(action)){
+            this.fileCallbacks.put(action, new LinkedList<Callback>());
+        }
+        this.fileCallbacks.get(action).add(callback);
     }
 }

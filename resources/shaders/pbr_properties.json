@@ -1,6 +1,6 @@
 {
   "Name":"main",
-  "Version": "#version 100",
+  "Version": "#version 400",
   "Vertex":{
     "Attributes": {
       "vPosition": "vec4",
@@ -17,6 +17,14 @@
       "t_scale": "vec2",
       "lightSpaceMatrix": "mat4",
       "jointTransforms": "mat4"
+    },
+    "SSBO": {
+      "Bones": {
+        "positions": {
+          "type": "vec3",
+          "size": 1
+        }
+      }
     },
     "Varying": {
 

@@ -7,6 +7,7 @@ import entity.EntityEditor;
 import entity.EntityManager;
 import entity.component.Attribute;
 import graphics.renderer.Renderer;
+import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
@@ -21,8 +22,10 @@ import material.MaterialManager;
 import models.Model;
 import models.ModelManager;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import particle.ParticleSystem;
+import reflection.Probe;
 import skybox.Skybox;
 import sound.SoundEmitter;
 import util.Callback;
@@ -84,6 +87,27 @@ public class EntityRegistry extends UIComponet {
         quad.getAttribute("name").setData("Quad");
         addEntity("Geometry", quad);
 
+        Sprite sprite = new Sprite(1,1);
+        sprite.setPixelColor(0,0, Colors.RED);
+        sprite.flush();
+        Material matTest2 = MaterialManager.getInstance().generateMaterial(sprite);
+
+        Sprite metallic = new Sprite(1,1);
+        metallic.setPixelColor(0,0, new Vector4f(new Vector3f(0.125f), 1));
+        metallic.flush();
+
+        matTest2.setMetallicID(metallic.getTextureID());
+        matTest2.setRoughnessID(metallic.getTextureID());
+
+        matTest2.setShader("pbr");
+
+        Entity animatedMode2 = new Entity();
+        animatedMode2.setModel(ModelManager.getInstance().loadModel("Pilot_LP_Animated.fbx"));
+        animatedMode2.addAttribute(new Attribute("updateInEditor", true));
+        animatedMode2.setMaterial(matTest2);
+        addEntity("Animation", animatedMode2);
+
+
 //        Entity dragon = new Entity();
 //        dragon.setModel(ModelManager.getInstance().loadModel("dragon.obj").getFirst());
 //        dragon.getAttribute("name").setData("Dragon");
@@ -140,8 +164,12 @@ public class EntityRegistry extends UIComponet {
         addEntity("Particles", system);
 
         Skybox skybox = new Skybox();
+        skybox.getAttribute("name").setData("Skybox");
         addEntity("Skybox", skybox);
 
+        Probe probe = new Probe();
+        probe.getAttribute("name").setData("Reflection Probe");
+        addEntity("Skybox", probe);
 
         Entity soundEmitter = new SoundEmitter();
         soundEmitter.getAttribute("name").setData("Sound Emitter");

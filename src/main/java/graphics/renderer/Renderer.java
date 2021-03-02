@@ -1,5 +1,6 @@
 package graphics.renderer;
 
+import camera.Camera;
 import camera.CameraManager;
 import camera.DynamicCamera;
 import engine.Reactor;
@@ -18,6 +19,8 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL46;
+import reflection.Probe;
+import reflection.ProbeManager;
 import skybox.SkyboxManager;
 import util.Callback;
 import util.StopwatchManager;
@@ -42,6 +45,15 @@ public class Renderer{
     public static final float NEAR_PLANE = 0.1f;
     public static final float FAR_PLANE = 1024.0f;
     //Reserve the first 7 textures for PBR
+    // 0 - Albedo
+    // 1 - Normal
+    // 2 - Metallic
+    // 3 - Roughness
+    // 4 - AO
+    // 5 - Skybox
+    // 6 - Nearest Probe
+    // 7 - (Max allowable) shadow maps Maybe replace with 4 cascading shadow maps.
+
     public static final int TEXTURE_OFFSET = 7;
 
     private float aspectRatio = 1.0f;
@@ -63,6 +75,8 @@ public class Renderer{
     private boolean fboBound = false;
 
     private Handshake cube;
+
+    private int batches = 0;
 
     private Renderer(int width, int height){
         if(Reactor.isDev()) {
@@ -179,7 +193,17 @@ public class Renderer{
             GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
         }
 
-        GL46.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+        batches = renderWorld(CameraManager.getInstance().getActiveCamera(), projectionMatrix);
+
+    }
+
+    public int renderWorld(Camera observer, float[] projection){
+        return renderWorld(observer.getPosition(), observer.getTransformationMatrix(), projection);
+    }
+
+    public int renderWorld(Vector3f pos, Matrix4f observer, float[] projection){
+
+        GL46.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GL46.glEnable(GL46.GL_DEPTH_TEST);
         GL46.glEnable(GL46.GL_STENCIL_TEST);
         GL46.glEnable(GL46.GL_CULL_FACE);
@@ -192,10 +216,6 @@ public class Renderer{
 
         //Render all entities
 //        StopwatchManager.getInstance().getTimer("drawCalls").start();
-//        int lastID = -1;
-//        int lastTexture = -1;
-//        int loads = 0;
-
 
         LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches = EntityManager.getInstance().getBatches();
 
@@ -211,9 +231,11 @@ public class Renderer{
 
                 ShaderManager.getInstance().useShader(shaderID);
 
-                ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", CameraManager.getInstance().getActiveCamera().getPosition());
-                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
-                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"), false, projectionMatrix);
+                //
+                ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", pos);
+                //TODO maybe memory leak
+                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, observer.get(new float[16]));
+                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "perspective"), false, projection);
 
                 //Pos -2 is skybox
                 GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
@@ -221,6 +243,13 @@ public class Renderer{
                 GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
 
                 //-1 is closest probe to entity
+                Probe probe = ProbeManager.getInstance().getClosest(CameraManager.getInstance().getActiveCamera().getPosition());
+                if(probe != null) {
+                    GL46.glActiveTexture(GL46.GL_TEXTURE0 + 6);
+                    GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, probe.getReflectionProbeTextureID());
+                    GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "nearestProbe"), 6);
+                }
+
 
                 //Compute per frame, refactor to per entity eventually
                 LinkedList<DirectionalLight> shadowCasters = LightingManager.getInstance().getClosestLights(5, new Vector3f(0));
@@ -259,9 +288,7 @@ public class Renderer{
                 numDrawCalls++;
             }
         }
-
-        UIManager.getInstance().drawString(128, 4, "Batches:" + numDrawCalls);
-
+        return numDrawCalls;
     }
 
     public void postpare(){
@@ -447,5 +474,9 @@ public class Renderer{
 
     public Vector2f getScreenSize(){
         return screenSize;
+    }
+
+    public int getBatches() {
+        return batches;
     }
 }

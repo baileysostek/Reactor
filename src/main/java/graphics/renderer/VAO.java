@@ -29,6 +29,7 @@ public class VAO {
 
     private LinkedHashMap<String, EnumGLDatatype> uniforms = new LinkedHashMap<>();
     private HashMap<String, Float> uniformDefaults = new HashMap<>();
+    private HashMap<String, Integer> uniformOffsets = new HashMap<>();
 
     /*
         NOTE the only thing that is crucial is that index 0 of this array contains the triangulated model data such that VBO[0] / 3 = #of trinagles to render.
@@ -47,6 +48,8 @@ public class VAO {
 
     //Store our animations
     Model model;
+
+    SSBO bones;
 
     public VAO(Model model){
         //Create our vao
@@ -68,8 +71,8 @@ public class VAO {
 
         //Any uniform loads go here.
         registerUniform("transform", EnumGLDatatype.MAT4);
-        registerUniform("jointIndices", EnumGLDatatype.VEC3);
-        registerUniform("boneWeights", EnumGLDatatype.VEC3, 1f / (float)EnumGLDatatype.VEC3.sizePerVertex);
+        registerUniform("jointIndices", EnumGLDatatype.VEC3, 0, model.getNumBones());
+        registerUniform("boneWeights", EnumGLDatatype.VEC3, 1f / (float)EnumGLDatatype.VEC3.sizePerVertex, model.getNumBones());
 
         //Lets see if we are animated
         this.animated = model.animations.size() > 0;
@@ -170,6 +173,11 @@ public class VAO {
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
         GL46.glBindVertexArray(0);
+
+
+        //Generate an SSBO for our Bones
+        bones = SSBOManager.getInstance().generateSSBO(EnumGLDatatype.VEC3);
+        bones.allocate(4);
     }
 
     private VBO allocateUniform(String name, int index){
@@ -197,11 +205,19 @@ public class VAO {
     private void registerUniform(String uniformName, EnumGLDatatype datatype){
         this.uniforms.put(uniformName, datatype);
         this.uniformDefaults.put(uniformName, 0f);
+        this.uniformOffsets.put(uniformName, 1);
     }
 
     private void registerUniform(String uniformName, EnumGLDatatype datatype, float defaultData){
         this.uniforms.put(uniformName, datatype);
         this.uniformDefaults.put(uniformName, defaultData);
+        this.uniformOffsets.put(uniformName, 1);
+    }
+
+    private void registerUniform(String uniformName, EnumGLDatatype datatype, float defaultData, int unitsPerEntity){
+        this.uniforms.put(uniformName, datatype);
+        this.uniformDefaults.put(uniformName, defaultData);
+        this.uniformOffsets.put(uniformName, unitsPerEntity);
     }
 
     /*
@@ -320,18 +336,6 @@ public class VAO {
         //IF this is an animated model load the bone transforms
         loop:{
             if (animated) {
-//                for (Animation animation : model.animations.values()) {
-//
-//                    LinkedHashMap<String, Matrix4f> posePositions = animation.getBoneTransformsForTime(model.getTime());
-//                    //Load from animation
-//                    int maxBones = 50;
-//                    int index = 0;
-//                    for(String boneName : posePositions.keySet()){
-//                        Matrix4f posePosition = posePositions.get(boneName);
-//                        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("jointTransforms", index, posePosition.mul(new Matrix4f(model.joints.get(boneName).getLocalBindTransform()).invert()));
-//                        index++;
-//                    }
-//                }
                 HashMap<String, Matrix4f> frames = model.getAnimatedBoneTransforms("animation", (double)((Entity)toRender.toArray()[0]).getAttribute("animationIndex").getData());
                 applyPoseToJoints(frames, model.rootJoint, new Matrix4f().identity());
 
@@ -368,6 +372,12 @@ public class VAO {
             index++;
         }
 
+        bones.setData(0, new float[]{1, 1, 1});
+        bones.setData(1, new float[]{0, 1, 1});
+        bones.setData(2, new float[]{0, 1, 0});
+        bones.setData(3, new float[]{1, 0, 1});
+        bones.flush();
+
         //Actual draw call.
         GL46.glDrawArraysInstanced(GL46.GL_TRIANGLES, 0, numFaces, renderCount);
 
@@ -391,20 +401,6 @@ public class VAO {
     public int getID() {
         return VAO_DI;
     }
-
-//    private void calculateBonePositionHelper(Joint root, Matrix4f parentTransform, HashMap<String, Matrix4f> frames, HashMap<String, Matrix4f> out) {
-//        if(frames.containsKey(root.getName())) {
-//            Matrix4f animationOffset = new Matrix4f(frames.get(root.getName()));
-////            Matrix4f currentTransform = new Matrix4f(animationOffset).mul(parentTransform);
-//
-//            for (Joint childJoint : root.getChildren()) {
-//                calculateBonePositionHelper(childJoint, animationOffset, frames, out);
-//            }
-//
-//            out.put(root.getName(), new Matrix4f(parentTransform).mul(new Matrix4f(animationOffset)));
-////            out.put(root.getName(), new Matrix4f(parentTransform).invert().mul(currentTransform));
-//        }
-//    }
 
 
     private void applyPoseToJoints(HashMap<String, Matrix4f> currentPose, Joint joint, Matrix4f parentTransform) {

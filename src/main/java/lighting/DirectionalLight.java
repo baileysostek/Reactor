@@ -10,6 +10,7 @@ import graphics.sprite.SpriteBinder;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 import particle.ParticleSystem;
 import util.Callback;
 
@@ -23,11 +24,9 @@ public class DirectionalLight extends Light {
     public DirectionalLight(){
         super();
         depthBuffer = new FBO();
-        setTexture(depthBuffer.getDepthTexture());
         addAttribute(new Attribute<Vector3f>("targetPoint", new Vector3f(0)));
 
         this.getAttribute("castsShadows").setShouldBeSerialized(false).setData(true);
-        super.setTexture(SpriteBinder.getInstance().loadSVG("engine/svg/sun.svg", 1, 1, 96f));
 
         resize = new Callback() {
             @Override
@@ -44,6 +43,8 @@ public class DirectionalLight extends Light {
     public void onAdd(){
         Renderer.getInstance().addResizeCallback(resize);
         super.onAdd();
+//        super.setTexture(SpriteBinder.getInstance().loadSVG("engine/svg/sun.svg", 1, 1, 96f));
+        super.setTexture(depthBuffer.getDepthTexture());
     }
 
     @Override
@@ -76,9 +77,12 @@ public class DirectionalLight extends Light {
     public void renderInEditor(boolean selected){
         DirectDraw.getInstance().drawArrow(new Vector3f(this.getPosition()), new Vector3f(0, 0, 0).sub(this.getPosition()).normalize().add(this.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, (Vector3f) this.getAttribute("color").getData());
 
-        DirectDraw.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), 0);
+//        DirectDraw.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), 0);
 
         if(selected) {
+
+            DirectDraw.getInstance().drawArrow(new Vector3f(this.getPosition()), new Vector3f((Vector3fc) this.getAttribute("targetPoint").getData()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, (Vector3f) this.getAttribute("color").getData());
+
             Vector3f frustum = (Vector3f) this.getAttribute("frustum").getData();
 
             Vector3f CYAN = new Vector3f(0, 1, 1);
@@ -106,6 +110,11 @@ public class DirectionalLight extends Light {
     public float[] getLightspaceTransform() {
         Vector3f frustum = (Vector3f) this.getAttribute("frustum").getData();
         return new Matrix4f().ortho(-frustum.x, frustum.x, -frustum.x,frustum.x, frustum.y, frustum.z).mul(viewMatrix).get(new float[16]);
+    }
+
+    public Matrix4f getLightspaceTransformMatrix() {
+        Vector3f frustum = (Vector3f) this.getAttribute("frustum").getData();
+        return new Matrix4f().ortho(-frustum.x, frustum.x, -frustum.x,frustum.x, frustum.y, frustum.z).mul(viewMatrix);
     }
 
     public FBO getDepthBuffer() {

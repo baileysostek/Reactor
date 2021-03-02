@@ -366,4 +366,16 @@ public class Sprite implements Serializable<Sprite> {
 
         return this;
     }
+
+    public ByteBuffer getBuffer() {
+        ByteBuffer buffer = ByteBuffer.allocateDirect(pixels.length * 4);
+        for (int pixel : pixels) {
+            buffer.put((byte) ((pixel >> 16) & 0xFF));
+            buffer.put((byte) ((pixel >> 8) & 0xFF));
+            buffer.put((byte) (pixel & 0xFF));
+            buffer.put((byte) (pixel >> 24));
+        }
+        buffer.flip();
+        return buffer;
+    }
 }

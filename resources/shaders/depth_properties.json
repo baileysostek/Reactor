@@ -3,13 +3,23 @@
   "Version": "#version 400",
   "Vertex":{
     "Attributes": {
-      "vPosition": "vec4"
+      "vPosition": "vec4",
+      "vNormal": "vec3",
+      "vColor": "vec3",
+      "vTexture": "vec2"
     },
     "Uniforms": {
-      "lightSpaceMatrix":"mat4",
-      "model":"mat4"
+      "transformation":"mat4",
+      "perspective":"mat4",
+      "view":"mat4",
+      "cameraPos": "vec3",
+      "t_offset":"vec2",
+      "t_scale": "vec2",
+      "lightSpaceMatrix": "mat4",
+      "jointTransforms": "mat4"
     },
     "Varying": {
+
     }
   },
   "Fragment":{

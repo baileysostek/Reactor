@@ -1,14 +1,17 @@
 package models;
 
 import com.google.gson.JsonObject;
+import entity.Entity;
 import graphics.renderer.Handshake;
 import graphics.renderer.VAO;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.assimp.AIBone;
 import serialization.Serializable;
 import util.FileObject;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -124,6 +127,30 @@ public class Model implements Serializable<Model> {
         }
     }
 
+//    public Matrix4f getAnimatedBoneTransform(String animation, String bone, double deltaTime){
+//        if(animations.containsKey(animation)) {
+//            return drawBonesHelper(getRootJoint(), bone, new Matrix4f().identity(), deltaTime);
+//        }
+//        return new Matrix4f().identity();
+//    }
+//
+//    private Matrix4f drawBonesHelper(Joint root, String search, Matrix4f parentTransform, HashMap<String, Matrix4f> frames) {
+//        if(frames.containsKey(root.getName())) {
+//            Matrix4f animationOffset = frames.get(root.getName());
+//            Matrix4f currentTransform = new Matrix4f(parentTransform).mul(animationOffset);
+//            for (Joint childJoint : root.getChildren()) {
+//                drawBonesHelper(childJoint, currentTransform, frames);
+//            }
+//            Vector4f parentPos = new Vector4f(0, 0, 0, 1).mul(parentTransform);
+//            Vector4f childPos = new Vector4f(0, 0, 0, 1).mul(currentTransform);
+//
+//            if(){
+//
+//            }
+//        }
+//        return null;
+//    }
+
     public String getPath(){
         return path;
     }
@@ -138,5 +165,13 @@ public class Model implements Serializable<Model> {
 
     public boolean hasAnimations() {
         return this.animations.size() > 0;
+    }
+
+    public int getNumBones(){
+        return this.joints.size();
+    }
+
+    public Collection<String> getBoneNames(){
+        return this.joints.keySet();
     }
 }

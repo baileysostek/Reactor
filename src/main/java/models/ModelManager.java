@@ -194,7 +194,7 @@ public class ModelManager {
             AIAnimation aiAnimation = AIAnimation.create(scene.mAnimations().get(i));
             String animationName = aiAnimation.mName().dataString();
             System.out.println("Animation found in model data:" + animationName);
-            Animation animation = new Animation(aiAnimation.mDuration());
+            Animation animation = new Animation(aiAnimation.mDuration(), (float)aiAnimation.mTicksPerSecond());
             HashMap<String, LinkedList<KeyFrame>> keyframes = new HashMap<>();
             HashMap<String, LinkedList<AIBone>> bones = new HashMap<>();
 
@@ -316,6 +316,8 @@ public class ModelManager {
                     if(name.contains("file")) {
                         String propValue = StandardCharsets.UTF_8.decode(prop.mData()).toString();
                         System.out.println("Texture file:" + propValue);
+                    }else{
+                        System.out.println("Other Prop:" + name + " = " + StandardCharsets.UTF_8.decode(prop.mData()).toString());
                     }
                 }
             }
@@ -468,9 +470,6 @@ public class ModelManager {
                         vBoneWeights[(i * 9) + (faceSize * 3) + 2] = weights[2];
                     }
                 }
-
-                System.out.println("Here");
-
 
                 Handshake modelHandshake = new Handshake();
                 modelHandshake.addAttributeList("vPosition", vPositions, EnumGLDatatype.VEC3);

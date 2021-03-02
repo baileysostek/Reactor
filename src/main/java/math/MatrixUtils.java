@@ -25,6 +25,23 @@ public class MatrixUtils {
         return new Matrix4f().perspective(Renderer.FOV, Renderer.getInstance().getAspectRatio(), Renderer.NEAR_PLANE, Renderer.FAR_PLANE).get(new float[16]);
     }
 
+    public static float[] createProjectionMatrix(float FOV, float aspectRatio, float near, float far) {
+        Matrix4f out = new Matrix4f();
+
+        float y_scale = (float) ((1f / Math.tan(Math.toRadians(FOV / 2f))));
+        float x_scale = y_scale / aspectRatio;
+        float frustumLength = far - near;
+
+        out.m00(x_scale);
+        out.m11(y_scale);
+        out.m22(-((far + near) / frustumLength));
+        out.m23(-1);
+        out.m32(-((2 * near * far) / frustumLength));
+        out.m33(0);
+
+        return out.get(new float[16]);
+    }
+
     public static float[] scaleM(float[] matrix, int offset, float scaleX, float scaleY, float scaleZ){
         Matrix4f matrix4f = new Matrix4f().set(matrix, offset);
         matrix4f = matrix4f.scale(scaleX, scaleY, scaleZ);

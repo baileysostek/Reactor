@@ -10,6 +10,7 @@ import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.nanovg.NSVGImage;
 import org.lwjgl.nanovg.NanoSVG;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL46;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.stb.STBImageResize;
@@ -369,6 +370,21 @@ public class SpriteBinder {
         return textureID;
     }
 
+    public int generateCubeMap(int size){
+        int textureID = this.genTexture();
+        GL46.glActiveTexture(GL46.GL_TEXTURE0);
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, textureID);
+        for(int i = 0; i < 6; i++){
+            GL46.glTexImage2D(GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL46.GL_RGBA8, size, size, 0, GL46.GL_RGB, GL46.GL_FLOAT, (FloatBuffer) null);
+        }
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_S, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_T, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_R, GL46.GL_CLAMP_TO_EDGE);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_LINEAR);
+        GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MAG_FILTER, GL46.GL_LINEAR);
+        GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, 0);
+        return textureID;
+    }
 
     public void updateCubeMap(int textureID, Vector4f color) {
         if(cubemapTextures.contains(textureID)) {
@@ -413,17 +429,8 @@ public class SpriteBinder {
         for(int i = 0; i < 6; i++){
             Sprite sprite = SpriteBinder.getInstance().load(location+"/"+names[i].toLowerCase()+".png");
 
-            int[] pixels = sprite.getPixels();
-            ByteBuffer buffer = ByteBuffer.allocateDirect(pixels.length * 4);
-            for (int pixel : pixels) {
-                buffer.put((byte) ((pixel >> 16) & 0xFF));
-                buffer.put((byte) ((pixel >> 8) & 0xFF));
-                buffer.put((byte) (pixel & 0xFF));
-                buffer.put((byte) (pixel >> 24));
-            }
-            buffer.flip();
 
-            GL46.glTexImage2D(GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL46.GL_RGBA, sprite.getWidth(), sprite.getHeight(), 0, GL46.GL_RGBA, GL46.GL_UNSIGNED_BYTE, buffer);
+            GL46.glTexImage2D(GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL46.GL_RGBA, sprite.getWidth(), sprite.getHeight(), 0, GL46.GL_RGBA, GL46.GL_UNSIGNED_BYTE, sprite.getBuffer());
         }
 
         GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_MIN_FILTER, GL46.GL_LINEAR);
@@ -466,8 +473,9 @@ public class SpriteBinder {
         int envCubemap = this.genTexture();
         GL46.glActiveTexture(GL46.GL_TEXTURE0);
         GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, envCubemap);
+
         for(int i = 0; i < 6; i++){
-            GL46.glTexImage2D(GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL46.GL_RGB32F, 512, 512, 0, GL46.GL_RGB, GL46.GL_FLOAT, (FloatBuffer) null);
+            GL46.glTexImage2D(GL46.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL46.GL_RGB16F, 512, 512, 0, GL46.GL_RGB, GL46.GL_FLOAT, (FloatBuffer) null);
         }
         GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_S, GL46.GL_CLAMP_TO_EDGE);
         GL46.glTexParameteri(GL46.GL_TEXTURE_CUBE_MAP, GL46.GL_TEXTURE_WRAP_T, GL46.GL_CLAMP_TO_EDGE);
@@ -503,7 +511,7 @@ public class SpriteBinder {
 
         int cubeRBO = GL46.glGenRenderbuffers();
         GL46.glBindRenderbuffer(GL46.GL_RENDERBUFFER, cubeRBO);
-        GL46.glRenderbufferStorage(GL46.GL_RENDERBUFFER, GL46.GL_DEPTH_COMPONENT24, 512, 512);
+        GL46.glRenderbufferStorage(GL46.GL_RENDERBUFFER, GL46.GL_DEPTH_COMPONENT16, 512, 512);
         GL46.glFramebufferRenderbuffer(GL46.GL_FRAMEBUFFER, GL46.GL_DEPTH_ATTACHMENT, GL46.GL_RENDERBUFFER, cubeRBO);
 
         GL46.glViewport(0, 0, 512, 512);
@@ -555,7 +563,12 @@ public class SpriteBinder {
         extraIDS.addLast(envCubemap);
         GL46.glViewport(0, 0, Renderer.getWIDTH(), Renderer.getHEIGHT());
 
-        return irradianceMap;
+        System.out.println("FBO:" + cubeFBO);
+        System.out.println("irradianceMap:" + irradianceMap);
+        System.out.println("hdrTextureID:" + hdrTextureID);
+        System.out.println("envCubemap:" + envCubemap);
+
+        return envCubemap;
     }
 
     public void renderCube(int shader){

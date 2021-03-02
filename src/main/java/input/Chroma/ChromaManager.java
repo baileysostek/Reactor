@@ -25,7 +25,7 @@ public class ChromaManager implements Runnable{
 
     //Desired colors to set keys to
     private static ConcurrentHashMap<Integer, KeyColorDuration> keyColorsAdd = new ConcurrentHashMap<>();
-    private static HashMap<Integer, KeyColorDuration> keyColors = new HashMap<>();
+    private static ConcurrentHashMap<Integer, KeyColorDuration> keyColors = new ConcurrentHashMap<>();
 
     private boolean isInitialized = false;
 

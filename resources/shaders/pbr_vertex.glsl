@@ -1,4 +1,4 @@
-#version 400
+#version 430
 
 //Set prescision
 precision highp int;
@@ -23,6 +23,9 @@ layout(location =  8) in vec4 transform_1;
 layout(location =  9) in vec4 transform_2;
 layout(location = 10) in vec4 transform_3;
 
+layout(std430, binding = 0) buffer blocksData{
+    vec3[3] color;
+} buf1;
 
 //Uniform variables
 uniform mat4 view;           // Cameras position in space
@@ -37,6 +40,8 @@ uniform mat4 jointTransforms[MAX_JOINTS];
 
 // Outputs
 out vec3 passNormal;
+out vec3 passWeights;
+out vec3 passIndices;
 out vec3 passCamPos;
 out vec2 passCoords;
 out vec3 WorldPos;
@@ -57,14 +62,13 @@ void main(){
         transform_3
     );
 
-    mat4 identity = mat4(
+    //Calculate a transform in space representing this vertex's bone deformation as a sum of 3 parts whos weights add to 1./
+    mat4 boneTransform = (jointTransforms[uint(boneIndices.x)] * boneWeights.x) + (jointTransforms[uint(boneIndices.y)] * boneWeights.y) + (jointTransforms[uint(boneIndices.z)] * boneWeights.z);
+    boneTransform = mat4(
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
     0, 0, 0, 1);
-
-    //Calculate a transform in space representing this vertex's bone deformation as a sum of 3 parts whos weights add to 1./
-    mat4 boneTransform = (jointTransforms[uint(boneIndices.x)] * boneWeights.x) + (jointTransforms[uint(boneIndices.y)] * boneWeights.y) + (jointTransforms[uint(boneIndices.z)] * boneWeights.z);
 
     //Transdform the normnal vectors of this model by its transform.
     vec4 offsetNormal = transform * vec4(mat3(boneTransform) * vNormal.xyz, 1.0);
@@ -75,6 +79,9 @@ void main(){
     WorldPos = worldPosition.xyz;
 
     passCoords = vTexture;
+
+    passWeights = boneWeights;
+    passIndices = buf1.color[gl_InstanceID];
 
     //Camera Direction
     passCamPos = cameraPos * -1;

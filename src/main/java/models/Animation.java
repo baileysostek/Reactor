@@ -9,12 +9,14 @@ import java.util.LinkedList;
 public class Animation {
     public String name;
 
-    public double duration = 1;
+    public double duration  = 1;
+    public double frameRate = 1;
 
     private HashMap<String, KeyFrame[]> keyFrames = new HashMap<>();
 
-    public Animation(double timescale){
+    public Animation(double timescale, float frameRate){
         this.duration = timescale;
+        this.frameRate = frameRate;
     }
 
     public void importKeyFrames(HashMap<String, LinkedList<KeyFrame>> keyframes){
@@ -64,5 +66,9 @@ public class Animation {
 
     public double getDuration() {
         return duration;
+    }
+
+    public double getFramesPerSecond() {
+        return frameRate;
     }
 }

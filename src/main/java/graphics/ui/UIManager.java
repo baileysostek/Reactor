@@ -74,7 +74,7 @@ public class UIManager{
             NanoVG.nvgText(Reactor.getVg(), text.posX, text.posY, text.text);
         }
 
-        NanoVG.nvgText(Reactor.getVg(), 4, 4, "FPS:" + Reactor.getFPS());
+        NanoVG.nvgText(Reactor.getVg(), 4, 4, "FPS:" + Reactor.getFPS() + " Batches:" + Renderer.getInstance().getBatches());
 
         for(Renderable r : drawCalls){
             if(r instanceof LineRender){

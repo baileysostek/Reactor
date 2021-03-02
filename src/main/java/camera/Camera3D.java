@@ -10,7 +10,7 @@ import serialization.SerializationHelper;
 public class Camera3D extends Camera{
 
     //Camera controls
-    float speed = 0.1f;
+    float speed = 24.0f;
 
     public Camera3D(){
         //Pass by reference or value
@@ -29,26 +29,26 @@ public class Camera3D extends Camera{
     public void update(double delta){
 
         if(Keyboard.getInstance().isKeyPressed(Keyboard.W)){
-            this.translate(super.getLookingDirection().mul(-speed));
+            this.translate(super.getLookingDirection().mul((float) (-speed * delta)));
         }
         if(Keyboard.getInstance().isKeyPressed(Keyboard.S)){
-            this.translate(super.getLookingDirection().mul(speed));
+            this.translate(super.getLookingDirection().mul((float) (speed * delta)));
         }
         if(Keyboard.getInstance().isKeyPressed(Keyboard.A)){
             //TODO store a buffered quaternion set and Matrix 4f set to reduce memory fragmentation
             Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -90).normalize();
-            super.translate((new Vector3f(0, 0, -1).mul(super.speed)).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * super.getRotationV().y())).normalize()));
+            super.translate((new Vector3f(0, 0, -1).mul((float) (speed * delta))).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * super.getRotationV().y())).normalize()));
         }
         if(Keyboard.getInstance().isKeyPressed(Keyboard.D)){
             //TODO store a buffered quaternion set and Matrix 4f set to reduce memory fragmentation
             Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), 90).normalize();
-            super.translate((new Vector3f(0, 0, -1).mul(super.speed)).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * super.getRotationV().y())).normalize()));
+            super.translate((new Vector3f(0, 0, -1).mul((float) (speed * delta))).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * super.getRotationV().y())).normalize()));
         }
         if(Keyboard.getInstance().isKeyPressed(Keyboard.E)){
-            super.translate(new Vector3f(0, -speed, 0));
+            super.translate(new Vector3f(0, (float) (-speed * delta), 0));
         }
         if(Keyboard.getInstance().isKeyPressed(Keyboard.Q)){
-            super.translate(new Vector3f(0, speed, 0));
+            super.translate(new Vector3f(0, (float) (speed * delta), 0));
         }
 
     }

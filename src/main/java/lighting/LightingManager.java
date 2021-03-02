@@ -3,6 +3,7 @@ package lighting;
 import camera.CameraManager;
 import entity.Entity;
 import entity.EntityManager;
+import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
 import graphics.renderer.VAO;
 import graphics.sprite.SpriteBinder;
@@ -49,7 +50,8 @@ public class LightingManager {
         GL46.glEnable(GL46.GL_BLEND);
         GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE_MINUS_SRC_ALPHA);
 
-        ShaderManager.getInstance().loadUniformIntoActiveShader("lightSpaceMatrix", directionalLight.getLightspaceTransform());
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(ShaderManager.getInstance().getActiveShader(), "view"), false, directionalLight.getLightspaceTransform());
+//        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(ShaderManager.getInstance().getActiveShader(), "perspective"), false, Renderer.getInstance().getProjectionMatrix());
 
 //        //Render all entities
 //        EntityManager.getInstance().resort();
@@ -66,7 +68,6 @@ public class LightingManager {
 //        }
 
         LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches = EntityManager.getInstance().getBatches();
-        int numDrawCalls = 0;
         for(VAO vao : batches.keySet()) {
             if(vao == null){
                 continue;

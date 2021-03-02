@@ -479,7 +479,8 @@ public class Entity implements Transformable, Serializable<Entity> {
         //Now set our animationComponent
         removeComponent(animationComponent);
         if(this.model.hasAnimations()) {
-            animationComponent = new AnimationComponent(this.model);
+            animationComponent = new AnimationComponent();
+            animationComponent.setModel(this.model);
             this.addComponent(animationComponent);
         }
         return this;

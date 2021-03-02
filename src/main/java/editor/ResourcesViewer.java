@@ -21,8 +21,10 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWDropCallback;
 import org.lwjgl.system.MemoryUtil;
 import util.Callback;
+import util.EnumFileAction;
 import util.FileObject;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class ResourcesViewer extends UIComponet {
@@ -46,6 +48,9 @@ public class ResourcesViewer extends UIComponet {
     private LinkedList<Callback> onTryPlaceInWorld      = new LinkedList<>();
     private LinkedList<Callback> onPlaceInWorld         = new LinkedList<>();
     private LinkedList<Callback> onDragStartCallbacks   = new LinkedList<>();
+
+    //These are directory callback subscriptions that execute when a file is changed within a specific directory.
+    private HashMap<String, LinkedList<Callback>> directoryCallbacks = new HashMap<>();
 
     public ResourcesViewer(){
 
@@ -289,6 +294,33 @@ public class ResourcesViewer extends UIComponet {
 
     public void onDragStart(Callback c){
         this.onDragStartCallbacks.addLast(c);
+    }
+
+    public boolean registerCallback(String directory, EnumFileAction action, Callback callback){
+        FileObject check = hasDirectory(directory);
+        if(check != null){
+            check.registerCallback(action, callback);
+            return true;
+        }
+        return false;
+    }
+
+    public FileObject hasDirectory(String name){
+        return hasDirectoruHelper(this.resources, name);
+    }
+
+    private FileObject hasDirectoruHelper(FileObject base, String search){
+        if(base.getName().toLowerCase().equals(search.toLowerCase())){
+            return base;
+        }else{
+            for(FileObject object : base.getChildren()){
+                FileObject child = hasDirectoruHelper(object, search);
+                if(child != null){
+                    return child;
+                }
+            }
+        }
+        return null;
     }
 }
 

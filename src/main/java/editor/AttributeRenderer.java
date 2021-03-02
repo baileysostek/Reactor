@@ -412,10 +412,16 @@ public class AttributeRenderer{
                 ImFloat value = new ImFloat(data);
 
                 ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
-                ImGui.inputFloat(attribute.getName(), value);
+                if(attribute.getType().equals(EnumAttributeType.SLIDERS)){
+                    float[] sliderValue = new float[]{(float) data};
+                    ImGui.sliderFloat("", sliderValue, 0, 360);
+                    attribute.setData(sliderValue[0]);
+                }else{
+                    ImGui.inputFloat(attribute.getName(), value);
+                    attribute.setData(value.get());
+                }
                 ImGui.popItemWidth();
 
-                attribute.setData(value.get());
                 return;
             }
 

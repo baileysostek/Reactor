@@ -132,14 +132,7 @@ public abstract class Camera implements Serializable<Camera> {
         Matrix4f transform = getTransformationMatrix();
 
 
-        float[] modelMatrix = new float[]{
-                transform.m00(), transform.m01(), transform.m02(), transform.m03(),
-                transform.m10(), transform.m11(), transform.m12(), transform.m13(),
-                transform.m20(), transform.m21(), transform.m22(), transform.m23(),
-                transform.m30(), transform.m31(), transform.m32(), transform.m33()
-        };
-
-        return modelMatrix;
+        return transform.get(new float[16]);
     }
 
 

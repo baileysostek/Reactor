@@ -1,17 +1,25 @@
 package graphics.renderer;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import editor.Editor;
+import engine.Reactor;
 import entity.Entity;
 import entity.component.Attribute;
+import material.MaterialManager;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
+import util.Callback;
+import util.EnumFileAction;
 import util.StringUtils;
 
 import java.nio.FloatBuffer;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ShaderManager {
 
@@ -23,8 +31,6 @@ public class ShaderManager {
     private HashMap<String, Shader>     shaders               = new HashMap<>();
     private HashMap<Integer, String>    shaderInstances_prime = new HashMap<>();
 
-    private HashMap<String, Boolean>    enabledArrays        = new HashMap<>();
-
     //Keep Track of the active shader
     private int activeShader = -1;
 
@@ -33,8 +39,57 @@ public class ShaderManager {
     //The default shader
     private static int defaultShader;
 
-    private ShaderManager(){
+    //The definition for our shaders directory
+    private static final String SHADER_DIRECTORY = "shaders";
 
+    //This is where we store the list of recompilations that need to happen at the start of next frame
+    private LinkedList<String> recompilations = new LinkedList<>();
+
+    //Lock for locking our entity set
+    private Lock lock;
+
+    private static final String DEFAULT_SHADER_PROGRAM = "pbr";
+
+    private ShaderManager(){
+        lock = new ReentrantLock();
+    }
+
+    public void update(double delta){
+        if(recompilations.size() > 0){
+            lock.lock();
+            for(String shader : recompilations){
+                loadShader(shader);
+            }
+            recompilations.clear();
+            lock.unlock();
+        }
+    }
+
+    public void setupCallbackListeners(){
+        if(Reactor.isDev()){
+            Editor.getInstance().getFileBrowser().registerCallback("/" + SHADER_DIRECTORY, EnumFileAction.MODIFY, new Callback() {
+                @Override
+                public Object callback(Object... objects) {
+                    String shaderSource = (String) objects[0];
+                    //Make sure this is not a temporary file.
+                    if(!shaderSource.endsWith("~")){
+                        String parsedName = parseShaderName(shaderSource);
+                        if(hasShader(parsedName)){
+                            lock.lock();
+                            if(!recompilations.contains(parsedName)){
+                                recompilations.add(parsedName);
+                            }
+                            lock.unlock();
+                        }
+                    }
+                    return null;
+                }
+            });
+        }
+    }
+
+    private String parseShaderName(String source){
+        return source.replace("/" + SHADER_DIRECTORY + "/", "").replace("_fragment.glsl", "").replace("_vertex.glsl", "").replace("_properties.json", "");
     }
 
     public void setGLTarget(GLTarget target){
@@ -47,9 +102,9 @@ public class ShaderManager {
 
     public int loadShader(String name){
         //Look at the assets we have available to us, and load a shaders source files
-        String info     = StringUtils.load("shaders/" + name + "_properties.json");
-        String vertex   = StringUtils.load("shaders/" + name + "_vertex.glsl");
-        String fragment = StringUtils.load("shaders/" + name + "_fragment.glsl");
+        String info     = StringUtils.load(SHADER_DIRECTORY + "/" + name + "_properties.json");
+        String vertex   = StringUtils.load(SHADER_DIRECTORY + "/" + name + "_vertex.glsl");
+        String fragment = StringUtils.load(SHADER_DIRECTORY + "/" + name + "_fragment.glsl");
 
         //Buffer for reading compile status
         int[] compileBuffer = new int[]{ 0 };
@@ -65,10 +120,9 @@ public class ShaderManager {
             if (compileBuffer[0] > 0) {
                 String errorMesssage = GL46.glGetShaderInfoLog(vertexShader);
                 String lineNumber = errorMesssage.substring(errorMesssage.indexOf("(")+ 1, errorMesssage.indexOf(")"));
-                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + "shaders/" + name + "_vertex.glsl:" + lineNumber + " | " + GL46.glGetShaderInfoLog(vertexShader));
+                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + SHADER_DIRECTORY + "/" + name + "_vertex.glsl:" + lineNumber + " | " + GL46.glGetShaderInfoLog(vertexShader));
                 //Cleanup our broken shader
                 GL46.glDeleteShader(vertexShader);
-                System.exit(0);
                 return -1;
             }
         }else{
@@ -90,10 +144,10 @@ public class ShaderManager {
                 String errorMesssage = GL46.glGetShaderInfoLog(fragmentShader);
 //                String lineNumber = errorMesssage.substring(errorMesssage.indexOf("(")+ 1, errorMesssage.indexOf(")"));
 //                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + "shaders/" + name + "_fragment.glsl:" + lineNumber + " | " + GL46.glGetShaderInfoLog(fragmentShader));
-                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + "shaders/" + name + "_fragment.glsl:" + errorMesssage + " | " + GL46.glGetShaderInfoLog(fragmentShader));
+                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + SHADER_DIRECTORY + "/" + name + "_fragment.glsl:" + errorMesssage + " | " + GL46.glGetShaderInfoLog(fragmentShader));
                 //Cleanup our broken shader
                 GL46.glDeleteShader(vertexShader);
-                System.exit(0);
+                GL46.glDeleteShader(fragmentShader);
                 return -1;
             }
         }else{
@@ -142,10 +196,16 @@ public class ShaderManager {
         //Check link status
         GL46.glGetShaderiv(vertexShader, GL46.GL_LINK_STATUS, compileBuffer);
         if (compileBuffer[0] == GL46.GL_TRUE) {
-            System.out.println("Shader Link was successful.");
             //Add this shader to our shader cache
+//            if(shaderInstances.containsKey(name)){
+//                int oldProgramID = shaderInstances.get(name);
+//                System.out.println("Shader:" + name + " already loaded at index:" + oldProgramID);
+//                MaterialManager.getInstance().updateShaderIndex(oldProgramID, programID);
+//                GL46.glDeleteProgram(oldProgramID);
+//            }
             shaderInstances.put(name, programID);
             shaderInstances_prime.put(programID, name);
+            System.out.println("Shader Link was successful.");
         }else{
             System.err.println("Shader Link failed.");
             GL46.glDeleteProgram(programID);
@@ -171,6 +231,15 @@ public class ShaderManager {
             String uniformType = uniformsJSON.get(uniformName).getAsString();
             shader.addUniform(uniformName, uniformType);
             System.out.println("Adding uniform named: " + uniformName + " type:" + uniformType);
+        }
+
+        //SSBO
+        if(vertexData.has("SSBO")) {
+            JsonObject ssboJson = vertexData.get("SSBO").getAsJsonObject();
+            for (String ssboName : ssboJson.keySet()) {
+                JsonObject ssboData = ssboJson.get(ssboName).getAsJsonObject();
+                System.out.println(ssboData);
+            }
         }
 
         shaders.put(name, shader);
@@ -205,7 +274,7 @@ public class ShaderManager {
                 loop:{
                     //Check to see if this handshake has this attribute.
                     if (!handshake.hasAttribute(attribute)) {
-                        System.err.println("This handshake does not contain the attribute: " + attribute);
+                        System.err.println("Error loading data into shader:" + shaderInstances_prime.get(programID) + ". This shader expects Attribute: " + attribute + " however it is not present in the handshake.");
                         break loop;
                     }
 
@@ -345,7 +414,7 @@ public class ShaderManager {
     public static void initialize(){
         if(shaderManager == null){
             shaderManager = new ShaderManager();
-            defaultShader = shaderManager.loadShader("pbr");
+            defaultShader = shaderManager.loadShader(DEFAULT_SHADER_PROGRAM);
         }
     }
 
@@ -383,5 +452,9 @@ public class ShaderManager {
             }
         }
 
+    }
+
+    public int getActiveShader() {
+        return activeShader;
     }
 }
