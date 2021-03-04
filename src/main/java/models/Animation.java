@@ -1,5 +1,6 @@
 package models;
 
+import entity.Entity;
 import org.joml.Matrix4f;
 
 import java.util.HashMap;

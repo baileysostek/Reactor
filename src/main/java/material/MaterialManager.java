@@ -155,4 +155,8 @@ public class MaterialManager {
             }
         }
     }
+
+    public boolean hasMaterial(String name) {
+        return materials.containsKey(name);
+    }
 }

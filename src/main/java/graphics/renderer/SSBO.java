@@ -15,13 +15,14 @@ public class SSBO {
         this.id       = id;
         this.location = location;
         this.datatype = datatype;
+        GL46.glBindBuffer(GL46.GL_SHADER_STORAGE_BUFFER, id);
+        GL46.glBindBufferBase(GL46.GL_SHADER_STORAGE_BUFFER, location, id);
+        GL46.glBindBuffer(GL46.GL_SHADER_STORAGE_BUFFER, 0);
     }
 
     public void flush(){
         GL46.glBindBuffer(GL46.GL_SHADER_STORAGE_BUFFER, id);
-        GL46.glBufferData(GL46.GL_SHADER_STORAGE_BUFFER, this.data, GL46.GL_STATIC_DRAW);
-        GL46.glBindBufferBase(GL46.GL_SHADER_STORAGE_BUFFER, location, id);
-        GL46.glBindBuffer(GL46.GL_SHADER_STORAGE_BUFFER, 0);
+        GL46.glBufferData(GL46.GL_SHADER_STORAGE_BUFFER, this.data, GL46.GL_DYNAMIC_DRAW);
     }
 
     public void allocate(int size){

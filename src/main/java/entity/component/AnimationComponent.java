@@ -95,6 +95,17 @@ public class AnimationComponent extends Component{
 
     }
 
+    public double getAnimationIndex(){
+        return animationIndex.getData();
+    }
+
+    public String getCurrentAnimation(){
+        if(animationNames.getData().size() > 0) {
+            return animationNames.getData().getFirst();
+        }
+        return "T-Pose";
+    }
+
     @Override
     public AnimationComponent deserialize(JsonObject data){
         if(data.has("model")){

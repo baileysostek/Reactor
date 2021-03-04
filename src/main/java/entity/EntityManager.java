@@ -457,10 +457,12 @@ public class EntityManager {
         for(VAO batch : batches.keySet()){
             LinkedHashMap<Material, LinkedList<Entity>> materialEntities = new LinkedHashMap<>();
             for(Entity e : batches.get(batch)){
+                //TODO fix batching
                 if(!materialEntities.containsKey(e.getMaterial())){
                     materialEntities.put(e.getMaterial(), new LinkedList<Entity>());
                 }
-                materialEntities.get(e.getMaterial()).add(e);
+                materialEntities.get(e.getMaterial()).addAll(batches.get(batch));
+                break;
             }
             out.put(batch, materialEntities);
         }

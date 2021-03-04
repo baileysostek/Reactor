@@ -42,6 +42,10 @@ public class ModelManager {
 
     private final Model DEFAULT_MODEL;
 
+    private final Matrix4f IDENTITY_MATRIX       = new Matrix4f().identity();
+
+    private final float[]  IDENTITY_MATRIX_ARRAY = IDENTITY_MATRIX.get(new float[16]);
+
     private ModelManager(){
         //TODO fix
         DEFAULT_MODEL = loadModel("sphere_smooth.tek").getFirst();
@@ -540,6 +544,14 @@ public class ModelManager {
             }
         }
         return buffer;
+    }
+
+    public Matrix4f getIdentityMatrix() {
+        return IDENTITY_MATRIX;
+    }
+
+    public float[] getIdentityMatrixArray() {
+        return IDENTITY_MATRIX_ARRAY;
     }
 
 

@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import entity.Entity;
 import graphics.renderer.Handshake;
 import graphics.renderer.VAO;
+import graphics.renderer.VAOManager;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -28,6 +29,8 @@ public class Model implements Serializable<Model> {
     public Joint rootJoint;
     public LinkedHashMap<String, Joint> joints = new LinkedHashMap<>();
     public LinkedHashMap<String, Animation> animations = new LinkedHashMap<>();
+
+    public LinkedHashMap<String, Matrix4f> tPose = new LinkedHashMap<>();
 
     //VAO
     private Handshake handshake;
@@ -56,6 +59,7 @@ public class Model implements Serializable<Model> {
         this.animations = animations;
 
         this.joints = joints;
+        recalculateTPose();
 
         vao = new VAO(this);
     }
@@ -103,6 +107,14 @@ public class Model implements Serializable<Model> {
 
     public void setJoints(LinkedHashMap<String, Joint> joints) {
         this.joints = joints;
+        recalculateTPose();
+    }
+
+    private void recalculateTPose(){
+        tPose.clear();
+        for(Joint joint : this.joints.values()){
+            tPose.put(joint.getName(), ModelManager.getInstance().getIdentityMatrix());
+        }
     }
 
     //todo refactor
@@ -122,8 +134,7 @@ public class Model implements Serializable<Model> {
         if(animations.containsKey(animation)) {
             return animations.get(animation).getBoneTransformsForTime(deltaTime);
         }else{
-            //Get the first entry.
-            return ((Animation)animations.values().toArray()[0]).getBoneTransformsForTime(deltaTime);
+            return tPose;
         }
     }
 

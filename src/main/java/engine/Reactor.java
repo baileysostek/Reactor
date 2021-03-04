@@ -303,19 +303,19 @@ public class Reactor {
                 sprite.setPixelColor(0,0, Colors.RED);
                 sprite.flush();
 
-                float size = 1;
+                float size = 0;
 
                 Sprite grey = new Sprite(1,1);
                 grey.setPixelColor(0,0, new Vector4f(1.0f,0.0f,0.0f,1));
                 grey.flush();
 
                 Material matTest3 = MaterialManager.getInstance().generateMaterial(grey);
-                Entity quad = new Entity();
-                quad.setModel(ModelManager.getInstance().loadModel("quad.obj").getFirst());
-                quad.getAttribute("name").setData("Quad");
-                quad.setScale(size);
-                quad.setMaterial(matTest3);
-                EntityManager.getInstance().addEntity(quad);
+//                Entity quad = new Entity();
+//                quad.setModel(ModelManager.getInstance().loadModel("quad.obj").getFirst());
+//                quad.getAttribute("name").setData("Quad");
+//                quad.setScale(size);
+//                quad.setMaterial(matTest3);
+//                EntityManager.getInstance().addEntity(quad);
                 EntityManager.getInstance().update(0);
 
                 Probe probe = new Probe();

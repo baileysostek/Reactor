@@ -16,7 +16,8 @@
       "t_offset":"vec2",
       "t_scale": "vec2",
       "lightSpaceMatrix": "mat4",
-      "jointTransforms": "mat4"
+      "jointTransforms": "mat4",
+      "numBones": "int"
     },
     "SSBO": {
       "Bones": {

@@ -23,10 +23,6 @@ layout(location =  8) in vec4 transform_1;
 layout(location =  9) in vec4 transform_2;
 layout(location = 10) in vec4 transform_3;
 
-layout(std430, binding = 0) buffer blocksData{
-    vec3[3] color;
-} buf1;
-
 //Uniform variables
 uniform mat4 view;           // Cameras position in space
 uniform vec3 cameraPos;      // Cameras position in worldSpace
@@ -37,6 +33,10 @@ uniform mat4 lightSpaceMatrix[maxLights];
 
 //Bones
 uniform mat4 jointTransforms[MAX_JOINTS];
+uniform int numBones;
+layout(std430, binding = 3) buffer Bones{
+    mat4 boneTransforms[];
+} bonesLocal;
 
 // Outputs
 out vec3 passNormal;
@@ -62,26 +62,30 @@ void main(){
         transform_3
     );
 
-    //Calculate a transform in space representing this vertex's bone deformation as a sum of 3 parts whos weights add to 1./
-    mat4 boneTransform = (jointTransforms[uint(boneIndices.x)] * boneWeights.x) + (jointTransforms[uint(boneIndices.y)] * boneWeights.y) + (jointTransforms[uint(boneIndices.z)] * boneWeights.z);
-    boneTransform = mat4(
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1);
+    mat4 boneTransform;
+    if(numBones > 0){
+        boneTransform = (bonesLocal.boneTransforms[uint(boneIndices.x) + (numBones * gl_InstanceID)] * boneWeights.x) + (bonesLocal.boneTransforms[uint(boneIndices.y) + (numBones * gl_InstanceID)] * boneWeights.y) + (bonesLocal.boneTransforms[uint(boneIndices.z) + (numBones * gl_InstanceID)] * boneWeights.z);
+    }else{
+        boneTransform = mat4(
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        );
+    }
 
-    //Transdform the normnal vectors of this model by its transform.
     vec4 offsetNormal = transform * vec4(mat3(boneTransform) * vNormal.xyz, 1.0);
     vec4 worldOffset = transform * vec4(0, 0, 0, 1);
     passNormal = normalize((vec3(offsetNormal) / offsetNormal.w) - (worldOffset.xyz)/worldOffset.w);
 
     vec4 worldPosition = transform * boneTransform * vec4(vPosition.xyz, 1.0);
+//    worldPosition += vec4(1, 0, 0, 0);
     WorldPos = worldPosition.xyz;
 
     passCoords = vTexture;
 
     passWeights = boneWeights;
-    passIndices = buf1.color[gl_InstanceID];
+    passIndices = passIndices;
 
     //Camera Direction
     passCamPos = cameraPos * -1;

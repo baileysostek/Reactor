@@ -197,12 +197,12 @@ public class ShaderManager {
         GL46.glGetShaderiv(vertexShader, GL46.GL_LINK_STATUS, compileBuffer);
         if (compileBuffer[0] == GL46.GL_TRUE) {
             //Add this shader to our shader cache
-//            if(shaderInstances.containsKey(name)){
-//                int oldProgramID = shaderInstances.get(name);
-//                System.out.println("Shader:" + name + " already loaded at index:" + oldProgramID);
-//                MaterialManager.getInstance().updateShaderIndex(oldProgramID, programID);
-//                GL46.glDeleteProgram(oldProgramID);
-//            }
+            if(shaderInstances.containsKey(name)){
+                int oldProgramID = shaderInstances.get(name);
+                System.out.println("Shader:" + name + " already loaded at index:" + oldProgramID);
+                MaterialManager.getInstance().updateShaderIndex(oldProgramID, programID);
+                GL46.glDeleteProgram(oldProgramID);
+            }
             shaderInstances.put(name, programID);
             shaderInstances_prime.put(programID, name);
             System.out.println("Shader Link was successful.");

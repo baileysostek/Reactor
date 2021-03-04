@@ -108,7 +108,6 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 void main(void){
     //Sample the Albedo texture
     vec4 albedo    = texture(textureID, passCoords);
-    albedo.rgb = passIndices.rgb;
     float metallic = texture(metallicID, passCoords).r;
     float ao       = texture(ambientOcclusionID, passCoords).r;
     float roughness= texture(roughnessID, passCoords).r;

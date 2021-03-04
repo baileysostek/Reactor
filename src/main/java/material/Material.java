@@ -224,9 +224,12 @@ public class Material implements Serializable<Material> {
 
     @Override
     public Material deserialize(JsonObject data) {
-
         if(data.has("name")){
-            this.name.setData(data.get("name").getAsString());
+            String name = data.get("name").getAsString();
+            if(MaterialManager.getInstance().hasMaterial(name)){
+                return MaterialManager.getInstance().getMaterial(name);
+            }
+            this.name.setData(name);
         }
 
         if(data.has("albedoID")){

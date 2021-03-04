@@ -37,6 +37,7 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Model data for this entity
     private Model model;
+
     private AnimationComponent animationComponent = null;
 
 
@@ -182,6 +183,9 @@ public class Entity implements Transformable, Serializable<Entity> {
         if(!this.components.contains(component)) {
             this.components.add(component);
             component.onAdd(this);
+            if(component instanceof AnimationComponent){
+                this.animationComponent = (AnimationComponent) component;
+            }
         }
     }
 
@@ -671,6 +675,13 @@ public class Entity implements Transformable, Serializable<Entity> {
         if(data.has("model")) {
             this.model = new Model(ModelManager.getInstance().getNextID()).deserialize(data.get("model").getAsJsonObject());
         }
+        if(data.has("materials")){
+            JsonArray materials = data.get("materials").getAsJsonArray();
+            for(int i = 0; i < materials.size(); i++){
+                String materialName = materials.get(i).getAsString();
+                this.setMaterial(MaterialManager.getInstance().getMaterial(materialName));
+            }
+        }
         //If we have any attributes
         if(data.has("attributes")) {
             for(String key : data.get("attributes").getAsJsonObject().keySet()){
@@ -807,5 +818,9 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     public boolean hasModel() {
         return this.model != null;
+    }
+
+    public AnimationComponent getAnimationComponent() {
+        return animationComponent;
     }
 }
