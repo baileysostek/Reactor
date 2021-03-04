@@ -340,7 +340,6 @@ public class VAO {
 
         //IF this is an animated model load the bone transforms
         loop:{
-            ShaderManager.getInstance().loadUniformIntoActiveShader("boneIndexOffset", 0);
             if (animated) {
                 //Load our number of bones into the shader
                 ShaderManager.getInstance().loadUniformIntoActiveShader("numBones", model.getNumBones());
