@@ -32,9 +32,9 @@ uniform mat4 perspective;    //Perspective of this world
 uniform mat4 lightSpaceMatrix[maxLights];
 
 //Bones
-uniform mat4 jointTransforms[MAX_JOINTS];
 uniform int numBones;
-layout(std430, binding = 3) buffer Bones{
+uniform int boneIndexOffset;
+layout(std430, binding = 0) buffer Bones{
     mat4 boneTransforms[];
 } bonesLocal;
 
@@ -56,15 +56,18 @@ out vec4[maxLights] passPosLightSpace;
 void main(){
     //reconstruct our IN matricies
     mat4 transform = mat4(
-        transform_0,
-        transform_1,
-        transform_2,
-        transform_3
+    transform_0,
+    transform_1,
+    transform_2,
+    transform_3
     );
 
     mat4 boneTransform;
     if(numBones > 0){
-        boneTransform = (bonesLocal.boneTransforms[uint(boneIndices.x) + (numBones * gl_InstanceID)] * boneWeights.x) + (bonesLocal.boneTransforms[uint(boneIndices.y) + (numBones * gl_InstanceID)] * boneWeights.y) + (bonesLocal.boneTransforms[uint(boneIndices.z) + (numBones * gl_InstanceID)] * boneWeights.z);
+        boneTransform =
+        (bonesLocal.boneTransforms[uint(boneIndices.x) + (numBones * gl_InstanceID) + boneIndexOffset] * boneWeights.x) +
+        (bonesLocal.boneTransforms[uint(boneIndices.y) + (numBones * gl_InstanceID) + boneIndexOffset] * boneWeights.y) +
+        (bonesLocal.boneTransforms[uint(boneIndices.z) + (numBones * gl_InstanceID) + boneIndexOffset] * boneWeights.z);
     }else{
         boneTransform = mat4(
             1, 0, 0, 0,
@@ -79,7 +82,7 @@ void main(){
     passNormal = normalize((vec3(offsetNormal) / offsetNormal.w) - (worldOffset.xyz)/worldOffset.w);
 
     vec4 worldPosition = transform * boneTransform * vec4(vPosition.xyz, 1.0);
-//    worldPosition += vec4(1, 0, 0, 0);
+    //    worldPosition += vec4(1, 0, 0, 0);
     WorldPos = worldPosition.xyz;
 
     passCoords = vTexture;
