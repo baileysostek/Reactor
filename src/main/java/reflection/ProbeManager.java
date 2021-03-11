@@ -1,5 +1,6 @@
 package reflection;
 
+import graphics.sprite.SpriteBinder;
 import org.joml.Vector3f;
 
 import java.util.LinkedList;
@@ -8,6 +9,8 @@ public class ProbeManager {
     private static ProbeManager probeManager;
 
     private LinkedList<Probe> probes = new LinkedList<>();
+
+    private final int REFLECTION_PROBE_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/circle.svg", 1, 1f, 96f);
 
     private ProbeManager(){
 
@@ -49,6 +52,10 @@ public class ProbeManager {
         if(probes.contains(probe)){
             probes.remove(probe);
         }
+    }
+
+    public int getReflectionProbeSVG(){
+        return this.REFLECTION_PROBE_SVG;
     }
 
     public static void initialize(){

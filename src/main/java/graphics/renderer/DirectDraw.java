@@ -1,8 +1,11 @@
 package graphics.renderer;
 
+import editor.Editor;
 import engine.Reactor;
 import entity.Entity;
 import entity.EntityManager;
+import graphics.ui.UIManager;
+import math.VectorUtils;
 import models.AABB;
 import models.Joint;
 import org.joml.*;
@@ -27,39 +30,39 @@ public class DirectDraw {
 
         drawerLine = new ImmediateDrawLine();
         drawTriangle = new ImmediateDrawTriangle();
-//        drawSprite = new ImmediateDrawSprite();
+        drawSprite = new ImmediateDrawSprite();
 
     }
 
     /*
         Billboard / Sprite
      */
-
-    //Quads and billboard
     public void drawBillboard(Vector3f pos, Vector2f scale, int texture){
-//        drawSprite.drawSprite(pos, texture);
+        drawSprite.drawBillboard(pos, scale, texture);
     }
 
+    public void drawBillboard(Vector3f pos, Vector2f scale, Vector3f color, int texture){
+        drawSprite.drawBillboard(pos, scale, color, texture);
+    }
 
     /*
         Draw Bones
      */
-
     public void drawBones(Entity entity) {
         if(entity.hasModel()) {
             if(entity.getModel().rootJoint != null) {
                 //TODO animation timeline
                 for(float i = 0; i < 1; i += 0.1f){
-                    HashMap<String, Matrix4f> frames = entity.getModel().getAnimatedBoneTransforms("animation", i);
+                    HashMap<String, Joint> frames = entity.getModel().getAnimatedBoneTransforms("animation", i);
                     drawBonesHelper(entity.getModel().getRootJoint(), entity.getTransform(), frames);
                 }
             }
         }
     }
 
-    private void drawBonesHelper(Joint root, Matrix4f parentTransform, HashMap<String, Matrix4f> frames) {
+    private void drawBonesHelper(Joint root, Matrix4f parentTransform, HashMap<String, Joint> frames) {
         if(frames.containsKey(root.getName())) {
-            Matrix4f animationOffset = frames.get(root.getName());
+            Matrix4f animationOffset = frames.get(root.getName()).getAnimationTransform();
             Matrix4f currentTransform = new Matrix4f(parentTransform).mul(animationOffset);
             for (Joint childJoint : root.getChildren()) {
                 drawBonesHelper(childJoint, currentTransform, frames);
@@ -558,7 +561,7 @@ public class DirectDraw {
             GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
         }
         drawTriangle.render();
-//        drawSprite.render();
+        drawSprite.render();
     }
 
     //Singleton stuff.

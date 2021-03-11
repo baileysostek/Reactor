@@ -30,7 +30,7 @@ public class Model implements Serializable<Model> {
     public LinkedHashMap<String, Joint> joints = new LinkedHashMap<>();
     public LinkedHashMap<String, Animation> animations = new LinkedHashMap<>();
 
-    public LinkedHashMap<String, Matrix4f> tPose = new LinkedHashMap<>();
+    public LinkedHashMap<String, Joint> tPose = new LinkedHashMap<>();
 
     //VAO
     private Handshake handshake;
@@ -113,7 +113,9 @@ public class Model implements Serializable<Model> {
     private void recalculateTPose(){
         tPose.clear();
         for(Joint joint : this.joints.values()){
-            tPose.put(joint.getName(), ModelManager.getInstance().getIdentityMatrix());
+            Joint clone = new Joint(joint);
+            clone.setAnimationTransform(ModelManager.getInstance().getIdentityMatrix());
+            tPose.put(joint.getName(), clone);
         }
     }
 
@@ -130,9 +132,9 @@ public class Model implements Serializable<Model> {
         return rootJoint;
     }
 
-    public LinkedHashMap<String, Matrix4f> getAnimatedBoneTransforms(String animation, double deltaTime) {
+    public LinkedHashMap<String, Joint> getAnimatedBoneTransforms(String animation, double deltaTime) {
         if(animations.containsKey(animation)) {
-            return animations.get(animation).getBoneTransformsForTime(deltaTime);
+            return animations.get(animation).getBoneTransformsForTime(rootJoint, deltaTime);
         }else{
             return tPose;
         }

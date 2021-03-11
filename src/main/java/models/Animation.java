@@ -13,6 +13,9 @@ public class Animation {
     public double duration  = 1;
     public double frameRate = 1;
 
+    //Local copy of some Joints used for this animation
+    private LinkedHashMap<String, Joint> animationTransform = new LinkedHashMap<>();
+
     private HashMap<String, KeyFrame[]> keyFrames = new HashMap<>();
 
     public Animation(double timescale, float frameRate){
@@ -32,7 +35,7 @@ public class Animation {
         }
     }
 
-    public LinkedHashMap<String, Matrix4f> getBoneTransformsForTime(double delta_t) {
+    public LinkedHashMap<String, Joint> getBoneTransformsForTime(Joint rootJoint, double delta_t) {
         delta_t *= duration;
         delta_t %= duration;
         LinkedHashMap<String , Matrix4f> out = new LinkedHashMap<>();
@@ -62,7 +65,26 @@ public class Animation {
             }
         }
 
-        return out;
+        applyPoseToJoints(out, rootJoint, new Matrix4f().identity(), animationTransform);
+
+        return animationTransform;
+    }
+
+    private void applyPoseToJoints(HashMap<String, Matrix4f> currentPose, Joint joint, Matrix4f parentTransform, LinkedHashMap<String, Joint> animationTranform) {
+        if(currentPose.containsKey(joint.getName())) {
+            Matrix4f currentLocalTransform = currentPose.get(joint.getName());
+            Matrix4f currentTransform = new Matrix4f(parentTransform).mul(currentLocalTransform);
+            for (Joint childJoint : joint.getChildren()) {
+                applyPoseToJoints(currentPose, childJoint, currentTransform, animationTranform);
+            }
+            currentTransform = currentTransform.mul(joint.getLocalBindTransform());
+            if(!animationTranform.containsKey(joint.getName())){
+                Joint clone = new Joint(joint);
+                animationTranform.put(clone.getName(), clone);
+            }
+
+            animationTranform.get(joint.getName()).setAnimationTransform(currentTransform);
+        }
     }
 
     public double getDuration() {

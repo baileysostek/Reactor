@@ -2,9 +2,8 @@
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec4 translation;
-layout(location = 2) in vec4 color;
-layout(location = 3) in vec3 scale;
-layout(location = 4) in vec2 tCoords;
+layout(location = 2) in vec3 scale;
+layout(location = 3) in vec2 tCoords;
 
 uniform mat4 view;
 uniform mat4 projection;
@@ -22,7 +21,6 @@ void main(void){
 
 	vec4 worldPosition = vec4(vertexPosition_worldspace, 1.0);
     gl_Position = projection * view * worldPosition;
-	passColor = color;
 
-    passCoords = tCoords;
+    passCoords = vec2(tCoords.r , 1 - tCoords.g);
 }

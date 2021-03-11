@@ -26,6 +26,14 @@ public class Joint {
         this.inverseBindTransform = new Matrix4f(localBindTransform).invert();
     }
 
+    public Joint(Joint other){
+        this.index = other.index;
+        this.name = other.name;
+        this.localBindTransform     = new Matrix4f(other.localBindTransform);
+        this.inverseBindTransform   = new Matrix4f(other.inverseBindTransform);
+        this.animationTransform     = new Matrix4f(other.animationTransform);
+    }
+
     public Matrix4f getLocalBindTransform(){
         return this.localBindTransform;
     }

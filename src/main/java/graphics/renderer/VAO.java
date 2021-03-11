@@ -350,12 +350,15 @@ public class VAO {
                 // For each Model to render, get the animation component and deform the bones by the animation.
                 for(Entity entity : toRender) {
                     // Calculate bone transforms
-                    HashMap<String, Matrix4f> frames = model.getAnimatedBoneTransforms(entity.getAnimationComponent().getCurrentAnimation(), entity.getAnimationComponent().getAnimationIndex());
-                    // Apply this transformation to our mesh
-                    applyPoseToJoints(frames, model.rootJoint, new Matrix4f().identity());
+                    HashMap<String, Joint> frames = model.getAnimatedBoneTransforms(entity.getAnimationComponent().getCurrentAnimation(), entity.getAnimationComponent().getAnimationIndex());
+
                     //For each Joint, upload that joint to the model.
-                    for (Joint joint : model.joints.values()) {
-                        bones.setData((entityIndex * model.getNumBones()) + joint.getIndex(), joint.getAnimationTransform().get(new float[16]));
+                    for (Joint joint : frames.values()) {
+                        if(!entity.getAnimationComponent().getCurrentAnimation().isEmpty()) {
+                            bones.setData((entityIndex * model.getNumBones()) + joint.getIndex(), joint.getAnimationTransform().get(new float[16]));
+                        }else{
+                            bones.setData((entityIndex * model.getNumBones()) + joint.getIndex(), ModelManager.getInstance().getIdentityMatrixArray());
+                        }
                     }
                     entityIndex++;
                 }
@@ -413,19 +416,6 @@ public class VAO {
 
     public int getID() {
         return VAO_DI;
-    }
-
-    private void applyPoseToJoints(HashMap<String, Matrix4f> currentPose, Joint joint, Matrix4f parentTransform) {
-        if(currentPose.containsKey(joint.getName())) {
-            Matrix4f currentLocalTransform = currentPose.get(joint.getName());
-            Matrix4f currentTransform = new Matrix4f(parentTransform).mul(currentLocalTransform);
-            for (Joint childJoint : joint.getChildren()) {
-                applyPoseToJoints(currentPose, childJoint, currentTransform);
-            }
-            currentTransform = currentTransform.mul(joint.getLocalBindTransform());
-            joint.setAnimationTransform(currentTransform);
-//            currentPose.put(joint.getName(), currentTransform);
-        }
     }
 }
 

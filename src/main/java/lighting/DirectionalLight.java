@@ -43,7 +43,6 @@ public class DirectionalLight extends Light {
     public void onAdd(){
         Renderer.getInstance().addResizeCallback(resize);
         super.onAdd();
-//        super.setTexture(SpriteBinder.getInstance().loadSVG("engine/svg/sun.svg", 1, 1, 96f));
         super.setTexture(depthBuffer.getDepthTexture());
     }
 
@@ -77,7 +76,7 @@ public class DirectionalLight extends Light {
     public void renderInEditor(boolean selected){
         DirectDraw.getInstance().drawArrow(new Vector3f(this.getPosition()), new Vector3f(0, 0, 0).sub(this.getPosition()).normalize().add(this.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, (Vector3f) this.getAttribute("color").getData());
 
-//        DirectDraw.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), 0);
+        DirectDraw.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), (Vector3f) this.getAttribute("color").getData(), LightingManager.getInstance().getSunSVG());
 
         if(selected) {
 

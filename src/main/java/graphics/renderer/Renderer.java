@@ -21,6 +21,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL46;
 import reflection.Probe;
 import reflection.ProbeManager;
+import skybox.Skybox;
 import skybox.SkyboxManager;
 import util.Callback;
 import util.StopwatchManager;
@@ -71,6 +72,8 @@ public class Renderer{
     //Used for entity Previews
     private HashMap<Entity, FBO> snapshotFBOS = new HashMap<>();
     private DirectionalLight light;
+    private Probe probe;
+    private Skybox skybox;
 
     private boolean fboBound = false;
 
@@ -100,6 +103,9 @@ public class Renderer{
 
         //INIT our light.
         light = new DirectionalLight();
+        probe = new Probe();
+        skybox = new Skybox();
+        skybox.getAttribute("skyboxColor").setData(new Vector3f(1));
 
         cube = new Handshake();
         float[] defaultCubeMap = new float[]{
@@ -413,8 +419,15 @@ public class Renderer{
 
             //Pos -2 is skybox
             GL46.glActiveTexture(GL46.GL_TEXTURE0 + 5);
-            GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, SkyboxManager.getInstance().getSkyboxTexture());
+            GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, skybox.getSkyboxTexture());
             GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "skybox"), 5);
+
+            //-1 is closest probe to entity
+            if(probe != null) {
+                GL46.glActiveTexture(GL46.GL_TEXTURE0 + 6);
+                GL46.glBindTexture(GL46.GL_TEXTURE_CUBE_MAP, probe.getReflectionProbeTextureID());
+                GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "nearestProbe"), 6);
+            }
 
             light.setPosition(new Vector3f(max/2f, max, max));
 
@@ -429,6 +442,15 @@ public class Renderer{
             ShaderManager.getInstance().loadUniformIntoActiveShaderArray("sunColor", 0, light.getColor());
             ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightSpaceMatrix", 0, light.getLightspaceTransform());
             ShaderManager.getInstance().loadUniformIntoActiveShaderArray("shadowMap", 0, textureUnit);
+
+//            int index = 0;
+//            for (Light l : LightingManager.getInstance().getClosestPointLights(4, new Vector3f(0))) {
+//                ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightPosition", index, l.getPosition());
+//                ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightColor", index, l.getColor());
+//                ShaderManager.getInstance().loadUniformIntoActiveShaderArray("lightIntensity", index, l.getBrightness());
+//                index++;
+//            }
+            ShaderManager.getInstance().loadUniformIntoActiveShader("numPointLights", 0);
 
             loadMaterialIntoShader(shaderID, material);
 

@@ -9,6 +9,7 @@ import graphics.renderer.DirectDraw;
 import graphics.renderer.Renderer;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import reflection.ProbeManager;
 import util.Callback;
 
 import java.util.Collection;
@@ -365,9 +366,20 @@ public class ParticleSystem extends Entity {
 
     @Override
     public void renderInEditor(boolean selected){
-        DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f(1), new Vector3f(1, 0, 0), 32, new Vector3f(1));
-        DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f(1), new Vector3f(0, 1, 0), 32, new Vector3f(1));
-        DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f(1), new Vector3f(0, 0, 1), 32, new Vector3f(1));
+        switch (this.emissionShape.getData()){
+            case RING:{
+
+            }
+
+            default: {
+                DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f(super.getScale().x), new Vector3f(1, 0, 0), 32, new Vector3f(1));
+                DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f(super.getScale().y), new Vector3f(0, 1, 0), 32, new Vector3f(1));
+                DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f(super.getScale().z), new Vector3f(0, 0, 1), 32, new Vector3f(1));
+            }
+        }
+
+        DirectDraw.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), ParticleManager.getInstance().getParticleSystemSVG());
+
     }
 
     public void setStartColor(Vector3f color){

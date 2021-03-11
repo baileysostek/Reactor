@@ -7,13 +7,16 @@ import entity.Entity;
 import entity.EntityManager;
 import entity.component.Attribute;
 import entity.component.EnumAttributeType;
+import graphics.renderer.DirectDraw;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
+import lighting.LightingManager;
 import math.MatrixUtils;
 import org.joml.Quaternionf;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
 import skybox.SkyboxManager;
@@ -107,6 +110,11 @@ public class Probe extends Entity {
                 break;
             }
         }
+    }
+
+    @Override
+    public void renderInEditor(boolean selected){
+        DirectDraw.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), ProbeManager.getInstance().getReflectionProbeSVG());
     }
 
     public int getReflectionProbeTextureID(){

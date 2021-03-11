@@ -26,6 +26,7 @@ public class LightingManager {
     private LinkedList<PointLight> pointLights = new LinkedList<>();
 
     private final int LIGHT_BULB_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/lightbulb.svg", 1, 1f, 96f);
+    private final int SUN_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/sun.svg", 1, 1, 96f);
 
     //Lock for locking our entity set
     private Lock lock;
@@ -131,6 +132,10 @@ public class LightingManager {
         return LIGHT_BULB_SVG;
     }
 
+    public int getSunSVG() {
+        return SUN_SVG;
+    }
+
     public void remove(Light light) {
         //Disallow adding a null light.
         if(light == null){
@@ -152,5 +157,4 @@ public class LightingManager {
             lock.unlock();
         }
     }
-
 }

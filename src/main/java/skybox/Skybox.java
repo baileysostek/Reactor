@@ -5,7 +5,10 @@ import entity.Entity;
 import entity.component.Attribute;
 import entity.component.AttributeUtils;
 import entity.component.EnumAttributeType;
+import graphics.renderer.DirectDraw;
 import graphics.sprite.SpriteBinder;
+import lighting.LightingManager;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import particle.ParticleSystem;
@@ -75,6 +78,11 @@ public class Skybox extends Entity {
 
     public int getSkyboxTexture(){
         return this.skyBoxTexture;
+    }
+
+    @Override
+    public void renderInEditor(boolean selected){
+        DirectDraw.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), SkyboxManager.getInstance().getSkyboxSVG());
     }
 
     @Override

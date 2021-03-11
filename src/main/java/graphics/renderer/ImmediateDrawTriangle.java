@@ -2,7 +2,11 @@ package graphics.renderer;
 
 import camera.CameraManager;
 import entity.Entity;
+import math.VectorUtils;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.opengl.GL46;
 
 import java.util.HashMap;
@@ -39,6 +43,9 @@ public class ImmediateDrawTriangle {
         }
     }
 
+    public DrawIndex drawTriangle(Vector4f p1, Vector4f p2, Vector4f p3, Vector3f color) {
+        return drawTriangle(new Vector3f(p1.x, p1.y, p1.z), new Vector3f(p2.x, p2.y, p2.z), new Vector3f(p3.x, p3.y, p3.z), color);
+    }
 
     public DrawIndex drawTriangle(Vector3f p1, Vector3f p2, Vector3f p3, Vector3f color) {
         if(drawIndex >= MAX_LINES){

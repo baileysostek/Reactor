@@ -497,6 +497,7 @@ public class Reactor {
                 frames++;
 
                 last = now;
+
                 StopwatchManager.getInstance().getTimer("reactor_internal").stop();
 
             }

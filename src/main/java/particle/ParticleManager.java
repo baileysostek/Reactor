@@ -44,6 +44,8 @@ public class ParticleManager {
 
     private boolean startIndicesDirty = false;
 
+    private final int PARTICLE_SYSTEM_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/star.svg", 1, 1f, 96f);
+
     private ParticleManager(){
         //Start up our shader
         shaderID = ShaderManager.getInstance().loadShader("particle");
@@ -321,6 +323,10 @@ public class ParticleManager {
             s.overrideStartIndex(count);
             count += s.numParticles.getData();
         }
+    }
+
+    public int getParticleSystemSVG(){
+        return PARTICLE_SYSTEM_SVG;
     }
 
     public static void initialize(){

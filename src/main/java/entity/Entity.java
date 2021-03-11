@@ -675,13 +675,15 @@ public class Entity implements Transformable, Serializable<Entity> {
         if(data.has("model")) {
             this.model = new Model(ModelManager.getInstance().getNextID()).deserialize(data.get("model").getAsJsonObject());
         }
-        if(data.has("materials")){
-            JsonArray materials = data.get("materials").getAsJsonArray();
-            for(int i = 0; i < materials.size(); i++){
-                String materialName = materials.get(i).getAsString();
-                this.setMaterial(MaterialManager.getInstance().getMaterial(materialName));
-            }
-        }
+//        if(data.has("materials")){
+//            JsonArray materials = data.get("materials").getAsJsonArray();
+//            for(int i = 0; i < materials.size(); i++){
+//                String materialName = materials.get(i).getAsString();
+//                if(MaterialManager.getInstance().hasMaterial(materialName)){
+//                    this.setMaterial(MaterialManager.getInstance().getMaterial(materialName));
+//                }
+//            }
+//        }
         //If we have any attributes
         if(data.has("attributes")) {
             for(String key : data.get("attributes").getAsJsonObject().keySet()){

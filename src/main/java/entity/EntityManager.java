@@ -461,8 +461,9 @@ public class EntityManager {
                 if(!materialEntities.containsKey(e.getMaterial())){
                     materialEntities.put(e.getMaterial(), new LinkedList<Entity>());
                 }
-                materialEntities.get(e.getMaterial()).addAll(batches.get(batch));
-                break;
+                materialEntities.get(e.getMaterial()).add(e);
+//                materialEntities.get(e.getMaterial()).addAll(batches.get(batch));
+//                break;
             }
             out.put(batch, materialEntities);
         }

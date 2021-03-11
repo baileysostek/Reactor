@@ -10,7 +10,12 @@ import org.lwjgl.system.libc.LibCStdlib;
 import util.StringUtils;
 
 import javax.script.ScriptEngine;
-import java.io.File;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.*;
+import java.net.URL;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.HashMap;
@@ -62,45 +67,67 @@ public class SoundEngine{
                 return -1;
             }
 
-            //Allocate space to store return information from the function
-            MemoryStack.stackPush();
-            IntBuffer channelsBuffer = stackMallocInt(1);
-            MemoryStack.stackPush();
-            IntBuffer sampleRateBuffer = stackMallocInt(1);
+            //OGG
+            if(fileName.endsWith(".ogg")) {
+                //Allocate space to store return information from the function
+                MemoryStack.stackPush();
+                IntBuffer channelsBuffer = stackMallocInt(1);
+                MemoryStack.stackPush();
+                IntBuffer sampleRateBuffer = stackMallocInt(1);
 
-            ShortBuffer rawAudioBuffer = STBVorbis.stb_vorbis_decode_filename(path, channelsBuffer, sampleRateBuffer);
+                ShortBuffer rawAudioBuffer = STBVorbis.stb_vorbis_decode_filename(path, channelsBuffer, sampleRateBuffer);
 
-            //Retreive the extra information that was stored in the buffers by the function
-            int channels = channelsBuffer.get();
-            int sampleRate = sampleRateBuffer.get();
-            //Free the space we allocated earlier
-            MemoryStack.stackPop();
-            MemoryStack.stackPop();
+                //Retreive the extra information that was stored in the buffers by the function
+                int channels = channelsBuffer.get();
+                int sampleRate = sampleRateBuffer.get();
+                //Free the space we allocated earlier
+                MemoryStack.stackPop();
+                MemoryStack.stackPop();
 
-            //Find the correct OpenAL format
-            int format = -1;
-            if (channels == 1) {
-                format = AL10.AL_FORMAT_MONO16;
-            } else if (channels == 2) {
-                format = AL10.AL_FORMAT_STEREO16;
+                //Find the correct OpenAL format
+                int format = -1;
+                if (channels == 1) {
+                    format = AL10.AL_FORMAT_MONO16;
+                } else if (channels == 2) {
+                    format = AL10.AL_FORMAT_STEREO16;
+                }
+
+                //Request space for the buffer
+                int bufferPointer = AL10.alGenBuffers();
+
+                System.out.println("Allocated sound buffer:" + bufferPointer);
+                System.out.println("rawAudioBuffer:" + rawAudioBuffer);
+                bufferPointers.put(fileName, bufferPointer);
+
+                //Send the data to OpenAL
+                AL10.alBufferData(bufferPointer, format, rawAudioBuffer, sampleRate);
+
+                //Free the memory allocated by STB
+                LibCStdlib.free(rawAudioBuffer);
+                return bufferPointer;
             }
 
-            //Request space for the buffer
-            int bufferPointer = AL10.alGenBuffers();
+            if(fileName.endsWith(".wav")){
+                int bufferPointer = AL10.alGenBuffers();
+                try {
+                    InputStream bufferedIn = new BufferedInputStream(new FileInputStream(check));
+                    AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
+                    WaveData data = WaveData.create(audioStream);
+                    AL10.alBufferData(bufferPointer, data.format, data.data, data.samplerate);
+                    data.dispose();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (UnsupportedAudioFileException e) {
+                    e.printStackTrace();
+                }
+                return bufferPointer;
+            }
 
-            System.out.println("Allocated sound buffer:" + bufferPointer);
-            System.out.println("rawAudioBuffer:" + rawAudioBuffer);
-            bufferPointers.put(fileName, bufferPointer);
-
-            //Send the data to OpenAL
-            AL10.alBufferData(bufferPointer, format, rawAudioBuffer, sampleRate);
-
-            //Free the memory allocated by STB
-            LibCStdlib.free(rawAudioBuffer);
-            return bufferPointer;
         }else{
             return bufferPointers.get(fileName);
         }
+
+        return -1;
     }
 
     public int createSoundSource(){
@@ -152,6 +179,14 @@ public class SoundEngine{
         AL10.alListenerfv(AL10.AL_ORIENTATION, orientation);
     }
 
+    public void removeSource(int soundSourceID) {
+       //TODO nice fade out
+        if(soundSources.contains(soundSourceID)) {
+            soundSources.remove((Object)soundSourceID);
+            AL10.alDeleteSources(soundSourceID);
+        }
+    }
+
     public void onShutdown() {
         for(Integer bufferPointer : bufferPointers.values()){
             AL10.alDeleteBuffers(bufferPointer);
@@ -161,6 +196,10 @@ public class SoundEngine{
         }
         ALC10.alcDestroyContext(context);
         ALC10.alcCloseDevice(device);
+    }
+
+    public int getSourcePlaybackPosition(int sourcePointer){
+        return AL10.alGetSourcei(sourcePointer, AL11.AL_SAMPLE_OFFSET);
     }
 
     public void setListener(Vector3f position){
