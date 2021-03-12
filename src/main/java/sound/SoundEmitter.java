@@ -35,6 +35,65 @@ public class SoundEmitter extends Entity {
 
         soundSourceID = SoundEngine.getInstance().createSoundSource();
 
+        //Custom Callbacks
+        soundSource.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                soundBufferID = SoundEngine.getInstance().loadSound(soundSource.getData());
+                SoundEngine.getInstance().loadSoundIntoSource(soundSourceID, soundBufferID);
+                return null;
+            }
+        });
+
+        volume.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                AL10.alSourcef(soundSourceID, AL11.AL_GAIN, volume.getData());
+                return null;
+            }
+        });
+
+        pitch.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                AL10.alSourcef(soundSourceID, AL11.AL_PITCH, pitch.getData());
+                return null;
+            }
+        });
+
+        loop.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                boolean loop = ((Attribute<Boolean>) objects[0]).getData();
+                System.out.println("Setting looping to: " + loop);
+                AL10.alSourcei(soundSourceID, AL10.AL_LOOPING, loop ? 1 : 0);
+                return null;
+            }
+        });
+
+        //Play
+        play = new Attribute<Callback>("Play", new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                if(soundSourceID >= 0){
+                    SoundEngine.getInstance().playSound(soundSourceID);
+                }
+                return null;
+            }
+        });
+
+        pause = new Attribute<Callback>("Pause", new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                if(soundSourceID >= 0){
+                    SoundEngine.getInstance().pauseSound(soundSourceID);
+                }
+                return null;
+            }
+        });
+
+        SoundEngine.getInstance().loadSoundIntoSource(soundSourceID, soundBufferID);
+
     }
 
     @Override
@@ -60,70 +119,12 @@ public class SoundEmitter extends Entity {
             this.getAttribute("materials").setVisible(false);
         }
 
-        //Custom Callbacks
-        soundSource.subscribe(new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                soundBufferID = SoundEngine.getInstance().loadSound(soundSource.getData());
-                SoundEngine.getInstance().loadSoundIntoSource(soundSourceID, soundBufferID);
-                return null;
-            }
-        });
         addAttribute(soundSource);
-        SoundEngine.getInstance().loadSoundIntoSource(soundSourceID, soundBufferID);
-
-        volume.subscribe(new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                AL10.alSourcef(soundSourceID, AL11.AL_GAIN, volume.getData());
-                return null;
-            }
-        });
         addAttribute(volume);
-
-        pitch.subscribe(new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                AL10.alSourcef(soundSourceID, AL11.AL_PITCH, pitch.getData());
-                return null;
-            }
-        });
         addAttribute(pitch);
-
-        loop.subscribe(new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                boolean loop = ((Attribute<Boolean>) objects[0]).getData();
-                System.out.println("Setting looping to: " + loop);
-                AL10.alSourcei(soundSourceID, AL10.AL_LOOPING, loop ? 1 : 0);
-                return null;
-            }
-        });
         addAttribute(loop);
-
-        //Play
-        play = new Attribute<Callback>("Play", new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                if(soundSourceID >= 0){
-                    SoundEngine.getInstance().playSound(soundSourceID);
-                }
-                return null;
-            }
-        });
         addAttribute(play);
-
-        pause = new Attribute<Callback>("Pause", new Callback() {
-            @Override
-            public Object callback(Object... objects) {
-                if(soundSourceID >= 0){
-                    SoundEngine.getInstance().pauseSound(soundSourceID);
-                }
-                return null;
-            }
-        });
         addAttribute(pause);
-
     }
 
     public void setSoundSource(String soundSource){

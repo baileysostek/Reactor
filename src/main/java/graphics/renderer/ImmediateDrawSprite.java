@@ -24,12 +24,14 @@ public class ImmediateDrawSprite {
     private float[] positions;
     private float[] scales;
     private float[] textureCore;
+    private float[] colors;
 
     private int vao_id;
     private int vbo_vertex;
     private int vbo_pos;
     private int vbo_scale;
     private int vbo_texture;
+    private int vbo_colors;
 
     private int shaderID;
 
@@ -58,6 +60,7 @@ public class ImmediateDrawSprite {
 
         positions = new float[MAX_SPRITES * 3];
         scales    = new float[MAX_SPRITES * 3];
+        colors    = new float[MAX_SPRITES * 3];
 
         //Create our vao
         vao_id = GL46.glGenVertexArrays();
@@ -74,6 +77,11 @@ public class ImmediateDrawSprite {
             scales[i * 3 + 0] = 1;
             scales[i * 3 + 1] = 1;
             scales[i * 3 + 2] = 1;
+
+            //colors
+            colors[i * 3 + 0] = 1;
+            colors[i * 3 + 1] = 1;
+            colors[i * 3 + 2] = 1;
         }
 
 
@@ -99,6 +107,12 @@ public class ImmediateDrawSprite {
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_texture);
         GL46.glBufferData(GL46.GL_ARRAY_BUFFER, textureCore, GL46.GL_STATIC_DRAW);
         GL46.glVertexAttribPointer(3, 2, GL46.GL_FLOAT, false, 0, 0);
+
+        // The VBO containing the color of the billboard
+        vbo_colors = GL46.glGenBuffers();
+        GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_colors);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, colors, GL46.GL_STREAM_DRAW);
+        GL46.glVertexAttribPointer(4, 3, GL46.GL_FLOAT, false, 0, 0);
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
         GL46.glBindVertexArray(0);
@@ -134,6 +148,11 @@ public class ImmediateDrawSprite {
                 scales[index * 3 + 0] = billboard.getScale().x;
                 scales[index * 3 + 1] = billboard.getScale().y;
                 scales[index * 3 + 2] = 1f;
+
+                colors[index * 3 + 0] = billboard.getColor().x;
+                colors[index * 3 + 1] = billboard.getColor().y;
+                colors[index * 3 + 2] = billboard.getColor().z;
+
                 index++;
             }
 
@@ -146,6 +165,9 @@ public class ImmediateDrawSprite {
 
             GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_scale);
             GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, 0, scales);
+
+            GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_colors);
+            GL46.glBufferSubData(GL46.GL_ARRAY_BUFFER, 0, colors);
 
             GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
 
@@ -178,11 +200,13 @@ public class ImmediateDrawSprite {
             GL46.glEnableVertexAttribArray(2);
 //        // 4th attribute buffer : particles' scale
             GL46.glEnableVertexAttribArray(3);
+            GL46.glEnableVertexAttribArray(4);
 
             GL46.glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
             GL46.glVertexAttribDivisor(1, 1); // positions : one per quad (its center) -> 1
             GL46.glVertexAttribDivisor(2, 1); // scale : one per quad -> 1
             GL46.glVertexAttribDivisor(3, 0); // texture coords : four per quad -> 0
+            GL46.glVertexAttribDivisor(4, 1); // color one per quad -> 0
 
             GL46.glDrawArraysInstanced(GL46.GL_TRIANGLE_STRIP, 0, verticies.length / 3, toRender);
         }
@@ -195,6 +219,7 @@ public class ImmediateDrawSprite {
         GL46.glDisableVertexAttribArray(1);
         GL46.glDisableVertexAttribArray(2);
         GL46.glDisableVertexAttribArray(3);
+        GL46.glDisableVertexAttribArray(4);
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
         GL46.glBindVertexArray(0);

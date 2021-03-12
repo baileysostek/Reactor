@@ -299,50 +299,50 @@ public class Reactor {
 //                EntityManager.getInstance().addEntity(sun);
 //                Entity drag = new Entity();
 //
-                Sprite sprite = new Sprite(1,1);
-                sprite.setPixelColor(0,0, Colors.RED);
-                sprite.flush();
-
-                float size = 0;
-
-                Sprite grey = new Sprite(1,1);
-                grey.setPixelColor(0,0, new Vector4f(1.0f,0.0f,0.0f,1));
-                grey.flush();
-
-                Material matTest3 = MaterialManager.getInstance().generateMaterial(grey);
+//                Sprite sprite = new Sprite(1,1);
+//                sprite.setPixelColor(0,0, Colors.RED);
+//                sprite.flush();
+//
+//                float size = 0;
+//
+//                Sprite grey = new Sprite(1,1);
+//                grey.setPixelColor(0,0, new Vector4f(1.0f,0.0f,0.0f,1));
+//                grey.flush();
+//
+//                Material matTest3 = MaterialManager.getInstance().generateMaterial(grey);
 //                Entity quad = new Entity();
 //                quad.setModel(ModelManager.getInstance().loadModel("quad.obj").getFirst());
 //                quad.getAttribute("name").setData("Quad");
 //                quad.setScale(size);
 //                quad.setMaterial(matTest3);
 //                EntityManager.getInstance().addEntity(quad);
-                EntityManager.getInstance().update(0);
-
-                Probe probe = new Probe();
-                EntityManager.getInstance().addEntity(probe.setPosition(new Vector3f(0, 1, 0)));
-                probe.updateProbe();
-
-                Material matTest2 = MaterialManager.getInstance().generateMaterial(sprite);
-
-                Sprite metallic = new Sprite(1,1);
-                metallic.setPixelColor(0,0, new Vector4f(new Vector3f(0.125f), 1));
-                metallic.flush();
-
-                matTest2.setMetallicID(metallic.getTextureID());
-                matTest2.setRoughnessID(metallic.getTextureID());
-
-                matTest2.setShader("pbr");
-
-                Entity animatedMode2 = new Entity();
-                animatedMode2.setModel(ModelManager.getInstance().loadModel("Pilot_LP_Animated.fbx"));
-                animatedMode2.addAttribute(new Attribute("updateInEditor", true));
-                animatedMode2.setPosition(-8, 0, 0);
-                animatedMode2.setMaterial(matTest2);
-                EntityManager.getInstance().addEntity(animatedMode2);
+//                EntityManager.getInstance().update(0);
+//
+//                Probe probe = new Probe();
+//                EntityManager.getInstance().addEntity(probe.setPosition(new Vector3f(0, 1, 0)));
+//                probe.updateProbe();
+//
+//                Material matTest2 = MaterialManager.getInstance().generateMaterial(sprite);
+//
+//                Sprite metallic = new Sprite(1,1);
+//                metallic.setPixelColor(0,0, new Vector4f(new Vector3f(0.125f), 1));
+//                metallic.flush();
+//
+//                matTest2.setMetallicID(metallic.getTextureID());
+//                matTest2.setRoughnessID(metallic.getTextureID());
+//
+//                matTest2.setShader("pbr");
+//
+//                Entity animatedMode2 = new Entity();
+//                animatedMode2.setModel(ModelManager.getInstance().loadModel("Pilot_LP_Animated.fbx"));
+//                animatedMode2.addAttribute(new Attribute("updateInEditor", true));
+//                animatedMode2.setPosition(-8, 0, 0);
+//                animatedMode2.setMaterial(matTest2);
+//                EntityManager.getInstance().addEntity(animatedMode2);
 
 //                EntityManager.getInstance().addEntity(new Skybox());
 
-                EntityManager.getInstance().addEntity(new DirectionalLight().setPosition(new Vector3f(8, 8, 8)));
+//                EntityManager.getInstance().addEntity(new DirectionalLight().setPosition(new Vector3f(8, 8, 8)));
 
 //                Entity garden = new Entity();
 //                Material gardenMaterial = MaterialManager.getInstance().generateMaterial(sprite);
@@ -358,38 +358,38 @@ public class Reactor {
 //                garden.setMaterial(gardenMaterial);
 //                EntityManager.getInstance().addEntity(garden);
 
-                LinkedList<Entity> group = new LinkedList<Entity>();
-
-                for(int m = 0; m < size; m++){
-                    for(int r = 0; r < size; r++){
-                        Entity sphere = new Entity();
-                        sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
-                        sphere.setPosition(new Vector3f(((float)r * 2.25f) - ((float)size / 2.0f * 2.25f), 2, ((float)m * 2.25f)  - ((float)size / 2.0f * 2.25f)));
-                        Material matTest = MaterialManager.getInstance().generateMaterial(sprite);
-
-                        metallic = new Sprite(1,1);
-                        metallic.setPixelColor(0,0, new Vector4f(new Vector3f((float)(m + 1) / (size + 1f)), 1));
-                        metallic.flush();
-
-                        matTest.setMetallicID(metallic.getTextureID());
-
-                        Sprite roughness = new Sprite(1,1);
-                        roughness.setPixelColor(0,0, new Vector4f(new Vector3f((float)(r + 1) / (size + 1f)), 1));
-                        roughness.flush();
-
-                        matTest.setRoughnessID(roughness.getTextureID());
-
-                        matTest.setShader("pbr");
-
-                        sphere.addAttribute(new Attribute<Float>("metallic", (float)(m + 1) / (size + 1f)));
-                        sphere.addAttribute(new Attribute<Float>("reflective", (float)(r + 1) / (size + 1f)));
-
-                        sphere.setMaterial(matTest);
-                        group.add(sphere);
-                    }
-                }
-
-                EntityManager.getInstance().addEntity(group);
+//                LinkedList<Entity> group = new LinkedList<Entity>();
+//
+//                for(int m = 0; m < size; m++){
+//                    for(int r = 0; r < size; r++){
+//                        Entity sphere = new Entity();
+//                        sphere.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
+//                        sphere.setPosition(new Vector3f(((float)r * 2.25f) - ((float)size / 2.0f * 2.25f), 2, ((float)m * 2.25f)  - ((float)size / 2.0f * 2.25f)));
+//                        Material matTest = MaterialManager.getInstance().generateMaterial(sprite);
+//
+//                        metallic = new Sprite(1,1);
+//                        metallic.setPixelColor(0,0, new Vector4f(new Vector3f((float)(m + 1) / (size + 1f)), 1));
+//                        metallic.flush();
+//
+//                        matTest.setMetallicID(metallic.getTextureID());
+//
+//                        Sprite roughness = new Sprite(1,1);
+//                        roughness.setPixelColor(0,0, new Vector4f(new Vector3f((float)(r + 1) / (size + 1f)), 1));
+//                        roughness.flush();
+//
+//                        matTest.setRoughnessID(roughness.getTextureID());
+//
+//                        matTest.setShader("pbr");
+//
+//                        sphere.addAttribute(new Attribute<Float>("metallic", (float)(m + 1) / (size + 1f)));
+//                        sphere.addAttribute(new Attribute<Float>("reflective", (float)(r + 1) / (size + 1f)));
+//
+//                        sphere.setMaterial(matTest);
+//                        group.add(sphere);
+//                    }
+//                }
+//
+//                EntityManager.getInstance().addEntity(group);
 
 
 //                Entity animatedModel = new Entity();

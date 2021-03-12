@@ -4,7 +4,10 @@
   "Vertex":{
     "Attributes": {
       "position": "vec3",
-      "translation": "vec4"
+      "translation": "vec4",
+      "scale": "vec3",
+      "tCoords": "vec2",
+      "color": "vec3"
     },
     "Uniforms": {
       "view": "vec4",
