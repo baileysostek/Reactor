@@ -89,7 +89,8 @@ public class MaterialManager {
             //Create new entity
             preview = new Entity();
             //Set material texture to sphere
-            preview.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
+            //TODO comment back in below
+//            preview.setModel(ModelManager.getInstance().loadModel("sphere_smooth.obj").getFirst());
             //Set the material for this new entity to our material.
             preview.setMaterial(material);
             //Add this material to the hashmap so we can redraw the material without creating a new FBO or entity in the future.

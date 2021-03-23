@@ -26,7 +26,7 @@ public class VectorUtils {
     public static Vector3f transform(Vector3f vec, Matrix4f transform){
         Vector4f vec4 = new Vector4f(vec, 1);
         vec4 = transform.transform(vec4);
-        return new Vector3f(vec4.x, vec4.y, vec4.z);
+        return new Vector3f(vec4.x, vec4.y, vec4.z).div(vec4.w);
     }
 
     public static Vector2f worldToScreen(Vector3f worldPosition) {

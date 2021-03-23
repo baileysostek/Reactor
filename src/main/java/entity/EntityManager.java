@@ -432,6 +432,7 @@ public class EntityManager {
             this.links.put(parent, new LinkedList<Entity>());
         }
         this.links.get(parent).push(child);
+        child.setScale(new Vector3f(child.getScale()).div(parent.getScale()));
     }
 
     public LinkedList<Entity> getEntitiesChildren(Entity parent){

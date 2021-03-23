@@ -122,11 +122,17 @@ public class SpriteBinder {
     }
 
     public Sprite load(String image){
+        return load(image, new File("").getAbsolutePath() + "\\resources\\textures\\");
+    }
+
+    public Sprite load(String image, String basePath){
         if(spriteNames.containsKey(image)){
             return sprites.get(spriteNames.get(image));
         }else{
-            String path = new File("").getAbsolutePath() + "\\resources\\textures\\" + image;
+            String path = (basePath + image).replaceAll("\\\\", "/");
             File imageFile = new File(path);
+
+            System.out.println("Try load file:" + imageFile);
 
             //if not found
             if(!imageFile.exists()){

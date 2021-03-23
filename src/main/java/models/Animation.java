@@ -48,7 +48,7 @@ public class Animation {
 
             int index = 0;
             for(KeyFrame frame : keyFrames.get(bone)){
-                if(frame.timelinePosition > delta_t){
+                if(frame.timelinePosition >= delta_t){
                     upperKey = frame;
                     if(index >= 1){
                         lowerKey = keyFrames.get(bone)[index - 1];
@@ -60,8 +60,15 @@ public class Animation {
             }
 
             if(upperKey != null) {
-                Matrix4f pos = new Matrix4f(lowerKey.position).lerp(new Matrix4f(upperKey.position), (float) deltaTime);
+                Matrix4f pos;
+                if(Double.isNaN(deltaTime)){
+                    pos = new Matrix4f(upperKey.position);
+                }else {
+                    pos = new Matrix4f(lowerKey.position).lerp(new Matrix4f(upperKey.position), (float) deltaTime);
+                }
                 out.put(bone, pos);
+            }else{
+                out.put(bone, lowerKey.position);
             }
         }
 

@@ -10,8 +10,10 @@ import entity.Entity;
 import entity.EntityManager;
 import entity.component.Attribute;
 import entity.component.Collision;
+import entity.component.Component;
 import graphics.renderer.*;
 import graphics.renderer.Window;
+import graphics.renderer.postprocess.PostProcess;
 import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
@@ -58,6 +60,7 @@ import util.StringUtils;
 import java.awt.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -424,7 +427,6 @@ public class Reactor {
 //                sphere.setPosition(new Vector3f(0, 5, 0));
 //                sphere.addComponent(new Collision());
 //                EntityManager.getInstance().addEntity(sphere);
-
 
                 StopwatchManager.getInstance().addTimer("tick");
                 StopwatchManager.getInstance().addTimer("tick_editor");

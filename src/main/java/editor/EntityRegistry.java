@@ -67,10 +67,10 @@ public class EntityRegistry extends UIComponet {
         Entity whiteCube = new Entity();
         whiteCube.setModel(ModelManager.getInstance().loadModel("cube2.obj").getFirst());
         whiteCube.getAttribute("name").setData("Cube");
-//        Material mat1 = MaterialManager.getInstance().generateMaterial(SpriteBinder.getInstance().loadCubeMapHDR("Newport_Loft/Newport_Loft_Ref.hdr"));
-//        mat1.setShader("pbr");
-//        mat1.setAlbedoID(SpriteBinder.getInstance().load("white.png").getTextureID());
-//        whiteCube.setMaterial(mat1);
+        Material mat1 = MaterialManager.getInstance().generateMaterial(SpriteBinder.getInstance().load("white.png"));
+        mat1.setShader("pbr");
+        mat1.setNormalID(SpriteBinder.getInstance().load("white_normal.png").getTextureID());
+        whiteCube.setMaterial(mat1);
         addEntity("Geometry", whiteCube);
 
         Entity sphere = new Entity();
@@ -85,6 +85,7 @@ public class EntityRegistry extends UIComponet {
         Entity quad = new Entity();
         quad.setModel(ModelManager.getInstance().loadModel("quad.obj").getFirst());
         quad.getAttribute("name").setData("Quad");
+        quad.setMaterial(mat1);
         addEntity("Geometry", quad);
 
         Sprite sprite = new Sprite(1,1);
@@ -106,6 +107,13 @@ public class EntityRegistry extends UIComponet {
         animatedMode2.addAttribute(new Attribute("updateInEditor", true));
         animatedMode2.setMaterial(matTest2);
         addEntity("Animation", animatedMode2);
+
+//        Entity fox = new Entity();
+//        fox.setModel(ModelManager.getInstance().loadModel("2.0/Fox/glTF/Fox.gltf"));
+//        fox.addAttribute(new Attribute("updateInEditor", true));
+//        fox.setMaterial(matTest2);
+//        fox.setScale(0.1f);
+//        addEntity("Animation", fox);
 
 
 //        Entity dragon = new Entity();

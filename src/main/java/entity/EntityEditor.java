@@ -228,6 +228,8 @@ public class EntityEditor extends UIComponet {
                     if(Keyboard.getInstance().isKeyPressed(Keyboard.ALT_LEFT)){
                         Entity clone = cloneSelected();
 
+                        System.out.println(clone);
+
                         //Trigger the onCopy
                         for(Callback c : onClone){
                             c.callback(clone);
@@ -645,6 +647,11 @@ public class EntityEditor extends UIComponet {
                 e.printStackTrace();
                 return null;
             }
+//            catch (Exception e) {
+//                entity = new Entity();
+//                entity.getAttribute("name").setData("Error");
+//                e.printStackTrace();
+//            }
         }
 
         //Check if the moved entity was a child
@@ -711,7 +718,7 @@ public class EntityEditor extends UIComponet {
             for(Entity e: selectedEntities.keySet()){
                 e.renderInEditor(true);
                 DirectDraw.getInstance().drawAABB(e, new Vector3f(1));
-//                DirectDraw.getInstance().drawBones(e);
+                DirectDraw.getInstance().drawBones(e);
             }
 
             Vector3f YELLOW = new Vector3f(1, 1, 0);

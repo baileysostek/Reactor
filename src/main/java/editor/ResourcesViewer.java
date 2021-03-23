@@ -137,12 +137,12 @@ public class ResourcesViewer extends UIComponet {
                                 default: {
                                     String filename = draggedFile.getRelativePath().replace("/models/", "");
                                     LinkedList<Model> models = ModelManager.getInstance().loadModel(filename);
-                                    if(models.size() >= 2) {
+                                    if(models.size() > 1) {
                                         for (Model model : models) {
                                             Entity child = new Entity();
                                             child.setParent(newEntity);
                                             child.setModel(model);
-                                            child.setMaterial(MaterialManager.getInstance().getDefaultMaterial());
+                                            child.setMaterial(model.getDefaultMaterial() != null ? model.getDefaultMaterial() : MaterialManager.getInstance().getDefaultMaterial());
                                             EntityManager.getInstance().addEntity(child);
                                         }
                                     }else{

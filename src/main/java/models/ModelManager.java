@@ -5,18 +5,21 @@ import graphics.renderer.GLTarget;
 import graphics.renderer.ShaderManager;
 import graphics.renderer.EnumGLDatatype;
 import graphics.renderer.Handshake;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
-import org.joml.Vector2f;
-import org.joml.Vector3f;
+import graphics.sprite.Sprite;
+import graphics.sprite.SpriteBinder;
+import material.Material;
+import material.MaterialManager;
+import org.joml.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.assimp.*;
 import util.StringUtils;
 
 import java.io.*;
+import java.lang.Math;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -198,7 +201,11 @@ public class ModelManager {
             AIAnimation aiAnimation = AIAnimation.create(scene.mAnimations().get(i));
             String animationName = aiAnimation.mName().dataString();
             System.out.println("Animation found in model data:" + animationName);
-            Animation animation = new Animation(aiAnimation.mDuration(), (float)aiAnimation.mTicksPerSecond());
+            double duration = aiAnimation.mDuration();
+            if(!Double.isFinite(duration)){
+                duration = 1.0d;
+            }
+            Animation animation = new Animation(duration, (float)aiAnimation.mTicksPerSecond());
             HashMap<String, LinkedList<KeyFrame>> keyframes = new HashMap<>();
             HashMap<String, LinkedList<AIBone>> bones = new HashMap<>();
 
@@ -298,7 +305,14 @@ public class ModelManager {
     private LinkedList<Model> parseAssimp(String modelPath, AIScene scene){
         LinkedList<Model> out = new LinkedList<>();
 
+        LinkedHashMap<Integer, Material> materials = new LinkedHashMap<>();
+
         LinkedHashMap<String, Joint> joints = new LinkedHashMap<>();
+
+        String textureDirectory = "";
+        if(modelPath.contains("/")){
+            textureDirectory = modelPath.substring(0, modelPath.lastIndexOf("/")+1);
+        }
 
         try {
             //Allocate our textures
@@ -307,28 +321,67 @@ public class ModelManager {
             for (int i = 0; i < numMaterials; i++) {
                 AIMaterial material = AIMaterial.create(aiMaterials.get(i)); // wrap raw pointer in AIMaterial instance
 
-                // Method 1: use aiGetMaterial<property> functions, e.g.
-                int texCount = Assimp.aiGetMaterialTextureCount(material, Assimp.aiTextureType_DIFFUSE);
+                int materialIndex = i;
 
-                // Method 2: Parse material properties manually
-                PointerBuffer properties = material.mProperties(); // array of pointers to AIMaterialProperty structs
-                for ( int j = 0; j < properties.remaining(); j++ ) {
-                    AIMaterialProperty prop = AIMaterialProperty.create(properties.get(j));
-                    // parse property
-                    prop.mKey().dataString();
-                    String name = prop.mKey().dataString();
-                    if(name.contains("file")) {
-                        String propValue = StandardCharsets.UTF_8.decode(prop.mData()).toString();
-                        System.out.println("Texture file:" + propValue);
-                    }else{
-                        System.out.println("Other Prop:" + name + " = " + StandardCharsets.UTF_8.decode(prop.mData()).toString());
-                    }
+                Material mat = MaterialManager.getInstance().generateMaterial(SpriteBinder.getInstance().getFileNotFoundID());
+
+                AIString path = AIString.calloc();
+                Assimp.aiGetMaterialTexture(material, Assimp.aiTextureType_DIFFUSE, 0, path, (IntBuffer) null, null, null, null, null, null);
+                String textPath = path.dataString();
+                System.out.println("Texture file:" + textureDirectory+textPath);
+                if(!textPath.isEmpty()) {
+                    mat.setAlbedoID(SpriteBinder.getInstance().load(textureDirectory+textPath, StringUtils.getRelativePath()+"models/").getTextureID());
                 }
+
+//                AIString pathNormal = AIString.calloc();
+//                Assimp.aiGetMaterialTexture(material, Assimp.aiTextureType_NORMALS, 0, pathNormal, (IntBuffer) null, null, null, null, null, null);
+//                String textPathNormal = pathNormal.dataString();
+//                System.out.println("Normal file:" + textureDirectory+textPathNormal);
+//                if(!textPath.isEmpty()) {
+//                    mat.setNormalID(SpriteBinder.getInstance().load(textureDirectory+textPathNormal, StringUtils.getRelativePath()+"models/").getTextureID());
+//                }
+//
+//                AIString pathAo = AIString.calloc();
+//                Assimp.aiGetMaterialTexture(material, Assimp.aiTextureType_LIGHTMAP, 0, pathAo, (IntBuffer) null, null, null, null, null, null);
+//                String textPathAo = pathAo.dataString();
+//                System.out.println("AO file:" + textureDirectory+textPathAo);
+//                if(!textPath.isEmpty()) {
+//                    mat.setAmbientOcclusionID(SpriteBinder.getInstance().load(textureDirectory+textPathAo, StringUtils.getRelativePath()+"models/").getTextureID());
+//                }
+
+//                AIString pathAo = AIString.calloc();
+//                Assimp.aiGetMaterialTexture(material, Assimp.aiTextureType_LIGHTMAP, 0, pathAo, (IntBuffer) null, null, null, null, null, null);
+//                String textPathAo = pathAo.dataString();
+//                System.out.println("AO file:" + textureDirectory+textPathAo);
+//                if(!textPath.isEmpty()) {
+//                    mat.setAmbientOcclusionID(SpriteBinder.getInstance().load(textureDirectory+textPathAo, StringUtils.getRelativePath()+"models/").getTextureID());
+//                }
+                if(!materials.containsKey(materialIndex)) {
+                    materials.put(materialIndex, mat);
+                }
+
+//                // Method 2: Parse material properties manually
+//                PointerBuffer properties = material.mProperties(); // array of pointers to AIMaterialProperty structs
+//                for ( int j = 0; j < properties.remaining(); j++ ) {
+//                    AIMaterialProperty prop = AIMaterialProperty.create(properties.get(j));
+//                    // parse property
+//                    prop.mKey().dataString();
+//                    String name = prop.mKey().dataString();
+//                    if(name.contains("file")) {
+//                        String propValue = StandardCharsets.UTF_8.decode(prop.mData()).toString();
+//                        System.out.println("Texture file:" + propValue);
+//                    }else{
+//                        System.out.println("Other Prop:" + name + " = " + StandardCharsets.UTF_8.decode(prop.mData()).toString());
+//                    }
+//                }
             }
 
             //Load our mesh
             for (int meshIndex = 0; meshIndex < scene.mNumMeshes(); meshIndex++) {
                 AIMesh mesh = AIMesh.create(scene.mMeshes().get(meshIndex));
+
+                //Store the material
+                int materialIndex = mesh.mMaterialIndex();
 
                 //Number of vertices in this mesh
                 int numVertices = mesh.mNumFaces() * 3;
@@ -391,7 +444,7 @@ public class ModelManager {
                         }else{
                             vTangents[(i * 9) + (faceVertexIndex * 3) + 0] = 0;
                             vTangents[(i * 9) + (faceVertexIndex * 3) + 1] = 0;
-                            vTangents[(i * 9) + (faceVertexIndex * 3) + 2] = 0;
+                            vTangents[(i * 9) + (faceVertexIndex * 3) + 2] = 1;
                         }
 
                         if(bitangent != null) {
@@ -399,7 +452,7 @@ public class ModelManager {
                             vBiTangents[(i * 9) + (faceVertexIndex * 3) + 1] = bitangent.y();
                             vBiTangents[(i * 9) + (faceVertexIndex * 3) + 2] = bitangent.z();
                         }else{
-                            vBiTangents[(i * 9) + (faceVertexIndex * 3) + 0] = 0;
+                            vBiTangents[(i * 9) + (faceVertexIndex * 3) + 0] = 1;
                             vBiTangents[(i * 9) + (faceVertexIndex * 3) + 1] = 0;
                             vBiTangents[(i * 9) + (faceVertexIndex * 3) + 2] = 0;
                         }
@@ -496,9 +549,11 @@ public class ModelManager {
                 LinkedHashMap<String, Animation> animations = calculateAnimations(scene, joints);
 
                 Model model = new Model(this.getNextID(), modelPath, modelHandshake, vPositions.length / 3, new Vector3f[]{new Vector3f(min.x(), min.y(), min.z()), new Vector3f(max.x(), max.y(), max.z())}, root, animations, boneOffsets, joints);
+                System.out.println("Material Index link:"+ materialIndex);
+                model.setDefaultMaterial(materials.get(materialIndex));
                 out.push(model);
-
             }
+
         }catch(Exception exception){
             exception.printStackTrace();
             System.out.println("Error parsing data for model:");

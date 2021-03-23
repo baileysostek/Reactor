@@ -22,6 +22,11 @@ public abstract class Component implements Serializable<Component>{
 //    private LinkedList<Event> events = new LinkedList<>();
     private HashMap<String, LinkedList<Event>> events = new HashMap<String, LinkedList<Event>>();
 
+    public Component(){
+        ID = GLOBAL_ID;
+        GLOBAL_ID++;
+    }
+
     public Component(String componentName){
         ID = GLOBAL_ID;
         GLOBAL_ID++;

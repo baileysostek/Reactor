@@ -51,6 +51,9 @@ out vec3 passReflectNormal;
 //Lighting
 out vec4[maxLights] passPosLightSpace;
 
+//TBN matrix
+out mat3 TBN;
+
 //Main function to run
 void main(){
     //reconstruct our IN matricies
@@ -80,9 +83,13 @@ void main(){
         );
     }
 
-    vec4 offsetNormal = transform * vec4(mat3(boneTransform) * vNormal.xyz, 1.0);
+    vec4 offsetNormal  = transform * vec4(mat3(boneTransform) * vNormal.xyz, 1.0);
+    vec4 offsetTangent = transform * vec4(mat3(boneTransform) * vTangent.xyz, 1.0);
     vec4 worldOffset = transform * vec4(0, 0, 0, 1);
     passNormal = normalize((vec3(offsetNormal) / offsetNormal.w) - (worldOffset.xyz)/worldOffset.w);
+    vec3 localTangent = normalize((vec3(offsetTangent) / offsetTangent.w) - (worldOffset.xyz)/worldOffset.w);
+
+    TBN = transpose(mat3(offsetTangent.xyz, cross(offsetTangent.xyz, offsetNormal.xyz), offsetNormal.xyz));
 
     vec4 worldPosition = transform * boneTransform * vec4(vPosition.xyz, 1.0);
     //    worldPosition += vec4(1, 0, 0, 0);

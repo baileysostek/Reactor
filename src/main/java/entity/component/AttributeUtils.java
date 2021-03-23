@@ -68,7 +68,6 @@ public class AttributeUtils {
                 int index = 0;
                 for(Object obj : newCollection){
                     if(differ(obj, currentDataBuffer[index])){
-                        System.out.println("Changed!");
                         return true;
                     }
                     index++;

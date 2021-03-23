@@ -37,6 +37,7 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     //Model data for this entity
     private Model model;
+    private String boneParent;
 
     private AnimationComponent animationComponent = null;
 
@@ -205,6 +206,32 @@ public class Entity implements Transformable, Serializable<Entity> {
         return this.components;
     }
 
+    public final Collection<Component> getComponentsByClass(Class className){
+        if(className == null){
+            System.out.println("Error: Passed a null class to getComponentByClass(). Expected Parameter: instanceof Component");
+            return null;
+        }
+
+        if(Component.class.isAssignableFrom(className)){
+            LinkedList<Component> outPool = new LinkedList<>();
+
+            for(Component component : components){
+                if(className.isInstance(component)){
+                    outPool.add(component);
+                }
+            }
+
+            return outPool;
+        }else{
+            System.out.println("Error: passed class [" + className + "] is not instance of Component.class");
+            return null;
+        }
+    }
+
+//    public final Component getComponentByName(){
+//        return null
+//    }
+
     protected final Collection<Attribute> getAttributes(){
         return this.attributes.values();
     }
@@ -321,6 +348,13 @@ public class Entity implements Transformable, Serializable<Entity> {
 
         if(rotationData instanceof Quaternionf) {
             orientation = (Quaternionf) rotationData;
+        }
+
+        //Apply final Bone movement
+        if(this.hasParent()){
+            if(this.getParent().isAnimated()){
+                this.transform.translate(this.getParent().getAnimationComponent().getRelativePositionOfBone(this.boneParent));
+            }
         }
 
         //apply local translation rotation and scale, in that order.
@@ -544,8 +578,12 @@ public class Entity implements Transformable, Serializable<Entity> {
         return false;
     }
 
-    public final void setParent(Entity parent){
+    public final void setParent(Entity parent, String bone){
+        this.setParent(parent);
+        this.attachToParentsBone(bone);
+    }
 
+    public final void setParent(Entity parent){
         //Check to make sure that we are not already parented to a child
         if(this.parent != null){
 
@@ -553,6 +591,7 @@ public class Entity implements Transformable, Serializable<Entity> {
             if(parent == null){
                 EntityManager.getInstance().unlink(this.parent, this);
                 this.parent = null;
+                this.boneParent = null;
                 return;
             }
 
@@ -571,6 +610,12 @@ public class Entity implements Transformable, Serializable<Entity> {
 
         //Set our parent to this new parent.
         this.parent = parent;
+
+        this.boneParent = null;
+    }
+
+    public void attachToParentsBone(String bone){
+        this.boneParent = bone;
     }
 
     //Rendering hooks
@@ -698,6 +743,7 @@ public class Entity implements Transformable, Serializable<Entity> {
                 JsonObject component = components.get(i).getAsJsonObject();
                 try {
                     Class<?> classType = Class.forName(component.get("class").getAsString());
+                    System.out.println("Creating component:" + classType);
                     //Add our component
                     this.addComponent(((Component)classType.newInstance()).deserialize(component.getAsJsonObject("value")));
 
@@ -772,8 +818,8 @@ public class Entity implements Transformable, Serializable<Entity> {
         LinkedList<Material> materials = this.getMaterials().getData();
         materials.clear();
         materials.add(material);
-        this.getMaterials().setData(materials);
-        return material;
+        ((Attribute<LinkedList<Material>>)this.getAttribute("materials")).setData(materials);
+        return getMaterial();
     }
 
 //    public Material setMaterial(Sprite sprite){
@@ -824,5 +870,12 @@ public class Entity implements Transformable, Serializable<Entity> {
 
     public AnimationComponent getAnimationComponent() {
         return animationComponent;
+    }
+
+    public boolean isAnimated(){
+        if(this.animationComponent != null){
+            return this.animationComponent.getAnimationsByName().size() > 0;
+        }
+        return false;
     }
 }

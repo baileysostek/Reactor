@@ -22,6 +22,9 @@ in vec3 passCamPos;
 in vec3 WorldPos;
 in vec4 passPosLightSpace[maxLights];
 
+//TBN matrix
+in mat3 TBN;
+
 //Reflection normal.
 in vec3 passReflectNormal;
 
@@ -108,16 +111,14 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 void main(void){
     //Sample the Albedo texture
     vec4 albedo    = texture(textureID, passCoords);
+    vec3 normalMap = 2.0 * texture(normalID, passCoords).rgb - 1.0;
     float metallic = texture(metallicID, passCoords).r;
     float ao       = texture(ambientOcclusionID, passCoords).r;
     float roughness= texture(roughnessID, passCoords).r;
 
     //    albedo.xyz = mix(albedo.xyz, getReflection(), metallic);
 
-    //If this is a transparent pixel, dont do anything
-    if(albedo.a < 0.5){
-        discard;
-    }
+    normalMap = (TBN * normalMap);
 
     vec3 N = normalize(passNormal);
     vec3 V = normalize(passCamPos - WorldPos);

@@ -114,16 +114,20 @@ public class JavaController {
 //        Game.logManager.println();
         ByteBuffer buttons = GLFW.glfwGetJoystickButtons(index);
         int buttonIndex = 0;
+
         while (buttons.hasRemaining()) {
             int state = buttons.get();
             if (state == GLFW.GLFW_PRESS) {
                 button_values[buttonIndex] = 1.0f;
-//                Game.logManager.println(button_names[buttonIndex]+":"+button_values[buttonIndex]+":"+buttonIndex);
             }else{
                 button_values[buttonIndex] = 0.0f;
             }
 
             buttonIndex++;
+
+            if(buttonIndex >= button_values.length){
+                break;
+            }
         }
 
         FloatBuffer axis = GLFW.glfwGetJoystickAxes(index);
@@ -150,6 +154,9 @@ public class JavaController {
                 axis_values[axisIndex] = 0.0f;
             }
             axisIndex++;
+            if(axisIndex >= axis_values.length){
+                break;
+            }
         }
         leftThumbStick = (new Vector3f(getButton(EnumButtonType.LEFT_STICK_X), getButton(EnumButtonType.LEFT_STICK_Y), getButton(EnumButtonType.LEFT_TRIGGER))).mul(axis_modifier);
         rightThumbStick = (new Vector3f(getButton(EnumButtonType.RIGHT_STICK_X), getButton(EnumButtonType.RIGHT_STICK_Y), getButton(EnumButtonType.RIGHT_TRIGGER))).mul(axis_modifier);

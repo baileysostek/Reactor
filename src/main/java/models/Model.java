@@ -5,6 +5,8 @@ import entity.Entity;
 import graphics.renderer.Handshake;
 import graphics.renderer.VAO;
 import graphics.renderer.VAOManager;
+import material.Material;
+import org.joml.Matrix4dc;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -36,6 +38,9 @@ public class Model implements Serializable<Model> {
     private Handshake handshake;
     private VAO vao;
 
+    //Default Material
+    private Material defaultMaterial;
+
     //Just used to create a new pointer so deserilize can be called
     public Model(int id){
         this.id             = id;
@@ -62,6 +67,14 @@ public class Model implements Serializable<Model> {
         recalculateTPose();
 
         vao = new VAO(this);
+    }
+
+    public void setDefaultMaterial(Material passMaterial){
+        this.defaultMaterial = passMaterial;
+    }
+
+    public Material getDefaultMaterial(){
+        return defaultMaterial;
     }
 
     public Handshake getHandshake(){
@@ -138,6 +151,11 @@ public class Model implements Serializable<Model> {
         }else{
             return tPose;
         }
+    }
+
+    public Joint getAnimatedBoneTransform(String animation, String joint, double time) {
+        LinkedHashMap<String, Joint> mapping = getAnimatedBoneTransforms(animation, time);
+        return mapping.get(joint);
     }
 
 //    public Matrix4f getAnimatedBoneTransform(String animation, String bone, double deltaTime){

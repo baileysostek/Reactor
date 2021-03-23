@@ -5,6 +5,12 @@
  */
 package input.controller;
 
+import graphics.animation.EnumLoop;
+import graphics.animation.Timeline;
+import graphics.renderer.DirectDraw;
+import graphics.renderer.Renderer;
+import graphics.sprite.SpriteBinder;
+import graphics.ui.UIManager;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWJoystickCallbackI;
 import util.Callback;
@@ -34,50 +40,75 @@ public class ControllerManager{
 
     private Lock lock;
 
+    private Timeline connectTimeline = new Timeline();
+
+    private final int CONTROLLER_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/gamepad.svg", 1, 1, 96f);
+
     private ControllerManager() {
         lock = new ReentrantLock();
 
         controllers = new LinkedList<>();
 
+        //Init timeline
+        connectTimeline.addKeyFrame("alpha", 0, 0);
+        connectTimeline.addKeyFrame("alpha", 0.3f, 1);
+        connectTimeline.addKeyFrame("alpha", 0.6f, 0);
+        connectTimeline.addKeyFrame("alpha", 0.9f, 1);
+        connectTimeline.addKeyFrame("alpha", 1.2f, 0);
+
+        connectTimeline.setLoop(EnumLoop.STOP_LAST_VALUE);
+
         GLFW.glfwSetJoystickCallback(new GLFWJoystickCallbackI(){
             @Override
             public void invoke(int jid, int event) {
-                if (event == GLFW.GLFW_CONNECTED) {
-                    JavaController controller = new JavaController(jid);
-                    controllers.add(controller);
-                    for(Callback c : onControllerConnect){
-                        c.callback(controller);
-                    }
-                }
-                else if (event == GLFW.GLFW_DISCONNECTED){
-                    try {
-                        lock.unlock();
-                        JavaController controller = controllers.get(jid);
-                        for (Callback c : onControllerConnect) {
+                try {
+                    lock.lock();
+                    if (event == GLFW.GLFW_CONNECTED) {
+                        JavaController controller = new JavaController(jid);
+                        controllers.add(controller);
+                        for(Callback c : onControllerConnect){
                             c.callback(controller);
                         }
-                        controllers.remove(controller);
-                    }finally{
-                        lock.unlock();
+                        connectTimeline.start();
                     }
+                    else if (event == GLFW.GLFW_DISCONNECTED){
+                        if(controllers.contains(jid)) {
+                            JavaController controller = controllers.get(jid);
+                            for (Callback c : onControllerConnect) {
+                                c.callback(controller);
+                            }
+                            controllers.remove(controller);
+                        }
+                    }
+                } finally {
+                    lock.unlock();
                 }
             }
         });
 
-//        for(int i = 0; i < GLFW.GLFW_JOYSTICK_LAST; i++){
-//            if(GLFW.glfwJoystickPresent(i)){
-//                controllers.add(new JavaController(i));
-//            }else{
-//
-//            }
-//        }
+        for(int i = 0; i < 16; i++){
+            GLFW.glfwJoystickPresent(i);
+        }
+
+        for(int i = 0; i < GLFW.GLFW_JOYSTICK_LAST; i++){
+            if(GLFW.glfwJoystickPresent(i)){
+                controllers.add(new JavaController(i));
+            }
+        }
     }
 
-    private int connectedControllers = 0;
-
     public void update(double delta) {
-        for(JavaController controller: controllers){
-            controller.poll();
+        try {
+            for (JavaController controller : controllers) {
+                controller.poll();
+            }
+        }catch (Exception e){
+
+        }
+
+        if(connectTimeline.isRunning()) {
+            connectTimeline.update(delta);
+            UIManager.getInstance().drawImage(Renderer.getWIDTH() - 64, 16, 64, 64, CONTROLLER_SVG);
         }
     }
 
@@ -86,11 +117,24 @@ public class ControllerManager{
     }
 
     public int getNumberofConnectedControllers(){
-        return this.connectedControllers;
+        return this.controllers.size();
     }
 
     public JavaController getController(int controllerIndex) {
        return this.controllers.get(controllerIndex);
+    }
+
+    public void onControllerConnect(Callback callback){
+        if(!this.onControllerConnect.contains(callback)){
+            this.onControllerConnect.add(callback);
+        }
+    }
+
+    public boolean removeOnConnectCallback(Callback c){
+        if(this.onControllerConnect.contains(c)){
+            return this.onControllerConnect.remove(c);
+        }
+        return false;
     }
 
     public static void initialize(){
@@ -102,5 +146,4 @@ public class ControllerManager{
     public static ControllerManager getInstance(){
         return controllerManager;
     }
-
 }
