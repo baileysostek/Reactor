@@ -36,7 +36,7 @@ public class Settings extends UIComponet{
 
 
     @Override
-    public void self_render() {
+    public void selfRender() {
         int flags = ImGuiWindowFlags.NoCollapse;
         ImGui.beginChild(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight(),  true, flags);
         AttributeRenderer.renderAttributes(attribtues);

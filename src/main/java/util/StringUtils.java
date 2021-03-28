@@ -49,6 +49,14 @@ public class StringUtils {
         return null;
     }
 
+    public static boolean exists(String filePath){
+        if(fileCache.containsKey(filePath)){
+            return true;
+        }
+        String path = PATH + filePath;
+        return new File(path).exists();
+    }
+
     public static boolean releaseCachedFile(String fileName){
         if(fileName.startsWith("/")){
             fileName = fileName.substring(1, fileName.length());

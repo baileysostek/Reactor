@@ -63,7 +63,7 @@ public class Slider extends UIComponet {
     }
 
     @Override
-    public void self_render() {
+    public void selfRender() {
         ImGui.pushID(ID);
         ImGui.sliderFloat(label, value, range.x, range.y);
         ImGui.popID();

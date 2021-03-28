@@ -64,7 +64,7 @@ public class Axis extends UIComponet {
     }
 
     @Override
-    public void self_render() {
+    public void selfRender() {
 
     }
 

@@ -1,6 +1,5 @@
 package editor.components;
 
-import java.awt.*;
 import java.util.LinkedList;
 
 public abstract class UIComponet {
@@ -31,7 +30,7 @@ public abstract class UIComponet {
 
     public void render(){
         if(visable) {
-            self_render();
+            selfRender();
             self_render_children();
             self_post_render();
         }
@@ -47,7 +46,7 @@ public abstract class UIComponet {
     public abstract void onAdd();
     public abstract void onRemove();
     public abstract void self_update(double delta);
-    public abstract void self_render();
+    public abstract void selfRender();
     public abstract void self_post_render();
 
     public void onShutdown(){

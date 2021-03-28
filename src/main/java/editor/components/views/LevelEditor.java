@@ -176,7 +176,7 @@ public class LevelEditor extends UIComponet {
     }
 
     @Override
-    public void self_render() {
+    public void selfRender() {
         ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight());
         ImGui.inputText("SaveLevel", levelname);
         if(ImGui.button("Save", 32, 32)){

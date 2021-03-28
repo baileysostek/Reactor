@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import editor.Editor;
 import engine.Reactor;
 import graphics.renderer.VAO;
+import graphics.renderer.postprocess.PostProcess;
 import input.Keyboard;
 import input.MousePicker;
 import material.Material;
@@ -462,9 +463,27 @@ public class EntityManager {
                 if(!materialEntities.containsKey(e.getMaterial())){
                     materialEntities.put(e.getMaterial(), new LinkedList<Entity>());
                 }
-                materialEntities.get(e.getMaterial()).add(e);
-//                materialEntities.get(e.getMaterial()).addAll(batches.get(batch));
-//                break;
+                if(!e.hasComponentOfType(PostProcess.class)) {
+                    materialEntities.get(e.getMaterial()).add(e);
+                }
+            }
+            out.put(batch, materialEntities);
+        }
+        return out;
+    }
+
+    public LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> getBatchesPostProcess(){
+        LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> out = new LinkedHashMap<>();
+        for(VAO batch : batches.keySet()){
+            LinkedHashMap<Material, LinkedList<Entity>> materialEntities = new LinkedHashMap<>();
+            for(Entity e : batches.get(batch)){
+                //TODO fix batching
+                if(!materialEntities.containsKey(e.getMaterial())){
+                    materialEntities.put(e.getMaterial(), new LinkedList<Entity>());
+                }
+                if(e.hasComponentOfType(PostProcess.class)) {
+                    materialEntities.get(e.getMaterial()).add(e);
+                }
             }
             out.put(batch, materialEntities);
         }

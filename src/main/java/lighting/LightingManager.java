@@ -75,8 +75,16 @@ public class LightingManager {
             }
             LinkedList<Entity> rendered = new LinkedList<>();
             LinkedHashMap<Material, LinkedList<Entity>> materialEntities = batches.get(vao);
-            for(LinkedList<Entity> material : materialEntities.values()) {
-                rendered.addAll(material);
+            for(LinkedList<Entity> toRender : materialEntities.values()) {
+                for(Entity e : toRender){
+                    if(e.hasAttribute("Casts Shadows")){
+                        if((boolean)e.getAttribute("Casts Shadows").getData()){
+                            rendered.add(e);
+                        }
+                    }else{
+                        rendered.add(e);
+                    }
+                }
             }
             if(rendered.size() > 0) {
                 vao.render(rendered);

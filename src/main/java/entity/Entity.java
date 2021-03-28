@@ -228,6 +228,23 @@ public class Entity implements Transformable, Serializable<Entity> {
         }
     }
 
+    public boolean hasComponentOfType(Class className){
+        if(className == null){
+            System.out.println("Error: Passed a null class to getComponentByClass(). Expected Parameter: instanceof Component");
+            return false;
+        }
+
+        if(Component.class.isAssignableFrom(className)){
+            for(Component component : components){
+                if(className.isInstance(component)){
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 //    public final Component getComponentByName(){
 //        return null
 //    }

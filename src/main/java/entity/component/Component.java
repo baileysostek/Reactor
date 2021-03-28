@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 public abstract class Component implements Serializable<Component>{
-    private String componentName;
+    private String componentName= "Component";
     protected Entity parent;
     private HashMap<String, Attribute> attributes = new HashMap<>();
 
@@ -165,7 +165,9 @@ public abstract class Component implements Serializable<Component>{
     protected abstract LinkedList<Attribute> initialize();
 //    public abstract void postInitialize();
     public abstract void update(double delta);
-    public abstract String getName();
+    public String getName(){
+        return this.componentName;
+    };
     public abstract void onAttributeUpdate(Attribute observed);
 
 

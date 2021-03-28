@@ -51,10 +51,12 @@ public class ControllerManager{
 
         //Init timeline
         connectTimeline.addKeyFrame("alpha", 0, 0);
-        connectTimeline.addKeyFrame("alpha", 0.3f, 1);
-        connectTimeline.addKeyFrame("alpha", 0.6f, 0);
-        connectTimeline.addKeyFrame("alpha", 0.9f, 1);
+        connectTimeline.addKeyFrame("alpha", .3f, 1);
+        connectTimeline.addKeyFrame("alpha", .6f, 0);
+        connectTimeline.addKeyFrame("alpha", .9f, 1);
         connectTimeline.addKeyFrame("alpha", 1.2f, 0);
+
+        connectTimeline.setDuration(1.2f);
 
         connectTimeline.setLoop(EnumLoop.STOP_LAST_VALUE);
 
@@ -108,7 +110,7 @@ public class ControllerManager{
 
         if(connectTimeline.isRunning()) {
             connectTimeline.update(delta);
-            UIManager.getInstance().drawImage(Renderer.getWIDTH() - 64, 16, 64, 64, CONTROLLER_SVG);
+            UIManager.getInstance().drawImageWithAlpha(Renderer.getWIDTH() - 68, 4, 64, 64, CONTROLLER_SVG, connectTimeline.getValueOf("alpha"));
         }
     }
 

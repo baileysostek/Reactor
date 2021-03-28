@@ -1,14 +1,13 @@
 package models;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import graphics.renderer.GLTarget;
-import graphics.renderer.ShaderManager;
-import graphics.renderer.EnumGLDatatype;
-import graphics.renderer.Handshake;
+import graphics.renderer.*;
+import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import material.Material;
 import material.MaterialManager;
+import math.VectorUtils;
 import org.joml.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
@@ -564,6 +563,119 @@ public class ModelManager {
         }
 
         return out;
+    }
+
+    public Model buildPlane(float width, float height, int subdivisionsX, int subdivisionsY){
+        float unitWidth  = width  / (float)subdivisionsX;
+        float unitHeight = height / (float)subdivisionsY;
+
+        // +2 is for first and last point, so with 0 subdivisions you get 4 points making a simple quad.
+        int widthUnits  = subdivisionsY+2;
+        int heightUnits = subdivisionsX+2;
+
+        Vector3f[] vertices = new Vector3f[widthUnits * heightUnits];
+        Vector3f offset = new Vector3f(widthUnits * unitWidth / 2.0f, 0, heightUnits * unitHeight / 2.0f);
+
+        // Generate our vertses
+        for(int j = 0; j < heightUnits; j++){
+            for(int i = 0; i < widthUnits; i++){
+                vertices[i + (j * widthUnits)] = new Vector3f(i * unitWidth, 0, j * unitHeight).sub(offset);
+            }
+        }
+
+        //Here we have 6 verts per quad. Each quad is 2 tries = 6 verts.
+        Vector3f[] faceData   = new Vector3f[subdivisionsX * subdivisionsY * 6];
+        Vector3f[] normalData = new Vector3f[faceData.length];
+        Vector2f[] uvData     = new Vector2f[faceData.length];
+
+        // Generate our indices
+        for(int j = 0; j < subdivisionsY; j++){
+            for(int i = 0; i < subdivisionsX; i++){
+                int faceIndex = (i + (j * subdivisionsY));
+                boolean inverseFace = ((i + j) % 2) == 1;
+
+                Vector3f vec0 = vertices[(i + 0) + ((j + 0) * widthUnits)];
+                Vector3f vec1 = vertices[(i + 1) + ((j + 0) * widthUnits)];
+                Vector3f vec2 = vertices[(i + 0) + ((j + 1) * widthUnits)];
+                Vector3f vec3 = vertices[(i + 1) + ((j + 1) * widthUnits)];
+
+                Vector2f uv0 = new Vector2f((float)(i + 0) / (float)subdivisionsX, (float)(j + 0) / (float)subdivisionsY);
+                Vector2f uv1 = new Vector2f((float)(i + 1) / (float)subdivisionsX, (float)(j + 0) / (float)subdivisionsY);
+                Vector2f uv2 = new Vector2f((float)(i + 0) / (float)subdivisionsX, (float)(j + 1) / (float)subdivisionsY);
+                Vector2f uv3 = new Vector2f((float)(i + 1) / (float)subdivisionsX, (float)(j + 1) / (float)subdivisionsY);
+
+                if(inverseFace){
+                    // [0, 1, 3, 0, 3, 2]
+                    faceData[(faceIndex * 6) + 0] = vec3;
+                    faceData[(faceIndex * 6) + 1] = vec1;
+                    faceData[(faceIndex * 6) + 2] = vec0;
+                    faceData[(faceIndex * 6) + 3] = vec2;
+                    faceData[(faceIndex * 6) + 4] = vec3;
+                    faceData[(faceIndex * 6) + 5] = vec0;
+
+                    uvData[(faceIndex * 6) + 0] = uv3;
+                    uvData[(faceIndex * 6) + 1] = uv1;
+                    uvData[(faceIndex * 6) + 2] = uv0;
+                    uvData[(faceIndex * 6) + 3] = uv2;
+                    uvData[(faceIndex * 6) + 4] = uv3;
+                    uvData[(faceIndex * 6) + 5] = uv0;
+                }else{
+                    // [0, 1, 2, 1, 3, 2]
+                    faceData[(faceIndex * 6) + 0] = vec2;
+                    faceData[(faceIndex * 6) + 1] = vec1;
+                    faceData[(faceIndex * 6) + 2] = vec0;
+                    faceData[(faceIndex * 6) + 3] = vec2;
+                    faceData[(faceIndex * 6) + 4] = vec3;
+                    faceData[(faceIndex * 6) + 5] = vec1;
+
+                    uvData[(faceIndex * 6) + 0] = uv2;
+                    uvData[(faceIndex * 6) + 1] = uv1;
+                    uvData[(faceIndex * 6) + 2] = uv0;
+                    uvData[(faceIndex * 6) + 3] = uv2;
+                    uvData[(faceIndex * 6) + 4] = uv3;
+                    uvData[(faceIndex * 6) + 5] = uv1;
+                }
+            }
+        }
+
+        float[] vBoneIndices = new float[faceData.length];
+        float[] vBoneWeights = new float[faceData.length];
+
+        for(int i = 0 ; i < faceData.length / 3; i++){
+            //Bone Weights
+            vBoneWeights[i * 3 + 0] = 1.0f;
+            vBoneWeights[i * 3 + 1] = 0.0f;
+            vBoneWeights[i * 3 + 1] = 0.0f;
+
+            //Calculate normals
+            Vector3f normal = new Vector3f();
+            GeometryUtils.normal(faceData[(i * 3) + 0], faceData[(i * 3) + 1], faceData[(i * 3) + 2], normal);
+            normalData[(i * 3) + 0] = normal;
+            normalData[(i * 3) + 1] = normal;
+            normalData[(i * 3) + 2] = normal;
+        }
+
+        Handshake modelHandshake = new Handshake();
+        modelHandshake.addAttributeList("vPosition", VectorUtils.streamToFloatArray(faceData), EnumGLDatatype.VEC3);
+        modelHandshake.addAttributeList("vNormal", VectorUtils.streamToFloatArray(normalData), EnumGLDatatype.VEC3);
+        modelHandshake.addAttributeList("vTangent", VectorUtils.streamToFloatArray(faceData), EnumGLDatatype.VEC3);
+        modelHandshake.addAttributeList("vBitangent", VectorUtils.streamToFloatArray(faceData), EnumGLDatatype.VEC3);
+        modelHandshake.addAttributeList("vTexture", VectorUtils.streamToFloatArray(uvData), EnumGLDatatype.VEC2);
+
+        modelHandshake.addAttributeList("vBoneIndices", vBoneIndices, EnumGLDatatype.VEC3);
+        modelHandshake.addAttributeList("vBoneWeights", vBoneWeights, EnumGLDatatype.VEC3);
+
+
+//                modelHandshake.addAttributeList("vColor", vNormals, EnumGLDatatype.VEC3);
+
+//        AIVector3D min = mesh.mAABB().mMin();
+//        AIVector3D max = mesh.mAABB().mMax();
+
+        LinkedHashMap<String, Animation> animations = new LinkedHashMap<String, Animation>();
+        LinkedHashMap<String, Matrix4f> boneOffsets = new LinkedHashMap<>();
+        LinkedHashMap<String, Joint> joints = new LinkedHashMap<>();
+
+        return new Model(this.getNextID(), "generated", modelHandshake, faceData.length / 3, new Vector3f[]{ new Vector3f(-width/2f, -0.5f, -height/2f), new Vector3f(width/2f, 0.5f, height/2f)}, null, animations, boneOffsets, joints);
     }
 
     private static ByteBuffer ioResourceToByteBuffer(String resource, int bufferSize) throws IOException {

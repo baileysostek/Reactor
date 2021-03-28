@@ -30,6 +30,8 @@ public class ShaderManager {
     private HashMap<String, Integer>    shaderInstances       = new HashMap<>();
     private HashMap<String, Shader>     shaders               = new HashMap<>();
     private HashMap<Integer, String>    shaderInstances_prime = new HashMap<>();
+    private HashMap<Integer, Callback>  predrawCallbacks      = new HashMap<>();
+    private HashMap<Integer, Callback>  postDrawCallbacks     = new HashMap<>();
 
     //Keep Track of the active shader
     private int activeShader = -1;
@@ -48,10 +50,36 @@ public class ShaderManager {
     //Lock for locking our entity set
     private Lock lock;
 
-    private static final String DEFAULT_SHADER_PROGRAM = "pbr";
+    private static String DEFAULT_SHADER_PROGRAM = "pbr";
+
+    public static void setDefaultShader(String name){
+        DEFAULT_SHADER_PROGRAM = name;
+    }
 
     private ShaderManager(){
         lock = new ReentrantLock();
+    }
+
+    protected void predraw(int id){
+        Callback predraw = predrawCallbacks.get(id);
+        if(predraw != null) {
+            predraw.callback();
+        }
+    }
+
+    public void onPredraw(int id, Callback callback){
+        predrawCallbacks.put(id, callback);
+    }
+
+    protected void postdraw(int id){
+        Callback postdraw = postDrawCallbacks.get(id);
+        if(postdraw != null) {
+            postdraw.callback();
+        }
+    }
+
+    public void onPostdraw(int id, Callback callback){
+        postDrawCallbacks.put(id, callback);
     }
 
     public void update(double delta){
@@ -262,7 +290,8 @@ public class ShaderManager {
             GL46.glUseProgram(programID);
             activeShader = programID;
         }else{
-            System.err.println("Tried to use a shader programID out of the range of currently available programs.");
+            //TODO fix?
+//            System.err.println("Tried to use a shader programID out of the range of currently available programs.");
         }
     }
 
@@ -328,7 +357,7 @@ public class ShaderManager {
 
         int errorCheck = GL46.glGetError();
         while (errorCheck != GL46.GL_NO_ERROR) {
-            System.out.println("Pre load uniform:" + errorCheck);
+//            System.out.println("Pre load uniform:" + errorCheck);
             errorCheck = GL46.glGetError();
         }
 

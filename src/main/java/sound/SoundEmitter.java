@@ -21,7 +21,11 @@ public class SoundEmitter extends Entity {
     Attribute<String>   soundSource = new Attribute<String>("soundSource", "dragonroost.ogg");
     Attribute<Float>    volume = new Attribute<Float>("volume", 1f);
     Attribute<Float>    pitch = new Attribute<Float>("pitch", 1f);
+    Attribute<Float>    rolloff = new Attribute<Float>("rolloff", 1f);
+    Attribute<Float>    referenceDistance = new Attribute<Float>("referenceDistance", 16f);
+    Attribute<Float>    maxDistance = new Attribute<Float>("maxDistance", 32f);
     Attribute<Boolean>  loop = new Attribute<Boolean>("Loop", false);
+
     //Controls
     Attribute<Callback> play;
     Attribute<Callback> pause;
@@ -57,6 +61,30 @@ public class SoundEmitter extends Entity {
             @Override
             public Object callback(Object... objects) {
                 AL10.alSourcef(soundSourceID, AL11.AL_PITCH, pitch.getData());
+                return null;
+            }
+        });
+
+        rolloff.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                AL10.alSourcef(soundSourceID, AL10.AL_ROLLOFF_FACTOR, rolloff.getData());
+                return null;
+            }
+        });
+
+        referenceDistance.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                AL10.alSourcef(soundSourceID, AL10.AL_REFERENCE_DISTANCE, referenceDistance.getData());
+                return null;
+            }
+        });
+
+        maxDistance.subscribe(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                AL10.alSourcef(soundSourceID, AL10.AL_MAX_DISTANCE, maxDistance.getData());
                 return null;
             }
         });
@@ -122,6 +150,9 @@ public class SoundEmitter extends Entity {
         addAttribute(soundSource);
         addAttribute(volume);
         addAttribute(pitch);
+        addAttribute(referenceDistance);
+        addAttribute(maxDistance);
+        addAttribute(rolloff);
         addAttribute(loop);
         addAttribute(play);
         addAttribute(pause);
@@ -165,6 +196,15 @@ public class SoundEmitter extends Entity {
     @Override
     public void renderInEditor(boolean selected){
         DirectDraw.getInstance().drawBillboard(super.getPosition(), new Vector2f(1), SoundEngine.getInstance().getSoundEmitterSVG());
+        if(selected){
+            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("maxDistance").getData()), new Vector3f(1, 0, 0), 32, new Vector3f(1, 1, 1));
+            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("maxDistance").getData()), new Vector3f(0, 1, 0), 32, new Vector3f(1, 1, 1));
+            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("maxDistance").getData()), new Vector3f(0, 0, 1), 32, new Vector3f(1, 1, 1));
+
+            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("referenceDistance").getData()), new Vector3f(1, 0, 0), 32, new Vector3f(1, 0, 0));
+            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("referenceDistance").getData()), new Vector3f(0, 1, 0), 32, new Vector3f(1, 0, 0));
+            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("referenceDistance").getData()), new Vector3f(0, 0, 1), 32, new Vector3f(1, 0, 0));
+        }
     }
 
     @Override

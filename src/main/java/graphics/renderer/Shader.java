@@ -1,5 +1,7 @@
 package graphics.renderer;
 
+import util.Callback;
+
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -30,8 +32,6 @@ public class Shader {
     public EnumGLDatatype getUniform(String uniformName){
         return this.uniforms.get(uniformName);
     }
-
-
 
     public void addUniform(String name, String datatype){
         //convert string datatype to datatype
@@ -72,5 +72,9 @@ public class Shader {
             }
             foundIndex++;
         }
+    }
+
+    public String getName(){
+        return name;
     }
 }

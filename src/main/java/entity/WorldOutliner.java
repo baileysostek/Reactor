@@ -67,7 +67,7 @@ public class WorldOutliner extends UIComponet {
     }
 
     @Override
-    public void self_render() {
+    public void selfRender() {
         //World Outliner, list of all entities in the world
         ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight());
         //Search / filter for a specific type of Entity

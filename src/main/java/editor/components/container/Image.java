@@ -27,7 +27,7 @@ public class Image extends UIComponet {
     }
 
     @Override
-    public void self_render() {
+    public void selfRender() {
         ImGui.image(this.textureID, ImGui.getWindowWidth(), ImGui.getWindowWidth());
     }
 

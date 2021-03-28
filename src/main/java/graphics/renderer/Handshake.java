@@ -21,6 +21,7 @@ public class Handshake implements Serializable<Handshake> {
     private HashMap<String, SerializableBuffer> bufferedAttributes = new HashMap<>();
     private HashMap<String, EnumGLDatatype>     bufferedSizes      = new HashMap<>();
     private LinkedList<String> bufferNameIndexes = new LinkedList<>();
+    private HashMap<String, SSBO>     ssbos      = new HashMap<>();
 
     public Handshake(){
 
@@ -78,6 +79,16 @@ public class Handshake implements Serializable<Handshake> {
 
     public int getAttributeLength(){
         return this.bufferedAttributes.size();
+    }
+
+    public void addSSBO(String name, int dataSize, EnumGLDatatype datatype){
+        SSBO ssbo = SSBOManager.getInstance().generateSSBO(name, datatype);
+        ssbo.allocate(dataSize);
+        ssbos.put(name, ssbo);
+    }
+
+    public SSBO getSSBO(String name){
+        return ssbos.get(name);
     }
 
     @Override

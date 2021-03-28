@@ -1,4 +1,4 @@
-#version 400
+#version 430
 
 //Set prescision
 precision highp int;
@@ -23,13 +23,36 @@ layout(location =  8) in vec4 transform_1;
 layout(location =  9) in vec4 transform_2;
 layout(location = 10) in vec4 transform_3;
 
-
 //Uniform variables
 uniform mat4 view;           // Cameras position in space
+uniform vec3 cameraPos;      // Cameras position in worldSpace
 uniform mat4 perspective;    //Perspective of this world
 
+//Lighting
+uniform mat4 lightSpaceMatrix[maxLights];
+
 //Bones
-uniform mat4 jointTransforms[MAX_JOINTS];
+uniform int numBones;
+layout(std430, binding = 0) buffer Bones{
+    mat4 boneTransforms[];
+} bonesLocal;
+
+// Outputs
+out vec3 passNormal;
+out vec3 passWeights;
+out vec3 passIndices;
+out vec3 passCamPos;
+out vec2 passCoords;
+out vec3 WorldPos;
+
+//Reflection
+out vec3 passReflectNormal;
+
+//Lighting
+out vec4[maxLights] passPosLightSpace;
+
+//TBN matrix
+out mat3 TBN;
 
 //Main function to run
 void main(){
@@ -41,8 +64,25 @@ void main(){
         transform_3
     );
 
-    //Calculate a transform in space representing this vertex's bone deformation as a sum of 3 parts whos weights add to 1./
-    mat4 boneTransform = (jointTransforms[uint(boneIndices.x)] * boneWeights.x) + (jointTransforms[uint(boneIndices.y)] * boneWeights.y) + (jointTransforms[uint(boneIndices.z)] * boneWeights.z);
+    //Create a mat4 we will use for mesh deformation
+    mat4 boneTransform;
+    //IF we have bones in this model
+    if(numBones > 0){
+        //Calculate the bone transform
+        boneTransform =
+        (bonesLocal.boneTransforms[uint(boneIndices.x) + (numBones * gl_InstanceID)] * boneWeights.x) + //Bone weight 1
+        (bonesLocal.boneTransforms[uint(boneIndices.y) + (numBones * gl_InstanceID)] * boneWeights.y) + //Bone weight 2
+        (bonesLocal.boneTransforms[uint(boneIndices.z) + (numBones * gl_InstanceID)] * boneWeights.z);  //Bone weight 3
+    }else{
+        // Just upload an identiy matrix here for the bone transform so we will have no influence over the model geometry when we dont have an animated model.
+        boneTransform = mat4(
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        );
+    }
+
     vec4 worldPosition = transform * boneTransform * vec4(vPosition.xyz, 1.0);
 
     gl_Position = view * worldPosition;

@@ -16,6 +16,7 @@ import entity.Entity;
 import org.joml.Quaternionf;
 import physics.Collider;
 import physics.PhysicsEngine;
+import util.Callback;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
@@ -35,7 +36,7 @@ public class Collision extends Component implements Collider {
     Attribute<Float>             mass        = new Attribute<Float> ("mass", 10.0f).setType(EnumAttributeType.SLIDERS);
     Attribute<Float>             restitution = new Attribute<Float> ("restitution", 0.35f).setType(EnumAttributeType.SLIDERS);
 
-    private EnumCollisionShape shape = EnumCollisionShape.CUBE;
+    private EnumCollisionShape shape = EnumCollisionShape.SPHERE;
 
     public Collision(){
         super("Collision");

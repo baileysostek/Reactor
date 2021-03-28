@@ -29,6 +29,7 @@ import lighting.PointLight;
 import logging.LogManager;
 import material.Material;
 import material.MaterialManager;
+import models.MeshBuilder;
 import models.Model;
 import models.ModelManager;
 import org.joml.Vector2f;
@@ -231,6 +232,7 @@ public class Reactor {
                 LogManager.initialize();
                 SteamManager.initialize();
                 ModelManager.initialize();
+                MeshBuilder.initialize();
                 CameraManager.initialize();
                 MaterialManager.initialize();
                 ParticleManager.initialize();
@@ -555,6 +557,9 @@ public class Reactor {
             PhysicsEngine.getInstance().update(delta);
             StopwatchManager.getInstance().getTimer("tick_physics").stop();
         }
+
+//        MeshBuilder.getInstance().update(delta);
+//        MeshBuilder.getInstance().buildPlane(30, 30, 50, 50);
     }
 
     private static void render(){

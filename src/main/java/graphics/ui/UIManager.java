@@ -25,7 +25,7 @@ public class UIManager{
 
     private LinkedList<TextRender> textRenders = new LinkedList();
 
-//    private LinkedList<SpriteRender> spriteRenders = new LinkedList<>();
+    //    private LinkedList<SpriteRender> spriteRenders = new LinkedList<>();
     private LinkedList<ColorRender> backgroundColors = new LinkedList<ColorRender>();
 //    private LinkedList<ColorRender> foregroundColors = new LinkedList<ColorRender>();
 //    private LinkedList<LineRender> lines = new LinkedList<LineRender>();
@@ -52,9 +52,9 @@ public class UIManager{
 //        NanoVG.nvgFillColor(Reactor.getVg(), colorA);
 //        NanoVG.nvgFill(Reactor.getVg());
 
-        NVGColor colorB = NVGColor.create();
-        NanoVG.nvgRGBA((byte)255, (byte)255, (byte)255, (byte)255, colorB);
-        NanoVG.nvgFillColor(Reactor.getVg(), colorB);
+//        NVGColor colorB = NVGColor.create();
+//        NanoVG.nvgRGBA((byte)255, (byte)255, (byte)255, (byte)255, colorB);
+//        NanoVG.nvgFillColor(Reactor.getVg(), colorB);
         NanoVG.nvgFontSize(Reactor.getVg(), 24);
         NanoVG.nvgFontFace(Reactor.getVg(), "roboto_mono");
         NanoVG.nvgTextAlign(Reactor.getVg(), NanoVG.NVG_ALIGN_LEFT | NanoVG.NVG_ALIGN_TOP);
@@ -67,6 +67,7 @@ public class UIManager{
             NanoVG.nvgFillColor(Reactor.getVg(), colorC);
             NanoVG.nvgRect(Reactor.getVg(), colorRender.posx, colorRender.posy, colorRender.width, colorRender.height);
             NanoVG.nvgFill(vg);
+            NanoVG.nvgClosePath(vg);
         }
 
         //Render the text
@@ -79,17 +80,20 @@ public class UIManager{
         for(Renderable r : drawCalls){
             if(r instanceof LineRender){
                 LineRender line = ((LineRender) r);
-                NVGColor color = NVGColor.create();
+
                 NanoVG.nvgBeginPath(vg);
-                NanoVG.nvgRGBA((byte)line.color.x, (byte)line.color.y, (byte)line.color.z, (byte)line.color.w, color);
-//            NanoVG.nvgFillColor(vg, color);
-                NanoVG.nvgStrokeColor(vg, color);
-                NanoVG.nvgStrokeWidth(vg, 3.0f);
-                NanoVG.nvgStroke(vg);
+
                 NanoVG.nvgMoveTo(vg, line.p1x, line.p1y);
                 NanoVG.nvgLineTo(vg, line.p2x, line.p2y);
-                NanoVG.nvgFill(vg);
-                NanoVG.nvgMoveTo(vg, 0, 0);
+
+                NVGColor color = NVGColor.create();
+                NanoVG.nvgRGBA((byte)line.color.x, (byte)line.color.y, (byte)line.color.z, (byte)line.color.w, color);
+                NanoVG.nvgStrokeColor(vg, color);
+                NanoVG.nvgStrokeWidth(vg,line.thickness);
+                NanoVG.nvgStroke(vg);
+
+                NanoVG.nvgClosePath(vg);
+
                 continue;
             }
             if(r instanceof SpriteRender){
@@ -98,10 +102,12 @@ public class UIManager{
 
                 NanoVG.nvgBeginPath(vg);
 
-                NanoVG.nvgImagePattern(vg, sprite.posx, sprite.posy, sprite.width, sprite.height, 0, sprite.textureID, 1f, img);
+                NanoVG.nvgImagePattern(vg, sprite.posx, sprite.posy, sprite.width, sprite.height, sprite.angle, sprite.textureID, sprite.alpha, img);
                 NanoVG.nvgRect(vg, sprite.posx, sprite.posy, sprite.width, sprite.height);
                 NanoVG.nvgFillPaint(vg, img);
                 NanoVG.nvgFill(vg);
+
+                NanoVG.nvgClosePath(vg);
                 continue;
             }
             if(r instanceof ColorRender){
@@ -112,6 +118,7 @@ public class UIManager{
                 NanoVG.nvgFillColor(Reactor.getVg(), colorC);
                 NanoVG.nvgRect(Reactor.getVg(), colorRender.posx, colorRender.posy, colorRender.width, colorRender.height);
                 NanoVG.nvgFill(vg);
+                NanoVG.nvgClosePath(vg);
             }
         }
 
@@ -128,9 +135,14 @@ public class UIManager{
     }
 
     public void drawLine(float p1x, float p1y, float p2x, float p2y, Vector4f color) {
-        drawCalls.addLast(new LineRender(p1x,  p1y,  p2x,  p2y, color));
+        drawCalls.addLast(new LineRender(p1x,  p1y,  p2x,  p2y).setColor(color));
     }
 
+    public void drawLine(float p1x, float p1y, float p2x, float p2y, Vector4f color, float thickness) {
+        drawCalls.addLast(new LineRender(p1x,  p1y,  p2x,  p2y).setColor(color).setLineWidth(thickness));
+    }
+
+    //Basic image
     public void drawImage(float x, float y, float width, float height, int textureID){
         drawCalls.addLast(new SpriteRender(x, y, width, height, textureID));
     }
@@ -139,6 +151,71 @@ public class UIManager{
         drawCalls.addLast(new SpriteRender(x, y, width, height, sprite));
     }
 
+    public void drawImage(float x, float y, int textureID){
+        Sprite s = SpriteBinder.getInstance().getSprite(textureID);
+        drawCalls.addLast(new SpriteRender(x, y, s.getWidth(), s.getHeight(), textureID));
+    }
+
+    public void drawImage(float x, float y, Sprite sprite){
+        drawCalls.addLast(new SpriteRender(x, y, sprite.getWidth(), sprite.getHeight(), sprite));
+    }
+
+    //Image with angle
+    public void drawImageRotated(float x, float y, float width, float height, int textureID, float angle){
+        drawCalls.addLast(new SpriteRender(x, y, width, height, textureID).setAngle(angle));
+    }
+
+    public void drawImageRotated(float x, float y, float width, float height, Sprite sprite, float angle){
+        drawCalls.addLast(new SpriteRender(x, y, width, height, sprite).setAngle(angle));
+    }
+
+    public void drawImageRotated(float x, float y, int textureID, float angle){
+        Sprite s = SpriteBinder.getInstance().getSprite(textureID);
+        drawCalls.addLast(new SpriteRender(x, y, s.getWidth(), s.getHeight(), textureID).setAngle(angle));
+    }
+
+    public void drawImageRotated(float x, float y, Sprite sprite, float angle){
+        drawCalls.addLast(new SpriteRender(x, y, sprite.getWidth(), sprite.getHeight(), sprite).setAngle(angle));
+    }
+
+    //Image with alpha
+    public void drawImageWithAlpha(float x, float y, float width, float height, int textureID, float alpha){
+        drawCalls.addLast(new SpriteRender(x, y, width, height, textureID).setAlpha(alpha));
+    }
+
+    public void drawImageWithAlpha(float x, float y, float width, float height, Sprite sprite, float alpha){
+        drawCalls.addLast(new SpriteRender(x, y, width, height, sprite).setAlpha(alpha));
+    }
+
+    public void drawImageWithAlpha(float x, float y, int textureID, float alpha){
+        Sprite s = SpriteBinder.getInstance().getSprite(textureID);
+        drawCalls.addLast(new SpriteRender(x, y, s.getWidth(), s.getHeight(), textureID).setAlpha(alpha));
+    }
+
+    public void drawImageWithAlpha(float x, float y, Sprite sprite, float alpha){
+        drawCalls.addLast(new SpriteRender(x, y, sprite.getWidth(), sprite.getHeight(), sprite).setAlpha(alpha));
+    }
+
+    //Image with angle and alpha
+    public void drawImageRotatedWithAlpha(float x, float y, float width, float height, int textureID, float angle, float alpha){
+        drawCalls.addLast(new SpriteRender(x, y, width, height, textureID).setAlpha(alpha).setAngle(angle));
+    }
+
+    public void drawImageRotatedWithAlpha(float x, float y, float width, float height, Sprite sprite, float angle, float alpha){
+        drawCalls.addLast(new SpriteRender(x, y, width, height, sprite).setAlpha(alpha).setAngle(angle));
+    }
+
+    public void drawImageRotatedWithAlpha(float x, float y, int textureID, float angle, float alpha){
+        Sprite s = SpriteBinder.getInstance().getSprite(textureID);
+        drawCalls.addLast(new SpriteRender(x, y, s.getWidth(), s.getHeight(), textureID).setAlpha(alpha).setAngle(angle));
+    }
+
+    public void drawImageRotatedWithAlpha(float x, float y, Sprite sprite, float angle, float alpha){
+        drawCalls.addLast(new SpriteRender(x, y, sprite.getWidth(), sprite.getHeight(), sprite).setAlpha(alpha).setAngle(angle));
+    }
+
+    //TODO gradients
+    //Background colors
     public void drawColorBackground(float posx, float posy, float width, float height, Vector4f col){
         backgroundColors.addLast(new ColorRender(posx, posy, width, height, col));
     }
@@ -203,6 +280,9 @@ public class UIManager{
         boolean invertX = false;
         boolean invertY = false;
 
+        float angle = 0;
+        float alpha = 1;
+
         int textureID;
 
         SpriteRender(float x, float y, float width, float height, Sprite sprite){
@@ -236,6 +316,16 @@ public class UIManager{
             }
         }
 
+        public SpriteRender setAlpha(float alpha){
+            this.alpha = alpha;
+            return this;
+        }
+
+        public SpriteRender setAngle(float angle){
+            this.angle = alpha;
+            return this;
+        }
+
 
     }
 
@@ -260,14 +350,23 @@ public class UIManager{
         float p1y;
         float p2x;
         float p2y;
-        Vector4f color;
+        float thickness = 5.5f;
+        Vector4f color = new Vector4f(255);
 
-        public LineRender(float p1x, float p1y, float p2x, float p2y, Vector4f color) {
+        public LineRender(float p1x, float p1y, float p2x, float p2y) {
             this.p1x = p1x;
             this.p1y = p1y;
             this.p2x = p2x;
             this.p2y = p2y;
+        }
+
+        public LineRender setColor(Vector4f color){
             this.color = color;
+            return this;
+        }
+        public LineRender setLineWidth(float width){
+            this.thickness = width;
+            return this;
         }
     }
 }

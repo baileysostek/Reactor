@@ -56,7 +56,7 @@ public class Transform extends UIComponet {
     }
 
     @Override
-    public void self_render() {
+    public void selfRender() {
 
     }
 

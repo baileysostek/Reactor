@@ -8,6 +8,7 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.text.DecimalFormat;
+import java.util.Collection;
 
 public class VectorUtils {
 
@@ -33,6 +34,37 @@ public class VectorUtils {
         Vector4f worldspace = new Vector4f(worldPosition, 1.0f);
         Vector4f postProjection = new Matrix4f(CameraManager.getInstance().getActiveCamera().getTransformationMatrix()).mul(new Matrix4f().set(Renderer.getInstance().getProjectionMatrix())).transform(worldspace);
         return new Vector2f(postProjection.x / postProjection.w, postProjection.y / postProjection.w);
+    }
+
+//    public static float[] streamToFloatArray(Collection<Vector2f> input){
+//        return streamToFloatArray((Vector2f[]) input.toArray());
+//    }
+
+    public static float[] streamToFloatArray(Vector2f[] input){
+        float[] out = new float[input.length * 2];
+        int index = 0;
+        for(Vector2f vec : input){
+            out[index * 2 + 0] = vec.x;
+            out[index * 2 + 1] = vec.y;
+            index++;
+        }
+        return out;
+    }
+
+//    public static float[] streamToFloatArray(Collection<Vector3f> input){
+//        return streamToFloatArray((Vector3f[]) input.toArray());
+//    }
+
+    public static float[] streamToFloatArray(Vector3f[] input){
+        float[] out = new float[input.length * 3];
+        int index = 0;
+        for(Vector3f vec : input){
+            out[index * 3 + 0] = vec.x;
+            out[index * 3 + 1] = vec.y;
+            out[index * 3 + 2] = vec.z;
+            index++;
+        }
+        return out;
     }
 
 }

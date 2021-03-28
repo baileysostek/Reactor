@@ -199,16 +199,6 @@ public class Renderer{
             GL46.glBindFramebuffer(GL46.GL_FRAMEBUFFER, 0);
         }
 
-        batches = renderWorld(CameraManager.getInstance().getActiveCamera(), projectionMatrix);
-
-    }
-
-    public int renderWorld(Camera observer, float[] projection){
-        return renderWorld(observer.getPosition(), observer.getTransformationMatrix(), projection);
-    }
-
-    public int renderWorld(Vector3f pos, Matrix4f observer, float[] projection){
-
         GL46.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GL46.glEnable(GL46.GL_DEPTH_TEST);
         GL46.glEnable(GL46.GL_STENCIL_TEST);
@@ -216,14 +206,26 @@ public class Renderer{
         GL46.glCullFace(GL46.GL_BACK);
         GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT | GL46.GL_COLOR_BUFFER_BIT | GL46.GL_STENCIL_BUFFER_BIT);
 
+        batches = renderWorld(CameraManager.getInstance().getActiveCamera(), projectionMatrix);
+
+    }
+
+    public int renderWorld(Camera observer, float[] projection){
+        return renderWorld(observer.getPosition(), observer.getTransformationMatrix(), projection, EntityManager.getInstance().getBatches());
+    }
+
+    public int renderWorld(Camera observer, float[] projection, LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches){
+        return renderWorld(observer.getPosition(), observer.getTransformationMatrix(), projection, batches);
+    }
+
+    public int renderWorld(Vector3f pos, Matrix4f observer, float[] projection, LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches){
+
         EntityManager.getInstance().resort();
 //        StopwatchManager.getInstance().getTimer("sort").stop();
 
 
         //Render all entities
 //        StopwatchManager.getInstance().getTimer("drawCalls").start();
-
-        LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches = EntityManager.getInstance().getBatches();
 
         int numDrawCalls = 0;
 
@@ -236,6 +238,7 @@ public class Renderer{
                 int shaderID = mat.getShaderID();
 
                 ShaderManager.getInstance().useShader(shaderID);
+                ShaderManager.getInstance().predraw(shaderID);
 
                 //
                 ShaderManager.getInstance().loadUniformIntoActiveShader("cameraPos", pos);
@@ -291,6 +294,7 @@ public class Renderer{
 
                 //Draw calls
                 vao.render(materialEntities.get(mat));
+                ShaderManager.getInstance().postdraw(shaderID);
                 numDrawCalls++;
             }
         }
@@ -298,6 +302,9 @@ public class Renderer{
     }
 
     public void postpare(){
+        //Post process entities
+        renderWorld(CameraManager.getInstance().getActiveCamera(), projectionMatrix, EntityManager.getInstance().getBatchesPostProcess());
+
         //Render our lines!
         StopwatchManager.getInstance().getTimer("render_direct").start();
         if(Reactor.isDev() || Reactor.canDirectDraw()) {

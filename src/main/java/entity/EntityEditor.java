@@ -842,7 +842,7 @@ public class EntityEditor extends UIComponet {
     }
 
     @Override
-    public void self_render() {
+    public void selfRender() {
         ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight());
         //If we have an entity
         if(this.entity != null) {

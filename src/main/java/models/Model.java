@@ -13,6 +13,7 @@ import org.joml.Vector4f;
 import org.lwjgl.assimp.AIBone;
 import serialization.Serializable;
 import util.FileObject;
+import util.StringUtils;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -96,9 +97,15 @@ public class Model implements Serializable<Model> {
     @Override
     public JsonObject serialize(JsonObject meta) {
         JsonObject saveData = new JsonObject();
-//        saveData.add("handshake", handshake.serialize());
-//        saveData.addProperty("indices", this.numIndicies);
-//        saveData.add("aabb", aabb.serialize());
+
+//        if( StringUtils.exists("models/" + this.path)) {
+//            saveData.addProperty("file", this.path);
+//        }else{
+//            saveData.add("handshake", handshake.serialize());
+//            saveData.addProperty("indices", this.numIndicies);
+//            saveData.add("aabb", aabb.serialize());
+//        }
+
         saveData.addProperty("file", this.path);
 
         return saveData;
@@ -106,14 +113,16 @@ public class Model implements Serializable<Model> {
 
     @Override
     public Model deserialize(JsonObject data) {
-//        this.numIndicies = data.get("indices").getAsInt();
-//        this.handshake = new Handshake().deserialize(data.get("handshake").getAsJsonObject());
-//        if(data.has("aabb")) {
-//            this.aabb = new AABB().deserialize(data.get("aabb").getAsJsonObject());
-//        }
         if(data.has("file")) {
             return ModelManager.getInstance().loadModel(data.get("file").getAsString()).getFirst();
         }
+//        else {
+//            this.numIndicies = data.get("indices").getAsInt();
+//            this.handshake = new Handshake().deserialize(data.get("handshake").getAsJsonObject());
+//            if(data.has("aabb")) {
+//                this.aabb = new AABB().deserialize(data.get("aabb").getAsJsonObject());
+//            }
+//        }
 
         return this;
     }

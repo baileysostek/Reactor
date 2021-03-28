@@ -27,7 +27,7 @@ public class AttributeUI extends UIComponet {
     }
 
     @Override
-    public void self_render() {
+    public void selfRender() {
 
     }
 

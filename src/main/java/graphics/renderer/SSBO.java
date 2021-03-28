@@ -5,6 +5,8 @@ import org.lwjgl.opengl.GL46;
 public class SSBO {
     private int id;
     private int location;
+    private int capacity;
+    private int adjustedCapacity;
     private float[] data;
     private int numElements;
     private EnumGLDatatype datatype;
@@ -26,6 +28,7 @@ public class SSBO {
     }
 
     public void allocate(int size){
+        this.capacity = size;
         int offset = 0;
         int deficit = this.datatype.sizePerVertex % ALIGNMENT;
         if(deficit != 0){
@@ -33,6 +36,7 @@ public class SSBO {
             offset = deficit * size;
         }
         this.data = new float[(size * datatype.sizePerVertex) + offset];
+        this.adjustedCapacity = this.data.length;
     }
 
     public void setData(int index, float[] data){
@@ -42,6 +46,25 @@ public class SSBO {
         }else{
             put(index, data);
         }
+    }
+
+    public void setDirect(float[] data){
+        if(this.data.length != data.length){
+            return;
+        }
+        this.data = data;
+    }
+
+    public int getCapacity(){
+        return capacity;
+    }
+
+    public int getAbsoluteCapacity(){
+        return capacity;
+    }
+
+    public int getUnitDataSize(){
+        return this.datatype.getSizePerVertex();
     }
 
     /*

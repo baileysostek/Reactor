@@ -260,7 +260,7 @@ public class EntityRegistry extends UIComponet {
     }
 
     @Override
-    public void self_render() {
+    public void selfRender() {
         isDraggingTemplate = false;
         //World Outliner, list of all entities in the world
         ImGui.beginChildFrame(Editor.getInstance().getNextID(), ImGui.getWindowWidth(), ImGui.getWindowHeight());

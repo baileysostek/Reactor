@@ -124,7 +124,7 @@ public class ResourcesViewer extends UIComponet {
                                         hits.getFirst().setMaterial(mat);
                                     } else {
                                         //We hit nothing
-                                        newEntity.setModel(ModelManager.getInstance().loadModel("quad.tek").getFirst());
+                                        newEntity.setModel(ModelManager.getInstance().loadModel("quad.obj").getFirst());
                                         Material mat = MaterialManager.getInstance().generateMaterial(newSprite);
                                         newEntity.setMaterial(mat);
                                         newEntity.setPosition(pos);
@@ -204,7 +204,7 @@ public class ResourcesViewer extends UIComponet {
     }
 
     @Override
-    public void self_render() {
+    public void selfRender() {
         //Start by saying that we are not dragging a file
         IS_DRAGGING_FILE = false;
         draggedFile = null;

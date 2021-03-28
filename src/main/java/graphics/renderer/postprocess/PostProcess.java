@@ -19,6 +19,9 @@ public class PostProcess extends Component {
     protected LinkedList<Attribute> initialize() {
         LinkedList<Attribute> out = new LinkedList<Attribute>();
 
+        out.add(index);
+        out.add(stages);
+
         //Return out
         return out;
     }
@@ -31,6 +34,7 @@ public class PostProcess extends Component {
 
     public void addStage(PostProcessConstants constants, Object ... params){
         PostProcessStage stage = new PostProcessStage(constants, params);
+        this.stages.getData().add(stage);
     }
 
     @Override
@@ -41,11 +45,6 @@ public class PostProcess extends Component {
     @Override
     public void update(double delta) {
 
-    }
-
-    @Override
-    public String getName() {
-        return null;
     }
 
     @Override
