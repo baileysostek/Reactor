@@ -7,9 +7,12 @@ package input.controller;
 
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
+import util.Callback;
+import util.Debouncer;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.LinkedHashMap;
 
 /**
  *
@@ -20,9 +23,15 @@ public class JavaController {
     private Vector3f leftThumbStick = new Vector3f(0,0,0);
     private Vector3f rightThumbStick = new Vector3f(0,0,0);
     private EnumButtonType[] button_names = new EnumButtonType[]{};
+    private Debouncer[] buttonBouncers = new Debouncer[]{};
     private EnumButtonType[] axis_names = new EnumButtonType[]{};
     private float[] button_values = new float[]{};
     private float[] axis_values = new float[]{};
+
+    private LinkedHashMap<EnumButtonType, Callback> onButtonPress   = new LinkedHashMap<>();
+    private LinkedHashMap<EnumButtonType, Callback> whileButtonPress   = new LinkedHashMap<>();
+    private LinkedHashMap<EnumButtonType, Callback> onButtonRelease = new LinkedHashMap<>();
+    private LinkedHashMap<EnumButtonType, Callback> whileButtonRelease = new LinkedHashMap<>();
 
     private Vector3f axis_modifier = new Vector3f(1, 1, 1);
 
@@ -56,12 +65,12 @@ public class JavaController {
                 EnumButtonType.D_PAD_LEFT,
             };
             axis_mapping = new EnumButtonType[]{
-                    EnumButtonType.LEFT_STICK_X,
-                    EnumButtonType.LEFT_STICK_Y,
-                    EnumButtonType.RIGHT_STICK_X,
-                    EnumButtonType.RIGHT_STICK_Y,
-                    EnumButtonType.LEFT_TRIGGER,
-                    EnumButtonType.RIGHT_TRIGGER,
+                EnumButtonType.LEFT_STICK_X,
+                EnumButtonType.LEFT_STICK_Y,
+                EnumButtonType.RIGHT_STICK_X,
+                EnumButtonType.RIGHT_STICK_Y,
+                EnumButtonType.LEFT_TRIGGER,
+                EnumButtonType.RIGHT_TRIGGER,
             };
             axis_modifier = new Vector3f(1, -1, 1);
         }
@@ -89,38 +98,67 @@ public class JavaController {
                 EnumButtonType.D_PAD_LEFT,
             };
             axis_mapping = new EnumButtonType[]{
-                    EnumButtonType.LEFT_STICK_X,
-                    EnumButtonType.LEFT_STICK_Y,
-                    EnumButtonType.RIGHT_STICK_X,
-                    EnumButtonType.LEFT_TRIGGER,
-                    EnumButtonType.RIGHT_TRIGGER,
-                    EnumButtonType.RIGHT_STICK_Y,
+                EnumButtonType.LEFT_STICK_X,
+                EnumButtonType.LEFT_STICK_Y,
+                EnumButtonType.RIGHT_STICK_X,
+                EnumButtonType.LEFT_TRIGGER,
+                EnumButtonType.RIGHT_TRIGGER,
+                EnumButtonType.RIGHT_STICK_Y,
             };
         }
 
         button_names = mapping;
         axis_names = axis_mapping;
         button_values = new float[button_names.length];
+        buttonBouncers = new Debouncer[button_names.length];
         axis_values = new float[axis_names.length];
         for(int i = 0; i < button_values.length; i++){
             button_values[i] = 0.0f;
+            buttonBouncers[i] = new Debouncer(false);
         }
         for(int i = 0; i < axis_values.length; i++){
             axis_values[i] = 0.0f;
         }
     }
 
-    public void poll(){
+//    public void removeButtonListener(Callback callback){
+//        if(onButtonPress.containsValue(callback)){
+//
+//        }
+//    }
+
+    protected void poll(){
 //        Game.logManager.println();
         ByteBuffer buttons = GLFW.glfwGetJoystickButtons(index);
         int buttonIndex = 0;
 
         while (buttons.hasRemaining()) {
             int state = buttons.get();
+            EnumButtonType button = this.button_names[buttonIndex];
             if (state == GLFW.GLFW_PRESS) {
                 button_values[buttonIndex] = 1.0f;
+                if(buttonBouncers[buttonIndex].risingAction(true)) {
+                    if (onButtonPress.containsKey(button)) {
+                        onButtonPress.get(button).callback(button_values[buttonIndex]);
+                    }
+                }
+
+                if (whileButtonPress.containsKey(button)) {
+                    whileButtonPress.get(button).callback(button_values[buttonIndex]);
+                }
+
             }else{
                 button_values[buttonIndex] = 0.0f;
+
+                if(buttonBouncers[buttonIndex].fallingAction(false)) {
+                    if(onButtonRelease.containsKey(button)){
+                        onButtonRelease.get(button).callback(button_values[buttonIndex]);
+                    }
+                }
+
+                if (whileButtonRelease.containsKey(button)) {
+                    whileButtonRelease.get(button).callback(button_values[buttonIndex]);
+                }
             }
 
             buttonIndex++;
@@ -179,7 +217,23 @@ public class JavaController {
         }
         return 0;
     }
-    
+
+    public void onPress(EnumButtonType type, Callback callback){
+        this.onButtonPress.put(type, callback);
+    }
+
+    public void whilePressed(EnumButtonType type, Callback callback){
+        this.whileButtonPress.put(type, callback);
+    }
+
+    public void onRelease(EnumButtonType type, Callback callback){
+        this.onButtonRelease.put(type, callback);
+    }
+
+    public void whileReleased(EnumButtonType type, Callback callback){
+        this.whileButtonRelease.put(type, callback);
+    }
+
     private void setButtonValue(EnumButtonType type, float value){
         int index = 0;
         for(EnumButtonType button : button_names){

@@ -88,13 +88,13 @@ public class ControllerManager{
             }
         });
 
-        for(int i = 0; i < 16; i++){
-            GLFW.glfwJoystickPresent(i);
-        }
-
         for(int i = 0; i < GLFW.GLFW_JOYSTICK_LAST; i++){
             if(GLFW.glfwJoystickPresent(i)){
-                controllers.add(new JavaController(i));
+                JavaController controller = new JavaController(i);
+                controllers.add(controller);
+                for(Callback c : onControllerConnect){
+                    c.callback(controller);
+                }
             }
         }
     }
@@ -129,6 +129,9 @@ public class ControllerManager{
     public void onControllerConnect(Callback callback){
         if(!this.onControllerConnect.contains(callback)){
             this.onControllerConnect.add(callback);
+            for(JavaController c : controllers){
+                callback.callback(c);
+            }
         }
     }
 
