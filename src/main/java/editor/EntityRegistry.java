@@ -238,6 +238,7 @@ public class EntityRegistry extends UIComponet {
             registeredEntities.put(category, new LinkedList<Entity>());
         }
         registeredEntities.get(category).addLast(entity);
+        //TODO fix
         int textureID = Renderer.getInstance().generateRenderedPreview(entity);
         this.snapshots.put(entity, textureID);
     }

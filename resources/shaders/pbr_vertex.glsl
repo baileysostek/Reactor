@@ -1,4 +1,4 @@
-#version 430
+#version 400
 
 //Set prescision
 precision highp int;
@@ -23,6 +23,7 @@ layout(location =  8) in vec4 transform_1;
 layout(location =  9) in vec4 transform_2;
 layout(location = 10) in vec4 transform_3;
 
+
 //Uniform variables
 uniform mat4 view;           // Cameras position in space
 uniform vec3 cameraPos;      // Cameras position in worldSpace
@@ -32,10 +33,7 @@ uniform mat4 perspective;    //Perspective of this world
 uniform mat4 lightSpaceMatrix[maxLights];
 
 //Bones
-uniform int numBones;
-layout(std430, binding = 0) buffer Bones{
-    mat4 boneTransforms[];
-} bonesLocal;
+uniform mat4 jointTransforms[MAX_JOINTS];
 
 // Outputs
 out vec3 passNormal;
@@ -51,9 +49,6 @@ out vec3 passReflectNormal;
 //Lighting
 out vec4[maxLights] passPosLightSpace;
 
-//TBN matrix
-out mat3 TBN;
-
 //Main function to run
 void main(){
     //reconstruct our IN matricies
@@ -64,41 +59,21 @@ void main(){
         transform_3
     );
 
-    //Create a mat4 we will use for mesh deformation
-    mat4 boneTransform;
-    //IF we have bones in this model
-    if(numBones > 0){
-        //Calculate the bone transform
-        boneTransform =
-        (bonesLocal.boneTransforms[uint(boneIndices.x) + (numBones * gl_InstanceID)] * boneWeights.x) + //Bone weight 1
-        (bonesLocal.boneTransforms[uint(boneIndices.y) + (numBones * gl_InstanceID)] * boneWeights.y) + //Bone weight 2
-        (bonesLocal.boneTransforms[uint(boneIndices.z) + (numBones * gl_InstanceID)] * boneWeights.z);  //Bone weight 3
-    }else{
-        // Just upload an identiy matrix here for the bone transform so we will have no influence over the model geometry when we dont have an animated model.
-        boneTransform = mat4(
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        );
-    }
+    //Calculate a transform in space representing this vertex's bone deformation as a sum of 3 parts whos weights add to 1./
+    mat4 boneTransform = (jointTransforms[uint(boneIndices.x)] * boneWeights.x) + (jointTransforms[uint(boneIndices.y)] * boneWeights.y) + (jointTransforms[uint(boneIndices.z)] * boneWeights.z);
 
-    vec4 offsetNormal  = transform * vec4(mat3(boneTransform) * vNormal.xyz, 1.0);
-    vec4 offsetTangent = transform * vec4(mat3(boneTransform) * vTangent.xyz, 1.0);
+    //Transdform the normnal vectors of this model by its transform.
+    vec4 offsetNormal = transform * vec4(mat3(boneTransform) * vNormal.xyz, 1.0);
     vec4 worldOffset = transform * vec4(0, 0, 0, 1);
     passNormal = normalize((vec3(offsetNormal) / offsetNormal.w) - (worldOffset.xyz)/worldOffset.w);
-    vec3 localTangent = normalize((vec3(offsetTangent) / offsetTangent.w) - (worldOffset.xyz)/worldOffset.w);
-
-    TBN = transpose(mat3(offsetTangent.xyz, cross(offsetTangent.xyz, offsetNormal.xyz), offsetNormal.xyz));
 
     vec4 worldPosition = transform * boneTransform * vec4(vPosition.xyz, 1.0);
-    //    worldPosition += vec4(1, 0, 0, 0);
     WorldPos = worldPosition.xyz;
 
     passCoords = vTexture;
 
     passWeights = boneWeights;
-    passIndices = passIndices;
+    passIndices = boneIndices;
 
     //Camera Direction
     passCamPos = cameraPos * -1;

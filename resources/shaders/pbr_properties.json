@@ -16,15 +16,7 @@
       "t_offset":"vec2",
       "t_scale": "vec2",
       "lightSpaceMatrix": "mat4",
-      "numBones": "int"
-    },
-    "SSBO": {
-      "Bones": {
-        "positions": {
-          "type": "vec3",
-          "size": 1
-        }
-      }
+      "jointTransforms": "mat4"
     },
     "Varying": {
 

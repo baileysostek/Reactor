@@ -29,7 +29,6 @@ import lighting.PointLight;
 import logging.LogManager;
 import material.Material;
 import material.MaterialManager;
-import models.MeshBuilder;
 import models.Model;
 import models.ModelManager;
 import org.joml.Vector2f;
@@ -232,7 +231,6 @@ public class Reactor {
                 LogManager.initialize();
                 SteamManager.initialize();
                 ModelManager.initialize();
-                MeshBuilder.initialize();
                 CameraManager.initialize();
                 MaterialManager.initialize();
                 ParticleManager.initialize();
@@ -258,6 +256,7 @@ public class Reactor {
 
 
                 Renderer.getInstance();
+                DirectDraw3D.initialize();
                 DirectDraw.initialize();
 
 //                int size = 16;
@@ -546,6 +545,7 @@ public class Reactor {
         ParticleManager.getInstance().update(delta);
         ControllerManager.getInstance().update(delta);
         ShaderManager.getInstance().update(delta);
+        SteamManager.getInstance().update(delta);
         StopwatchManager.getInstance().getTimer("tick").stop();
 
         if(isDev()){
@@ -621,6 +621,7 @@ public class Reactor {
             Editor.getInstance().onShutdown();
         }
         VAOManager.getInstance().onShutdown();
+        SteamManager.getInstance().onShutdown();
 
         Set<Thread> threads = Thread.getAllStackTraces().keySet();
 

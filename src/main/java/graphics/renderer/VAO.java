@@ -1,14 +1,12 @@
 package graphics.renderer;
 
 import entity.Entity;
-import entity.component.AnimationComponent;
 import entity.component.Attribute;
 import input.Keyboard;
 import material.MaterialManager;
 import models.Animation;
 import models.Joint;
 import models.Model;
-import models.ModelManager;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -50,8 +48,6 @@ public class VAO {
 
     //Store our animations
     Model model;
-
-    SSBO bones;
 
     public VAO(Model model){
         //Create our vao
@@ -175,14 +171,6 @@ public class VAO {
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
         GL46.glBindVertexArray(0);
-
-
-        //Generate an SSBO for our Bones
-        if(!SSBOManager.getInstance().hasSSBO("Bones")) {
-            bones = SSBOManager.getInstance().generateSSBO("Bones", EnumGLDatatype.MAT4);
-        }else{
-            bones = SSBOManager.getInstance().getSSBO("Bones");
-        }
     }
 
     private VBO allocateUniform(String name, int index){
@@ -341,35 +329,21 @@ public class VAO {
         //IF this is an animated model load the bone transforms
         loop:{
             if (animated) {
-                //Load our number of bones into the shader
-                ShaderManager.getInstance().loadUniformIntoActiveShader("numBones", model.getNumBones());
-
-                bones.allocate(model.getNumBones() * renderCount);
-
                 int entityIndex = 0;
                 // For each Model to render, get the animation component and deform the bones by the animation.
                 for(Entity entity : toRender) {
-                    // Calculate bone transforms
                     HashMap<String, Joint> frames = model.getAnimatedBoneTransforms(entity.getAnimationComponent().getCurrentAnimation(), entity.getAnimationComponent().getAnimationIndex());
 
-                    //For each Joint, upload that joint to the model.
-                    for (Joint joint : frames.values()) {
-                        if(!entity.getAnimationComponent().getCurrentAnimation().isEmpty()) {
-                            bones.setData((entityIndex * model.getNumBones()) + joint.getIndex(), joint.getAnimationTransform().get(new float[16]));
-                        }else{
-                            bones.setData((entityIndex * model.getNumBones()) + joint.getIndex(), ModelManager.getInstance().getIdentityMatrixArray());
-                        }
+                    for(Joint joint : frames.values()){
+                        ShaderManager.getInstance().loadUniformIntoActiveShaderArray("jointTransforms", joint.getIndex(), joint.getAnimationTransform());
                     }
-                    entityIndex++;
-                }
-                bones.flush();
 
-                break loop;
+                    break loop;
+                }
             } else {
-                //No animation
-                ShaderManager.getInstance().loadUniformIntoActiveShader("numBones", 0);
-                for(int i = 0; i < Math.max(1, model.getNumBones()); i++) {
-                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("jointTransforms", i, ModelManager.getInstance().getIdentityMatrixArray());
+                int maxBones = 50;
+                for (int i = 0; i < maxBones; i++) {
+                    ShaderManager.getInstance().loadUniformIntoActiveShaderArray("jointTransforms", i, new Matrix4f().identity());
                 }
             }
         }
@@ -417,5 +391,19 @@ public class VAO {
     public int getID() {
         return VAO_DI;
     }
+
+
+    private void applyPoseToJoints(HashMap<String, Matrix4f> currentPose, Joint joint, Matrix4f parentTransform) {
+        if(currentPose.containsKey(joint.getName())) {
+            Matrix4f currentLocalTransform = currentPose.get(joint.getName());
+            Matrix4f currentTransform = new Matrix4f(parentTransform).mul(currentLocalTransform);
+            for (Joint childJoint : joint.getChildren()) {
+                applyPoseToJoints(currentPose, childJoint, currentTransform);
+            }
+            currentTransform = currentTransform.mul(joint.getLocalBindTransform());
+            joint.setAnimationTransform(currentTransform);
+        }
+    }
+
 }
 

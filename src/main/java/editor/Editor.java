@@ -472,9 +472,9 @@ public class Editor {
         if(Reactor.isDev()){
             //Draw Axis
             int size = 4096;
-            DirectDraw.getInstance().drawLine(new Vector3f(-size, 0, 0), new Vector3f(size, 0, 0), new Vector3f(1, 0, 0));
-            DirectDraw.getInstance().drawLine(new Vector3f(0, -size, 0), new Vector3f(0, size, 0), new Vector3f(0, 1, 0));
-            DirectDraw.getInstance().drawLine(new Vector3f(0, 0, -size), new Vector3f(0, 0, size), new Vector3f(0, 0, 1));
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(-size, 0, 0), new Vector3f(size, 0, 0), new Vector3f(1, 0, 0));
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(0, -size, 0), new Vector3f(0, size, 0), new Vector3f(0, 1, 0));
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(0, 0, -size), new Vector3f(0, 0, size), new Vector3f(0, 0, 1));
 
             //Draw arrows point in +Axis direction.
 //            Renderer.getInstance().drawArrow(new Vector3f(0, 0, 0), new Vector3f(1, 0, 0), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, new Vector3f(1, 0, 0));
@@ -491,8 +491,8 @@ public class Editor {
                 if(i % 10 == 0){
                     color.add(0.5f , 0.5f, 0.5f);
                 }
-                DirectDraw.getInstance().drawLine(new Vector3f(-size, 0, i), new Vector3f(size, 0, i), color);
-                DirectDraw.getInstance().drawLine(new Vector3f(i, 0, -size), new Vector3f(i, 0, size), color);
+                DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(-size, 0, i), new Vector3f(size, 0, i), color);
+                DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(i, 0, -size), new Vector3f(i, 0, size), color);
             }
         }
 

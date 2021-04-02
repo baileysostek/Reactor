@@ -36,10 +36,10 @@ public class StopwatchManager{
             frameTime += Float.parseFloat(number);
             double frameDelta = watch.getDelta() * 1000f;
             totalFrameTimeMS += frameDelta;
-            UIManager.getInstance().drawString(xOffset, index * UIManager.getInstance().getCurrentTextSize() + yOffset, padEnd(name, 32, ' ')+ ":" + padStart(format.format(frameDelta)+"ms", 8, ' ') + " " + padStart(format2.format(100f * (watch.getDelta()  / total)) +"%", 8, ' '));
+            UIManager.getInstance().drawText(xOffset, index * UIManager.getInstance().getCurrentTextSize() + yOffset, padEnd(name, 32, ' ')+ ":" + padStart(format.format(frameDelta)+"ms", 8, ' ') + " " + padStart(format2.format(100f * (watch.getDelta()  / total)) +"%", 8, ' '));
             index++;
         }
-        UIManager.getInstance().drawString(xOffset, index * UIManager.getInstance().getCurrentTextSize() + yOffset,"FPS:" +  padStart(format2.format(1f / frameTime), 6, ' ') + "MS:" + totalFrameTimeMS);
+        UIManager.getInstance().drawText(xOffset, index * UIManager.getInstance().getCurrentTextSize() + yOffset,"FPS:" +  padStart(format2.format(1f / frameTime), 6, ' ') + "MS:" + totalFrameTimeMS);
     }
 
     public void drawFrameTimer() {

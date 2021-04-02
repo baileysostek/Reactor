@@ -82,7 +82,7 @@ public class Skybox extends Entity {
 
     @Override
     public void renderInEditor(boolean selected){
-        DirectDraw.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), SkyboxManager.getInstance().getSkyboxSVG());
+        DirectDraw.getInstance().Draw3D.drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), SkyboxManager.getInstance().getSkyboxSVG());
     }
 
     @Override

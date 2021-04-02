@@ -26,7 +26,7 @@ public class BulletDebugDrawer extends IDebugDraw {
         Vector4f perspectiveFrom    = new Vector4f(from.x, from.y, from.z, 1);
         Vector4f perspectiveTo      = new Vector4f(to.x, to.y, to.z, 1);
 //
-        DirectDraw.getInstance().drawLine(new org.joml.Vector3f(perspectiveFrom.x, perspectiveFrom.y, perspectiveFrom.z), new org.joml.Vector3f(perspectiveTo.x, perspectiveTo.y, perspectiveTo.z), new org.joml.Vector3f(color.x, color.y, color.z));
+        DirectDraw.getInstance().Draw3D.drawLine(new org.joml.Vector3f(perspectiveFrom.x, perspectiveFrom.y, perspectiveFrom.z), new org.joml.Vector3f(perspectiveTo.x, perspectiveTo.y, perspectiveTo.z), new org.joml.Vector3f(color.x, color.y, color.z));
     }
 
     @Override

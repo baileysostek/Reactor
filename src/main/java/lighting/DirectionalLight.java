@@ -74,35 +74,35 @@ public class DirectionalLight extends Light {
 
     @Override
     public void renderInEditor(boolean selected){
-        DirectDraw.getInstance().drawArrow(new Vector3f(this.getPosition()), new Vector3f(0, 0, 0).sub(this.getPosition()).normalize().add(this.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, (Vector3f) this.getAttribute("color").getData());
+        DirectDraw.getInstance().Draw3D.drawArrow(new Vector3f(this.getPosition()), new Vector3f(0, 0, 0).sub(this.getPosition()).normalize().add(this.getPosition()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, (Vector3f) this.getAttribute("color").getData());
 
-        DirectDraw.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), (Vector3f) this.getAttribute("color").getData(), LightingManager.getInstance().getSunSVG());
+        DirectDraw.getInstance().Draw3D.drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), (Vector3f) this.getAttribute("color").getData(), LightingManager.getInstance().getSunSVG());
 
         if(selected) {
 
-            DirectDraw.getInstance().drawArrow(new Vector3f(this.getPosition()), new Vector3f((Vector3fc) this.getAttribute("targetPoint").getData()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, (Vector3f) this.getAttribute("color").getData());
+            DirectDraw.getInstance().Draw3D.drawArrow(new Vector3f(this.getPosition()), new Vector3f((Vector3fc) this.getAttribute("targetPoint").getData()), new Vector3f(0.5f, 0.5f, 1.25f).mul(0.25f), 13, (Vector3f) this.getAttribute("color").getData());
 
             Vector3f frustum = (Vector3f) this.getAttribute("frustum").getData();
 
             Vector3f CYAN = new Vector3f(0, 1, 1);
 
             //Rays into space
-            DirectDraw.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-            DirectDraw.getInstance().drawLine(new Vector3f(frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-            DirectDraw.getInstance().drawLine(new Vector3f(-frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-            DirectDraw.getInstance().drawLine(new Vector3f(frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(-frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
 
             //Front Face
-            DirectDraw.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-            DirectDraw.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-            DirectDraw.getInstance().drawLine(new Vector3f(-frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-            DirectDraw.getInstance().drawLine(new Vector3f(frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(-frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(frustum.x, frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
 
             //Back Face
-            DirectDraw.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-            DirectDraw.getInstance().drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-            DirectDraw.getInstance().drawLine(new Vector3f(-frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
-            DirectDraw.getInstance().drawLine(new Vector3f(frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(-frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(-frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(-frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
+            DirectDraw.getInstance().Draw3D.drawLine(new Vector3f(frustum.x, frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), new Vector3f(frustum.x, -frustum.x, -frustum.y - frustum.z).mulTransposeDirection(viewMatrix).add(this.getPosition()), CYAN);
         }
     }
 

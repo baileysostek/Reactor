@@ -2,10 +2,8 @@ package graphics.ui;
 
 import engine.Reactor;
 import graphics.renderer.Renderer;
-import graphics.renderer.Window;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
-import input.MousePicker;
 import org.joml.Vector4f;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NVGPaint;
@@ -14,7 +12,7 @@ import org.lwjgl.nanovg.NanoVGGL3;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Queue;
+import java.util.regex.Pattern;
 
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -23,16 +21,16 @@ public class UIManager{
     private static UIManager uiManager;
     protected static long vg;
 
-    private LinkedList<TextRender> textRenders = new LinkedList();
-
-    //    private LinkedList<SpriteRender> spriteRenders = new LinkedList<>();
     private LinkedList<ColorRender> backgroundColors = new LinkedList<ColorRender>();
-//    private LinkedList<ColorRender> foregroundColors = new LinkedList<ColorRender>();
-//    private LinkedList<LineRender> lines = new LinkedList<LineRender>();
-
     private LinkedList<Renderable> drawCalls = new LinkedList<>();
+    private LinkedList<ColorRender> foregroundColors = new LinkedList<ColorRender>();
 
     private HashMap<Integer, Integer> textureCache = new HashMap<Integer, Integer>();
+    private HashMap<String, Vector4f> hexColorCache = new HashMap<>();
+
+    private final Pattern regex = Pattern.compile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$");
+
+    private final Vector4f WHITE = new Vector4f(255);
 
     private UIManager(){
         vg = NanoVGGL3.nvgCreate(NanoVGGL3.NVG_ANTIALIAS | NanoVGGL3.NVG_STENCIL_STROKES);
@@ -70,14 +68,32 @@ public class UIManager{
             NanoVG.nvgClosePath(vg);
         }
 
-        //Render the text
-        for(TextRender text : textRenders){
-            NanoVG.nvgText(Reactor.getVg(), text.posX, text.posY, text.text);
-        }
-
         NanoVG.nvgText(Reactor.getVg(), 4, 4, "FPS:" + Reactor.getFPS() + " Batches:" + Renderer.getInstance().getBatches());
 
         for(Renderable r : drawCalls){
+            if(r instanceof TextRender){
+                TextRender text = ((TextRender)r);
+                NVGColor color = NVGColor.create();
+                NanoVG.nvgRGBA((byte)text.color.x, (byte)text.color.y, (byte)text.color.z, (byte)text.color.w, color);
+                NanoVG.nvgFillColor(Reactor.getVg(), color);
+                NanoVG.nvgText(Reactor.getVg(), text.posX, text.posY, text.text);
+                continue;
+            }
+            if(r instanceof TextSize){
+                TextSize textSize = ((TextSize) r);
+                NanoVG.nvgFontSize(Reactor.getVg(), textSize.size);
+                continue;
+            }
+            if(r instanceof TextFont){
+                TextFont textFont = ((TextFont) r);
+                NanoVG.nvgFontFace(Reactor.getVg(), textFont.fontFace);
+                continue;
+            }
+            if(r instanceof TextAlignmentDirective){
+                TextAlignmentDirective alignment = ((TextAlignmentDirective) r);
+                NanoVG.nvgTextAlign(Reactor.getVg(), alignment.alignment);
+                continue;
+            }
             if(r instanceof LineRender){
                 LineRender line = ((LineRender) r);
 
@@ -119,19 +135,70 @@ public class UIManager{
                 NanoVG.nvgRect(Reactor.getVg(), colorRender.posx, colorRender.posy, colorRender.width, colorRender.height);
                 NanoVG.nvgFill(vg);
                 NanoVG.nvgClosePath(vg);
+                continue;
             }
+
+            if(r instanceof RectangleRender){
+                RectangleRender rect = ((RectangleRender)r);
+                NanoVG.nvgBeginPath(vg);
+                NVGColor color = NVGColor.create();
+                NanoVG.nvgRGBA((byte)rect.color.x, (byte)rect.color.y, (byte)rect.color.z, (byte)rect.color.w, color);
+                NanoVG.nvgFillColor(Reactor.getVg(), color);
+                NanoVG.nvgRoundedRect(Reactor.getVg(), rect.x, rect.y, rect.width, rect.height, rect.corner);
+                NanoVG.nvgFill(vg);
+                NanoVG.nvgClosePath(vg);
+            }
+        }
+
+        //Render foreground
+        for(ColorRender colorRender : foregroundColors){
+            NVGColor colorC = NVGColor.create();
+            NanoVG.nvgBeginPath(vg);
+            NanoVG.nvgRGBA((byte)colorRender.color.x, (byte)colorRender.color.y, (byte)colorRender.color.z, (byte)colorRender.color.w, colorC);
+            NanoVG.nvgFillColor(Reactor.getVg(), colorC);
+            NanoVG.nvgRect(Reactor.getVg(), colorRender.posx, colorRender.posy, colorRender.width, colorRender.height);
+            NanoVG.nvgFill(vg);
+            NanoVG.nvgClosePath(vg);
         }
 
 
         NanoVG.nvgEndFrame(Reactor.getVg());
 
-        textRenders.clear();
         backgroundColors.clear();
+        foregroundColors.clear();
         drawCalls.clear();
     }
 
-    public void drawString(float posx, float posy, String string){
-        textRenders.addLast(new TextRender(posx, posy, string));
+    // Text functions
+    public void drawText(float posx, float posy, String string){
+        drawCalls.addLast(new TextRender(posx, posy, string));
+    }
+
+    public void drawText(float posx, float posy, String string, Vector4f color){
+        drawCalls.addLast(new TextRender(posx, posy, string).setColor(color));
+    }
+
+    public void setTextSize(float size){
+        drawCalls.addLast(new TextSize(size));
+    }
+
+    public void setTextFont(String fontFamily){
+        if(FontLoader.getInstance().hasFont(fontFamily)) {
+            drawCalls.addLast(new TextFont(fontFamily));
+        }
+    }
+
+    public void setTextAlignment(TextAlignment ... textAlignment){
+        int total = TextAlignment.TOP_LEFT.alignment;
+
+        if(textAlignment.length > 0){
+            total = 0;
+            for(TextAlignment alignment : textAlignment){
+                total = total | alignment.alignment;
+            }
+        }
+
+        drawCalls.addLast(new TextAlignmentDirective(total));
     }
 
     public void drawLine(float p1x, float p1y, float p2x, float p2y, Vector4f color) {
@@ -225,11 +292,58 @@ public class UIManager{
     }
 
     public void drawColorForeground(float posx, float posy, float width, float height, Vector4f col){
-        drawCalls.addLast(new ColorRender(posx, posy, width, height, col));
+        foregroundColors.addLast(new ColorRender(posx, posy, width, height, col));
     }
 
     public void fillColorForeground(Vector4f col){
-        drawCalls.addLast(new ColorRender(0,0, Renderer.getWIDTH(), Renderer.getHEIGHT(), col));
+        foregroundColors.addLast(new ColorRender(0,0, Renderer.getWIDTH(), Renderer.getHEIGHT(), col));
+    }
+
+    public void drawRect(float x, float y, float width, float height, Vector4f color){
+        drawCalls.addLast(new RectangleRender(x, y, width, height).setColor(color));
+    }
+
+    public void drawRect(float x, float y, float width, float height, Vector4f color, float cornerRadius){
+        drawCalls.addLast(new RectangleRender(x, y, width, height).setColor(color).setCornerRoundness(cornerRadius));
+    }
+
+    //Color Utils
+    public Vector4f getDrawColor(String hexColor, float alpha){
+        if(!this.hexColorCache.containsKey(hexColor)){
+
+            if(!hexColor.startsWith("#")){
+                hexColor = "#"+hexColor;
+            }
+
+            if(!regex.matcher(hexColor).matches() || hexColor.length() < 3){
+                return new Vector4f(255);
+            }
+
+            //Remove the Hash character
+            String removedHash = hexColor.substring(1);
+
+            Vector4f color = new Vector4f(255);
+
+            if(hexColor.length() == 3){
+                color.x = Integer.parseInt(removedHash.substring(0, 1), 16);
+                color.y = Integer.parseInt(removedHash.substring(1, 2), 16);
+                color.z = Integer.parseInt(removedHash.substring(2, 3), 16);
+            }else{
+                color.x = Integer.parseInt(removedHash.substring(0, 2), 16);
+                color.y = Integer.parseInt(removedHash.substring(2, 4), 16);
+                color.z = Integer.parseInt(removedHash.substring(4, 6), 16);
+            }
+
+            // Alpha
+            color.w = Math.max(Math.min(alpha, 1), 0) * 255f;
+
+            this.hexColorCache.put(hexColor, color);
+        }
+        return this.hexColorCache.get(hexColor);
+    }
+
+    public Vector4f getDrawColor(String hexColor){
+        return getDrawColor(hexColor, 1f);
     }
 
     public static UIManager getInstance() {
@@ -263,11 +377,41 @@ public class UIManager{
         float posX;
         float posY;
         String text;
+        Vector4f color = WHITE;
 
         TextRender(float posX, float posY, String text){
             this.posX = posX;
             this.posY = posY;
             this.text = text;
+        }
+
+        public Renderable setColor(Vector4f color) {
+            this.color = color;
+            return this;
+        }
+    }
+
+    private class TextSize implements Renderable{
+        float size;
+
+        public TextSize(float size) {
+            this.size = size;
+        }
+    }
+
+    private class TextFont implements Renderable{
+        String fontFace;
+
+        public TextFont(String fontFace) {
+            this.fontFace = fontFace;
+        }
+    }
+
+    private class TextAlignmentDirective implements Renderable{
+        int alignment;
+
+        public TextAlignmentDirective(int alignment) {
+            this.alignment = alignment;
         }
     }
 
@@ -351,7 +495,7 @@ public class UIManager{
         float p2x;
         float p2y;
         float thickness = 5.5f;
-        Vector4f color = new Vector4f(255);
+        Vector4f color = WHITE;
 
         public LineRender(float p1x, float p1y, float p2x, float p2y) {
             this.p1x = p1x;
@@ -366,6 +510,33 @@ public class UIManager{
         }
         public LineRender setLineWidth(float width){
             this.thickness = width;
+            return this;
+        }
+    }
+
+    private class RectangleRender implements Renderable{
+        float x;
+        float y;
+        float width;
+        float height;
+        float corner = 0f;
+
+        Vector4f color = new Vector4f(255);
+
+        public RectangleRender(float x, float y, float width, float height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+
+
+        public RectangleRender setColor(Vector4f color){
+            this.color = color;
+            return this;
+        }
+        public RectangleRender setCornerRoundness(float corner){
+            this.corner = corner;
             return this;
         }
     }

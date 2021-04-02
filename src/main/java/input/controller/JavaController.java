@@ -75,7 +75,7 @@ public class JavaController {
             axis_modifier = new Vector3f(1, -1, 1);
         }
 
-        if(GLFW.glfwGetJoystickName(index).toLowerCase().contains("wireless")){
+        if(GLFW.glfwGetJoystickGUID(index).equals("030000004c050000da0c000000000000")){
             System.out.println("PS4 controller Recognised.");
             mapping = new EnumButtonType[]{
                 EnumButtonType.X,

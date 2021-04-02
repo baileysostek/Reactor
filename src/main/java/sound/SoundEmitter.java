@@ -195,15 +195,15 @@ public class SoundEmitter extends Entity {
 
     @Override
     public void renderInEditor(boolean selected){
-        DirectDraw.getInstance().drawBillboard(super.getPosition(), new Vector2f(1), SoundEngine.getInstance().getSoundEmitterSVG());
+        DirectDraw.getInstance().Draw3D.drawBillboard(super.getPosition(), new Vector2f(1), SoundEngine.getInstance().getSoundEmitterSVG());
         if(selected){
-            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("maxDistance").getData()), new Vector3f(1, 0, 0), 32, new Vector3f(1, 1, 1));
-            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("maxDistance").getData()), new Vector3f(0, 1, 0), 32, new Vector3f(1, 1, 1));
-            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("maxDistance").getData()), new Vector3f(0, 0, 1), 32, new Vector3f(1, 1, 1));
+            DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("maxDistance").getData()), new Vector3f(1, 0, 0), 32, new Vector3f(1, 1, 1));
+            DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("maxDistance").getData()), new Vector3f(0, 1, 0), 32, new Vector3f(1, 1, 1));
+            DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("maxDistance").getData()), new Vector3f(0, 0, 1), 32, new Vector3f(1, 1, 1));
 
-            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("referenceDistance").getData()), new Vector3f(1, 0, 0), 32, new Vector3f(1, 0, 0));
-            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("referenceDistance").getData()), new Vector3f(0, 1, 0), 32, new Vector3f(1, 0, 0));
-            DirectDraw.getInstance().drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("referenceDistance").getData()), new Vector3f(0, 0, 1), 32, new Vector3f(1, 0, 0));
+            DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("referenceDistance").getData()), new Vector3f(1, 0, 0), 32, new Vector3f(1, 0, 0));
+            DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("referenceDistance").getData()), new Vector3f(0, 1, 0), 32, new Vector3f(1, 0, 0));
+            DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f((Float) this.getAttribute("referenceDistance").getData()), new Vector3f(0, 0, 1), 32, new Vector3f(1, 0, 0));
         }
     }
 

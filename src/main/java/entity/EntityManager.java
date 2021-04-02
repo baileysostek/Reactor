@@ -517,7 +517,7 @@ public class EntityManager {
         projectFile.add("entities", entities);
         projectFile.add("camera", CameraManager.getInstance().getActiveCamera().serialize());
 
-        StringUtils.write(projectFile.toString(), "test.json");
+//        StringUtils.write(projectFile.toString(), "test.json");
 
         return projectFile;
     }

@@ -114,7 +114,7 @@ public class Probe extends Entity {
 
     @Override
     public void renderInEditor(boolean selected){
-        DirectDraw.getInstance().drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), ProbeManager.getInstance().getReflectionProbeSVG());
+        DirectDraw.getInstance().Draw3D.drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), ProbeManager.getInstance().getReflectionProbeSVG());
     }
 
     public int getReflectionProbeTextureID(){

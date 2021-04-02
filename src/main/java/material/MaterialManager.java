@@ -5,6 +5,7 @@ import entity.Entity;
 import graphics.renderer.Renderer;
 import graphics.renderer.ShaderManager;
 import graphics.sprite.Sprite;
+import graphics.sprite.SpriteBinder;
 import models.ModelManager;
 
 import java.util.Collection;

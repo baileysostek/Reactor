@@ -98,7 +98,7 @@ public class WorldOutliner extends UIComponet {
                 //No parent, therefore is parent and should render at this level
                 renderEntity(e);
                 if(ImGui.isItemHovered()){
-                    DirectDraw.getInstance().drawAABB(e, new Vector3f(1));
+                    DirectDraw.getInstance().Draw3D.drawAABB(e, new Vector3f(1));
                 }
             }
         }
@@ -212,7 +212,7 @@ public class WorldOutliner extends UIComponet {
             for (Entity child : new LinkedList<>(children)) {
                 renderEntity(child);
                 if(ImGui.isItemHovered()){
-                    DirectDraw.getInstance().drawAABB(child, new Vector3f(1));
+                    DirectDraw.getInstance().Draw3D.drawAABB(child, new Vector3f(1));
                 }
             }
             ImGui.unindent();

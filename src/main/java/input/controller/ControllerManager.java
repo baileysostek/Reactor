@@ -44,6 +44,8 @@ public class ControllerManager{
 
     private final int CONTROLLER_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/gamepad.svg", 1, 1, 96f);
 
+    private final float pollingRate = 125.0f;
+
     private ControllerManager() {
         lock = new ReentrantLock();
 

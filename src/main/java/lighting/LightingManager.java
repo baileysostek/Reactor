@@ -54,43 +54,43 @@ public class LightingManager {
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(ShaderManager.getInstance().getActiveShader(), "view"), false, directionalLight.getLightspaceTransform());
 //        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(ShaderManager.getInstance().getActiveShader(), "perspective"), false, Renderer.getInstance().getProjectionMatrix());
 
-//        //Render all entities
-//        EntityManager.getInstance().resort();
-//
-//        for(Entity entity : EntityManager.getInstance().getEntities()){
-//            if(entity.getModel() != null) {
-//
-//                ShaderManager.getInstance().loadHandshakeIntoShader(lightDepth, entity.getModel().getHandshake());
-//
-//                //Mess with uniforms
-//                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lightDepth, "model"), false, entity.getTransform().get(new float[16]));
-//                GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, entity.getModel().getNumIndicies());
-//            }
-//        }
+        //Render all entities
+        EntityManager.getInstance().resort();
 
-        LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches = EntityManager.getInstance().getBatches();
-        for(VAO vao : batches.keySet()) {
-            if(vao == null){
-                continue;
+        for(Entity entity : EntityManager.getInstance().getEntities()){
+            if(entity.getModel() != null) {
+
+                ShaderManager.getInstance().loadHandshakeIntoShader(lightDepth, entity.getModel().getHandshake());
+
+                //Mess with uniforms
+                GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(lightDepth, "model"), false, entity.getTransform().get(new float[16]));
+                GL46.glDrawArrays(GL46.GL_TRIANGLES, 0, entity.getModel().getNumIndicies());
             }
-            LinkedList<Entity> rendered = new LinkedList<>();
-            LinkedHashMap<Material, LinkedList<Entity>> materialEntities = batches.get(vao);
-            for(LinkedList<Entity> toRender : materialEntities.values()) {
-                for(Entity e : toRender){
-                    if(e.hasAttribute("Casts Shadows")){
-                        if((boolean)e.getAttribute("Casts Shadows").getData()){
-                            rendered.add(e);
-                        }
-                    }else{
-                        rendered.add(e);
-                    }
-                }
-            }
-            if(rendered.size() > 0) {
-                vao.render(rendered);
-            }
-            rendered.clear();
         }
+
+//        LinkedHashMap<VAO, LinkedHashMap<Material, LinkedList<Entity>>> batches = EntityManager.getInstance().getBatches();
+//        for(VAO vao : batches.keySet()) {
+//            if(vao == null){
+//                continue;
+//            }
+//            LinkedList<Entity> rendered = new LinkedList<>();
+//            LinkedHashMap<Material, LinkedList<Entity>> materialEntities = batches.get(vao);
+//            for(LinkedList<Entity> toRender : materialEntities.values()) {
+//                for(Entity e : toRender){
+//                    if(e.hasAttribute("Casts Shadows")){
+//                        if((boolean)e.getAttribute("Casts Shadows").getData()){
+//                            rendered.add(e);
+//                        }
+//                    }else{
+//                        rendered.add(e);
+//                    }
+//                }
+//            }
+//            if(rendered.size() > 0) {
+//                vao.render(rendered);
+//            }
+//            rendered.clear();
+//        }
 
         directionalLight.getDepthBuffer().unbindFrameBuffer();
     }
