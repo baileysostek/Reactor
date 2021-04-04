@@ -697,10 +697,12 @@ public class Entity implements Transformable, Serializable<Entity> {
         //Add all of our components to an out array
         for(int i = 0; i < this.components.size(); i++){
             Component component = this.components.get(i);
-            JsonObject helperObject = new JsonObject();
-            helperObject.addProperty("class", component.getClass().getName());
-            helperObject.add("value", component.serialize());
-            componentsArray.add(helperObject);
+            if(!component.noSerialize()) {
+                JsonObject helperObject = new JsonObject();
+                helperObject.addProperty("class", component.getClass().getName());
+                helperObject.add("value", component.serialize());
+                componentsArray.add(helperObject);
+            }
         }
 
         //Add our attributes to out

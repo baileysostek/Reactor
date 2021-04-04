@@ -640,7 +640,10 @@ public class EntityEditor extends UIComponet {
             //Fancy entity from another class or namespace :)
             try {
                 Class<?> classType = Class.forName(target.getClass().getName());
-                entity = ((Entity) SerializationHelper.getGson().fromJson(serialziedEntity, classType)).deserialize(serialziedEntity);
+                System.out.println("Creating instance of:" + classType);
+                System.out.println("Meata Data:" + serialziedEntity);
+                entity = ((Entity) SerializationHelper.getGson().fromJson(new JsonObject(), classType));
+                entity = entity.deserialize(serialziedEntity);
 
             } catch (ClassNotFoundException e) {
                 //TODO play sound that that entity is unknown, maybe show message dialogue too.

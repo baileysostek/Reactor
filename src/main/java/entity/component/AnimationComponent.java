@@ -37,6 +37,7 @@ public class AnimationComponent extends Component{
 
     public AnimationComponent(){
         super("Animation");
+//        super.setNoSerialize(true);
     }
 
     public void setModel(Model model){

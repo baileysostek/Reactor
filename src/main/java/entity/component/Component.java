@@ -18,6 +18,8 @@ public abstract class Component implements Serializable<Component>{
     private static int GLOBAL_ID = 0;
     private final  int ID;
 
+    private boolean noSerialize = false;
+
     //When this component triggers, execute the events attached
 //    private LinkedList<Event> events = new LinkedList<>();
     private HashMap<String, LinkedList<Event>> events = new HashMap<String, LinkedList<Event>>();
@@ -219,6 +221,14 @@ public abstract class Component implements Serializable<Component>{
             this.events.put(trigger, triggeredEvents);
         }
         return this;
+    }
+
+    public void setNoSerialize(boolean noSerialize) {
+        this.noSerialize = noSerialize;
+    }
+
+    public boolean noSerialize(){
+        return this.noSerialize;
     }
 
     public int getID(){

@@ -20,20 +20,11 @@ import java.util.LinkedList;
 public class DirectDraw {
     private static DirectDraw directDraw;
 
-    //ImmediateDraw
-    private ImmediateDrawLine     drawerLine;
-    private ImmediateDrawTriangle drawTriangle;
-    private ImmediateDrawSprite   drawSprite;
-
     public DirectDraw3D Draw3D;
     public UIManager Draw2D;
 
     private DirectDraw(){
         //Setup our draw instances.
-
-        drawerLine = new ImmediateDrawLine();
-        drawTriangle = new ImmediateDrawTriangle();
-        drawSprite = new ImmediateDrawSprite();
 
         Draw2D = UIManager.getInstance();
         Draw3D = DirectDraw3D.getInstance();
@@ -42,12 +33,7 @@ public class DirectDraw {
 
     //Draw
     protected void render(){
-        drawerLine.render();
-        if(Reactor.isDev()) {
-            GL46.glClear(GL46.GL_DEPTH_BUFFER_BIT);
-        }
-        drawTriangle.render();
-        drawSprite.render();
+        Draw3D.render();
     }
 
     //Singleton stuff.

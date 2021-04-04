@@ -209,22 +209,22 @@ public class SteamManager {
                 SteamAPI.printDebugInfo(System.err);
             }else{
                 System.out.println("Steam Running:"+SteamAPI.isSteamRunning());
-            }
 
-            SteamAPI.printDebugInfo(System.out);
+                SteamAPI.printDebugInfo(System.out);
 
-            clientUtils = new SteamUtils(clUtilsCallback);
-            userStats = new SteamUserStats(userStatsCallback);
+                clientUtils = new SteamUtils(clUtilsCallback);
+                userStats = new SteamUserStats(userStatsCallback);
 
 //            clientUtils.setWarningMessageHook(clMessageHook);
 
-            // SteamAPI.init() with your (kn)own app ID
-            if (SteamAPI.restartAppIfNecessary(clientUtils.getAppID())) {
-                System.out.println("SteamAPI_RestartAppIfNecessary returned 'false'");
-            }
+                // SteamAPI.init() with your (kn)own app ID
+                if (SteamAPI.restartAppIfNecessary(clientUtils.getAppID())) {
+                    System.out.println("SteamAPI_RestartAppIfNecessary returned 'false'");
+                }
 
-            System.out.println("success.");
-            hasInstance = true;
+                System.out.println("success.");
+                hasInstance = true;
+            }
         } catch (SteamException e) {
             System.out.println("failed.");
             // Error extracting or loading native libraries
@@ -246,8 +246,10 @@ public class SteamManager {
     }
 
     public void onShutdown(){
-        clientUtils.dispose();
-        userStats.dispose();
+        if(hasInstance) {
+            clientUtils.dispose();
+            userStats.dispose();
+        }
         SteamAPI.shutdown();
     }
 
