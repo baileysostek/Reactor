@@ -456,15 +456,15 @@ public class AttributeRenderer{
                 attribute.setData(value.get());
                 return;
             }
-            //End If no type was found, render default string.
-            String data = "Unknown";
-            ImString value = new ImString(data);
-
-            int flags = ImGuiInputTextFlags.CallbackResize | ImGuiInputTextFlags.AutoSelectAll ;
-
-            ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
-            ImGui.inputText("Unknown", value, flags);
-            ImGui.popItemWidth();
+//            //End If no type was found, render default string.
+//            String data = "Unknown";
+//            ImString value = new ImString(data);
+//
+//            int flags = ImGuiInputTextFlags.CallbackResize | ImGuiInputTextFlags.AutoSelectAll ;
+//
+//            ImGui.pushItemWidth(ImGui.getColumnWidth() - 3);
+//            ImGui.inputText("Unknown", value, flags);
+//            ImGui.popItemWidth();
         }
     }
 

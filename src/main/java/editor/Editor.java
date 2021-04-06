@@ -12,6 +12,7 @@ import entity.component.Attribute;
 import graphics.renderer.DirectDraw;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
+import imgui.ImBool;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.ImVec2;
@@ -85,6 +86,9 @@ public class Editor {
     //Camera constants
     private float rotationSpeed = 45f;
     private float cameraSpeed = 0.1f;
+
+    //Popups
+    private LinkedList<Popup> popups = new LinkedList<>();
 
     private enum RightClickAction{
         ORBIT,
@@ -213,11 +217,6 @@ public class Editor {
             if (c != GLFW_KEY_DELETE) {
                 io.addInputCharacter(c);
             }
-        });
-
-        glfwSetScrollCallback(Reactor.WINDOW_POINTER, (w, xOffset, yOffset) -> {
-            io.setMouseWheelH(io.getMouseWheelH() + (float) xOffset);
-            io.setMouseWheel(io.getMouseWheel() + (float) yOffset);
         });
 
         io.setSetClipboardTextFn(new ImStrConsumer() {
@@ -359,6 +358,12 @@ public class Editor {
 
         this.onExitPlay();
 
+    }
+
+    public void registerPopup(Popup popup) {
+        if(!this.popups.contains(popup)) {
+            this.popups.add(popup);
+        }
     }
 
     //Public interfaces
@@ -528,6 +533,8 @@ public class Editor {
         ImVec2 padding = new ImVec2();
         ImGui.getStyle().getFramePadding(padding);
 
+        //        ImGui.showMetricsWindow();
+
         ImGui.columns(3);
 
 
@@ -604,12 +611,23 @@ public class Editor {
         ImGui.endChildFrame();
         ImGui.popStyleVar();
         ImGui.columns();
+        ImGui.popStyleVar();
+        ImGui.popStyleVar();
+        ImGui.popStyleVar();
+        ImGui.popStyleVar();
+        ImGui.popStyleVar();
 
-        ImGui.popStyleVar();
-        ImGui.popStyleVar();
-        ImGui.popStyleVar();
-        ImGui.popStyleVar();
-        ImGui.popStyleVar();
+        //Popups
+        for(Popup popup : popups){
+            if(popup.isOpen()) {
+                ImGui.openPopup(popup.getTitle());
+                if (ImGui.beginPopupModal(popup.getTitle())) {
+                    popup.render();
+                    ImGui.endPopup();
+                }
+                ImGui.setWindowFocus(popup.getTitle());
+            }
+        }
 
         //End
         ImGui.end();

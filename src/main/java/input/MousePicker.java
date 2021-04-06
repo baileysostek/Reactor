@@ -6,6 +6,7 @@ import engine.Reactor;
 import entity.Entity;
 import graphics.renderer.Renderer;
 import imgui.ImGui;
+import imgui.ImGuiIO;
 import models.AABB;
 import models.Model;
 import org.joml.*;
@@ -40,13 +41,15 @@ public class MousePicker{
     public static final int MOUSE_RIGHT  = GLFW.GLFW_MOUSE_BUTTON_RIGHT;
     public static final int MOUSE_MIDDLE = GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
 
-    public LinkedList<Callback> callbacks = new LinkedList<Callback>();
+    public LinkedList<Callback> callbacks      = new LinkedList<Callback>();
+    public LinkedList<Callback> scrollCallback = new LinkedList<Callback>();
 
     private HashMap<Integer, Boolean> mouseKeys = new HashMap<>();
 
     public boolean mousePressed = false;
 
-    public float scrollDelta = 0;
+    public float scrollDeltaX = 0;
+    public float scrollDeltaY = 0;
 
     private MousePicker(){
         GLFW.glfwSetMouseButtonCallback(Reactor.WINDOW_POINTER, (long window, int button, int action, int mods) -> {
@@ -61,6 +64,25 @@ public class MousePicker{
                 processMouse(window, button, action, mods);
             }
         });
+
+        GLFW.glfwSetScrollCallback(Reactor.WINDOW_POINTER, (long window, double xoffset, double yoffset) -> {
+            // Default for Engine opperation
+            scrollDeltaX = (float) xoffset;
+            scrollDeltaY = (float) yoffset;
+            if(scrollDeltaX != 0 || scrollDeltaY != 0){
+                for(Callback c : scrollCallback){
+                    c.callback(scrollDeltaX, scrollDeltaY);
+                }
+            }
+
+            //If dev
+            if(Reactor.isDev()){
+                ImGuiIO io = ImGui.getIO();
+                io.setMouseWheelH(io.getMouseWheelH() + (float) xoffset);
+                io.setMouseWheel(io.getMouseWheel() + (float) yoffset);
+            }
+        });
+
     }
 
     private void processMouse(long window, int button, int action, int mods){
@@ -104,7 +126,6 @@ public class MousePicker{
         MouseX = ((float) newX) + MouseOffsetX;
         MouseY = ((float) newY) + MouseOffsetY;
 
-//        System.out.println(MouseDeltaX+","+MouseDeltaY);
         if(lockMouse) {
             MouseDeltaX = (float) (newX - (Renderer.getInstance().getWIDTH()/2));
             MouseDeltaY = (float) (newY - (Renderer.getInstance().getHEIGHT()/2));
@@ -119,7 +140,6 @@ public class MousePicker{
 //        MouseY *= -1;
 //        MouseY += Renderer.getInstance().getHEIGHT();
 
-
         ray = calculateMouseRay();
 
         //Reset mouse pos for this frame
@@ -127,6 +147,12 @@ public class MousePicker{
         MouseY -= MouseOffsetY;
 
         resetOffset();
+    }
+
+    public void onScrollWhell(Callback callback){
+        if(!scrollCallback.contains(callback)) {
+            this.scrollCallback.add(callback);
+        }
     }
 
     public Vector3f calculateMouseRay() {
@@ -359,5 +385,13 @@ public class MousePicker{
             }
 //        }
         return null;
+    }
+
+    public float getScrollDeltaX() {
+        return scrollDeltaX;
+    }
+
+    public float getScrollDeltaY() {
+        return scrollDeltaY;
     }
 }
