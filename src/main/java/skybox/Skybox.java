@@ -80,6 +80,14 @@ public class Skybox extends Entity {
         return this.skyBoxTexture;
     }
 
+    public void setColor(Vector3f color){
+        this.color.setData(color);
+    }
+
+    public void setColor(Vector4f color){
+        this.color.setData(new Vector3f(color.x, color.y, color.z));
+    }
+
     @Override
     public void renderInEditor(boolean selected){
         DirectDraw.getInstance().Draw3D.drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), SkyboxManager.getInstance().getSkyboxSVG());

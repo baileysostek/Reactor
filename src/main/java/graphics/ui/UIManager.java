@@ -116,14 +116,19 @@ public class UIManager{
                 SpriteRender sprite = (SpriteRender) r;
                 NVGPaint img = NVGPaint.create();
 
+                NanoVG.nvgTranslate(vg, sprite.posx, sprite.posy);
+                NanoVG.nvgRotate(vg, sprite.angle);
                 NanoVG.nvgBeginPath(vg);
-
-                NanoVG.nvgImagePattern(vg, sprite.posx, sprite.posy, sprite.width, sprite.height, sprite.angle, sprite.textureID, sprite.alpha, img);
-                NanoVG.nvgRect(vg, sprite.posx, sprite.posy, sprite.width, sprite.height);
+                NanoVG.nvgImagePattern(vg, 0, 0, sprite.width, sprite.height, 0, sprite.textureID, sprite.alpha, img);
+                NanoVG.nvgRect(vg, 0, 0, sprite.width, sprite.height);
                 NanoVG.nvgFillPaint(vg, img);
                 NanoVG.nvgFill(vg);
 
                 NanoVG.nvgClosePath(vg);
+                NanoVG.nvgRotate(vg, -sprite.angle);
+                NanoVG.nvgTranslate(vg, -sprite.posx, -sprite.posy);
+
+
                 continue;
             }
             if(r instanceof ColorRender){

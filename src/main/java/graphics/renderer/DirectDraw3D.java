@@ -71,11 +71,13 @@ public class DirectDraw3D {
      */
     public void drawBones(Entity entity) {
         if(entity.hasModel()) {
-            if(entity.getModel().rootJoint != null) {
+            if(entity.getModel().getRootJoints().size() > 0) {
                 //TODO animation timeline
                 for(float i = 0; i < 1; i += 0.1f){
                     HashMap<String, Joint> frames = entity.getModel().getAnimatedBoneTransforms("animation", i);
-                    drawBonesHelper(entity.getModel().getRootJoint(), entity.getTransform(), frames);
+                    for(Joint rootJoint : entity.getModel().getRootJoints()){
+                        drawBonesHelper(rootJoint, entity.getTransform(), frames);
+                    }
                 }
             }
         }

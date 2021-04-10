@@ -605,7 +605,11 @@ public class EntityEditor extends UIComponet {
 //                            } else {
 //                                this.addTarget(hits.getFirst());
 //                            }
-                            this.addTarget(hits.getFirst());
+                            if(!this.selectedEntities.containsKey(hits.getFirst())) {
+                                this.addTarget(hits.getFirst());
+                            }else{
+                                this.selectedEntities.remove(hits.getFirst());
+                            }
                         } else {
                             this.setTarget(hits.getFirst());
                             this.pastSelections.push(hits.getFirst());

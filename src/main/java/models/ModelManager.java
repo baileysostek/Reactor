@@ -126,16 +126,17 @@ public class ModelManager {
 //                });
 
                 AIScene aiScene = Assimp.aiImportFileExWithProperties(resourceName,
-                        Assimp.aiProcess_Triangulate |
-                                Assimp.aiProcess_FlipUVs |
-                                Assimp.aiProcess_CalcTangentSpace |
-                                Assimp.aiProcess_GenNormals |
-                                Assimp.aiProcess_GenUVCoords |
-                                Assimp.aiProcess_LimitBoneWeights |
-                                Assimp.aiProcess_FixInfacingNormals |
-                                Assimp.aiProcess_GenBoundingBoxes,
-                        null,
-                        store
+                Assimp.aiProcess_Triangulate |
+                        Assimp.aiProcess_FlipUVs |
+                        Assimp.aiProcess_CalcTangentSpace |
+                        Assimp.aiProcess_GenNormals |
+                        Assimp.aiProcess_GenUVCoords |
+//                                Assimp.aiProcess_OptimizeMeshes|
+//                                Assimp.aiProcess_LimitBoneWeights |
+                        Assimp.aiProcess_FixInfacingNormals |
+                        Assimp.aiProcess_GenBoundingBoxes,
+                    null,
+                    store
                 );
 
                 if (aiScene == null) {
@@ -186,10 +187,10 @@ public class ModelManager {
 
     private Matrix4f toJOML(AIMatrix4x4 matrix){
         return new Matrix4f(
-                matrix.a1(), matrix.b1(), matrix.c1(), matrix.d1(),
-                matrix.a2(), matrix.b2(), matrix.c2(), matrix.d2(),
-                matrix.a3(), matrix.b3(), matrix.c3(), matrix.d3(),
-                matrix.a4(), matrix.b4(), matrix.c4(), matrix.d4()
+            matrix.a1(), matrix.b1(), matrix.c1(), matrix.d1(),
+            matrix.a2(), matrix.b2(), matrix.c2(), matrix.d2(),
+            matrix.a3(), matrix.b3(), matrix.c3(), matrix.d3(),
+            matrix.a4(), matrix.b4(), matrix.c4(), matrix.d4()
         );
     }
 
@@ -546,6 +547,9 @@ public class ModelManager {
                 Joint root = calcualteBoneHeierarchy(scene.mRootNode(), joints);
 
                 LinkedHashMap<String, Animation> animations = calculateAnimations(scene, joints);
+                if(animations.size() > 0){
+                    System.out.println("Bone Check");
+                }
 
                 Model model = new Model(this.getNextID(), modelPath, modelHandshake, vPositions.length / 3, new Vector3f[]{new Vector3f(min.x(), min.y(), min.z()), new Vector3f(max.x(), max.y(), max.z())}, root, animations, boneOffsets, joints);
                 System.out.println("Material Index link:"+ materialIndex);

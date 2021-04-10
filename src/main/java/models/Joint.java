@@ -66,4 +66,8 @@ public class Joint {
     public int getIndex() {
         return index;
     }
+
+    public boolean hasParent(){
+        return this.parent != null;
+    }
 }

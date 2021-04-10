@@ -9,6 +9,7 @@ import editor.components.UIComponet;
 import engine.Reactor;
 import entity.*;
 import entity.component.Attribute;
+import graphics.animation.Timeline;
 import graphics.renderer.DirectDraw;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
@@ -105,6 +106,12 @@ public class Editor {
     private LinkedList<JsonObject> history = new LinkedList<>();
 
     int gameWindowID = 0;
+
+    //Timelines
+    private Timeline feelGoodTimeline = new Timeline();
+
+    //Key config stuff
+    private final int COMMAND_KEY = GLFW.GLFW_KEY_LEFT_CONTROL;
 
     private Editor(){
         //Create imgui context
@@ -315,11 +322,18 @@ public class Editor {
             }
         });
 
-        Keyboard.getInstance().addPressCallback(Keyboard.U, new Callback() {
+        Keyboard.getInstance().addPressCallback(COMMAND_KEY, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                JsonObject data = EntityManager.getInstance().serialize();
-                EntityManager.getInstance().deserializeAndClear(data);
+                ((Camera3D)Editor.this.editorCamera).disableControls();
+                return null;
+            }
+        });
+
+        Keyboard.getInstance().addReleaseCallback(COMMAND_KEY, new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                Editor.this.feelGoodTimeline.start();
                 return null;
             }
         });
@@ -352,6 +366,16 @@ public class Editor {
                     }
                 }
 
+                return null;
+            }
+        });
+
+        //Timelines
+        feelGoodTimeline.setDuration(0.25f);
+        feelGoodTimeline.addCallback(feelGoodTimeline.getDuration(), new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                ((Camera3D)Editor.this.editorCamera).enableControls();
                 return null;
             }
         });
@@ -470,6 +494,11 @@ public class Editor {
                 Quaternionf offsetRot = new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -90).normalize();
                 cam.translate((new Vector3f(0, MousePicker.getInstance().getMouseDeltaY(), MousePicker.getInstance().getMouseDeltaX()).mul(0.1f)).rotate(offsetRot.mul(new Quaternionf().fromAxisAngleDeg(new Vector3f(0, 1, 0), -1 * cam.getRotationV().y())).normalize()));
             }
+        }
+
+        //Timelines
+        if(feelGoodTimeline.isRunning()){
+            feelGoodTimeline.update(delta);
         }
     }
 

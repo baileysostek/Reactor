@@ -44,10 +44,21 @@ public class AnimationComponent extends Component{
         this.model = model;
         animations = model.getAnimations();
         animationNames.setData(new LinkedList<String>(animations.keySet()));
-        duration.setData((float) animations.get(animationNames.getData().getFirst()).getDuration() / Math.max((float) animations.get(animationNames.getData().getFirst()).getFramesPerSecond(), 1f));
-
+        updateDuration();
         //Get the bones from the animation
         bones.setData(new LinkedList<>(model.getBoneNames()));
+    }
+
+    private void updateDuration(){
+        duration.setData((float) animations.get(animationNames.getData().getFirst()).getDuration() / Math.max((float) animations.get(animationNames.getData().getFirst()).getFramesPerSecond(), 1f));
+    }
+
+    public void useAnimation(String animation){
+        if(animationNames.getData().contains(animation)){
+            animationNames.getData().remove(animation);
+            animationNames.getData().addFirst(animation);
+            updateDuration();
+        }
     }
 
     @Override

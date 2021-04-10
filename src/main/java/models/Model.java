@@ -29,7 +29,7 @@ public class Model implements Serializable<Model> {
 
     private AABB aabb = new AABB();
 
-    public Joint rootJoint;
+    public LinkedList<Joint> rootJoints = new LinkedList<>();
     public LinkedHashMap<String, Joint> joints = new LinkedHashMap<>();
     public LinkedHashMap<String, Animation> animations = new LinkedHashMap<>();
 
@@ -58,8 +58,6 @@ public class Model implements Serializable<Model> {
         this.handshake      = handshake;
         this.numIndicies    = numIndicies;
         aabb = new AABB(AABB[0], AABB[1]);
-
-        this.rootJoint = rootJoint;
 
         this.animations.clear();
         this.animations = animations;
@@ -138,6 +136,9 @@ public class Model implements Serializable<Model> {
             Joint clone = new Joint(joint);
             clone.setAnimationTransform(ModelManager.getInstance().getIdentityMatrix());
             tPose.put(joint.getName(), clone);
+            if(!joint.hasParent()){
+                this.rootJoints.add(joint);
+            }
         }
     }
 
@@ -146,17 +147,13 @@ public class Model implements Serializable<Model> {
 
     }
 
-    public void setRootJoint(Joint joint) {
-        this.rootJoint = joint;
-    }
-
-    public Joint getRootJoint() {
-        return rootJoint;
+    public LinkedList<Joint> getRootJoints() {
+        return rootJoints;
     }
 
     public LinkedHashMap<String, Joint> getAnimatedBoneTransforms(String animation, double deltaTime) {
         if(animations.containsKey(animation)) {
-            return animations.get(animation).getBoneTransformsForTime(rootJoint, deltaTime);
+            return animations.get(animation).getBoneTransformsForTime(rootJoints, deltaTime);
         }else{
             return tPose;
         }
@@ -164,7 +161,11 @@ public class Model implements Serializable<Model> {
 
     public Joint getAnimatedBoneTransform(String animation, String joint, double time) {
         LinkedHashMap<String, Joint> mapping = getAnimatedBoneTransforms(animation, time);
-        return mapping.get(joint);
+        if(mapping.containsKey(joint)){
+            return mapping.get(joint);
+        }else{
+            return tPose.get(joint);
+        }
     }
 
 //    public Matrix4f getAnimatedBoneTransform(String animation, String bone, double deltaTime){

@@ -222,7 +222,7 @@ public class EntityManager {
         Collections.sort(hits, new Comparator<Meta>() {
             @Override
             public int compare(Meta o1, Meta o2) {
-                return -1 * (int) (o1.collisionPosition.distance(pos) - o2.collisionPosition.distance(pos));
+                return ((o1.collisionPosition.distance(pos) >= o2.collisionPosition.distance(pos)) ? -1 : 1);
             }
         });
 

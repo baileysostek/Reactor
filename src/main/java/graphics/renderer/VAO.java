@@ -341,7 +341,7 @@ public class VAO {
                     break loop;
                 }
             } else {
-                int maxBones = 50;
+                int maxBones = 200;
                 for (int i = 0; i < maxBones; i++) {
                     ShaderManager.getInstance().loadUniformIntoActiveShaderArray("jointTransforms", i, new Matrix4f().identity());
                 }

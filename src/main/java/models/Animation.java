@@ -35,7 +35,7 @@ public class Animation {
         }
     }
 
-    public LinkedHashMap<String, Joint> getBoneTransformsForTime(Joint rootJoint, double delta_t) {
+    public LinkedHashMap<String, Joint> getBoneTransformsForTime(LinkedList<Joint> rootJoints, double delta_t) {
         delta_t *= duration;
         delta_t %= duration;
         LinkedHashMap<String , Matrix4f> out = new LinkedHashMap<>();
@@ -72,7 +72,9 @@ public class Animation {
             }
         }
 
-        applyPoseToJoints(out, rootJoint, new Matrix4f().identity(), animationTransform);
+        for(Joint joint : rootJoints){
+            applyPoseToJoints(out, joint, new Matrix4f().identity(), animationTransform);
+        }
 
         return animationTransform;
     }

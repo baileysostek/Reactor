@@ -55,7 +55,7 @@ public class LogoScene extends Scene{
         fadeIntimeline.addCallback(fadeIntimeline.getDuration(), new Callback() {
             @Override
             public Object callback(Object... objects) {
-                SceneManager.getInstance().setScene(nextScene);
+                SceneManager.getInstance().setScene(nextScene, SceneManager.getInstance().FadeToBlack());
                 return null;
             }
         });
