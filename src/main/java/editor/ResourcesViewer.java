@@ -186,7 +186,7 @@ public class ResourcesViewer extends UIComponet {
 
     @Override
     public void onAdd() {
-        MousePicker.getInstance().addCallback(dropFileInWorld);
+        MousePicker.getInstance().addButtonCallback(dropFileInWorld);
     }
 
     @Override

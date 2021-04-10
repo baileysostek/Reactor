@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import editor.Editor;
 import editor.components.UIComponet;
-import editor.components.container.Image;
 import entity.Entity;
 import entity.EntityManager;
 import entity.component.Attribute;
@@ -152,7 +151,7 @@ public class LevelEditor extends UIComponet {
 
     @Override
     public void onAdd() {
-        MousePicker.getInstance().addCallback(mouseCallback);
+        MousePicker.getInstance().addButtonCallback(mouseCallback);
     }
 
     @Override

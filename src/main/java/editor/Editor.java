@@ -13,7 +13,6 @@ import graphics.animation.Timeline;
 import graphics.renderer.DirectDraw;
 import graphics.renderer.FBO;
 import graphics.renderer.Renderer;
-import imgui.ImBool;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.ImVec2;
@@ -31,7 +30,6 @@ import platform.EnumDevelopment;
 import serialization.SerializationHelper;
 import util.Callback;
 import util.Debouncer;
-import util.Raycast;
 import util.StringUtils;
 
 import java.util.Collection;
@@ -338,7 +336,7 @@ public class Editor {
             }
         });
 
-        MousePicker.getInstance().addCallback(new Callback() {
+        MousePicker.getInstance().addButtonCallback(new Callback() {
             @Override
             public Object callback(Object... objects) {
                 if(Reactor.isDev()) {

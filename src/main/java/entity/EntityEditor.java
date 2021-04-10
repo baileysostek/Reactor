@@ -6,34 +6,24 @@ import editor.AttributeRenderer;
 import editor.Editor;
 import editor.components.UIComponet;
 import engine.Reactor;
-import entity.component.Attribute;
 import entity.component.Component;
-import entity.component.EnumAttributeType;
 import entity.component.Event;
 import graphics.renderer.DirectDraw;
 import graphics.renderer.DirectDrawData;
-import graphics.renderer.Renderer;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import imgui.*;
-import imgui.enums.ImGuiCol;
-import imgui.enums.ImGuiColorEditFlags;
 import imgui.enums.ImGuiTreeNodeFlags;
-import imgui.enums.ImGuiWindowFlags;
 import input.Keyboard;
 import input.MousePicker;
 import math.VectorUtils;
 import org.joml.*;
 import org.lwjgl.glfw.GLFW;
-import platform.EnumDevelopment;
-import platform.PlatformManager;
 import serialization.SerializationHelper;
 import util.Callback;
 import util.Debouncer;
-import util.StringUtils;
 
 import java.lang.Math;
-import java.security.Key;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -687,8 +677,8 @@ public class EntityEditor extends UIComponet {
 
     @Override
     public void onAdd() {
-        MousePicker.getInstance().addCallback(mouseCallback);
-        MousePicker.getInstance().addCallback(dropFileInWorld);
+        MousePicker.getInstance().addButtonCallback(mouseCallback);
+        MousePicker.getInstance().addButtonCallback(dropFileInWorld);
     }
 
     @Override

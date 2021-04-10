@@ -11,15 +11,12 @@ import graphics.sprite.Colors;
 import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import imgui.ImGui;
-import imgui.enums.ImGuiDragDropFlags;
 import imgui.enums.ImGuiSelectableFlags;
-import imgui.enums.ImGuiTreeNodeFlags;
 import input.MousePicker;
 import lighting.DirectionalLight;
 import lighting.PointLight;
 import material.Material;
 import material.MaterialManager;
-import models.Model;
 import models.ModelManager;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -247,7 +244,7 @@ public class EntityRegistry extends UIComponet {
 
     @Override
     public void onAdd() {
-        MousePicker.getInstance().addCallback(dropFileInWorld);
+        MousePicker.getInstance().addButtonCallback(dropFileInWorld);
     }
 
     @Override

@@ -41,8 +41,9 @@ public class MousePicker{
     public static final int MOUSE_RIGHT  = GLFW.GLFW_MOUSE_BUTTON_RIGHT;
     public static final int MOUSE_MIDDLE = GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
 
-    public LinkedList<Callback> callbacks      = new LinkedList<Callback>();
-    public LinkedList<Callback> scrollCallback = new LinkedList<Callback>();
+    public LinkedList<Callback> buttonCallbacks = new LinkedList<Callback>();
+    public LinkedList<Callback> motionCallbacks = new LinkedList<Callback>();
+    public LinkedList<Callback> scrollCallbacks = new LinkedList<Callback>();
 
     private HashMap<Integer, Boolean> mouseKeys = new HashMap<>();
 
@@ -70,7 +71,7 @@ public class MousePicker{
             scrollDeltaX = (float) xoffset;
             scrollDeltaY = (float) yoffset;
             if(scrollDeltaX != 0 || scrollDeltaY != 0){
-                for(Callback c : scrollCallback){
+                for(Callback c : scrollCallbacks){
                     c.callback(scrollDeltaX, scrollDeltaY);
                 }
             }
@@ -98,7 +99,7 @@ public class MousePicker{
                 mousePressed = false;
             }
         }
-        for(Callback c : new LinkedList<>(callbacks)){
+        for(Callback c : new LinkedList<>(buttonCallbacks)){
             if(c != null) {
                 c.callback(button, action);
             }
@@ -150,8 +151,8 @@ public class MousePicker{
     }
 
     public void onScrollWhell(Callback callback){
-        if(!scrollCallback.contains(callback)) {
-            this.scrollCallback.add(callback);
+        if(!scrollCallbacks.contains(callback)) {
+            this.scrollCallbacks.add(callback);
         }
     }
 
@@ -220,12 +221,16 @@ public class MousePicker{
         return pos;
     }
 
-    public void addCallback(Callback callback){
-        this.callbacks.add(callback);
+    public void addButtonCallback(Callback callback){
+        this.buttonCallbacks.add(callback);
+    }
+
+    public void addPositionListenerCallback(Callback callback){
+        this.buttonCallbacks.add(callback);
     }
 
     public void removeCallback(Callback mouseCallback) {
-        this.callbacks.remove(mouseCallback);
+        this.buttonCallbacks.remove(mouseCallback);
     }
 
     public void setOffset(float mouseOffsetX, float mouseOffsetY, float screenScaleX, float screenScaleY){
