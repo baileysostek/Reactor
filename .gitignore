@@ -4,3 +4,5 @@ META-INF/
 renderer-backup/
 out/
 package/
+build.gradle
+imgui.ini
