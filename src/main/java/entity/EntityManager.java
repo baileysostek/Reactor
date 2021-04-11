@@ -349,10 +349,18 @@ public class EntityManager {
 
     public void resort(){
         this.entities.sort((entity1, entity2) -> {
-            if(entity1.hasAttribute("zIndex") && entity2.hasAttribute("zIndex")){
-                return (int) entity1.getAttribute("zIndex").getData() - (int) entity2.getAttribute("zIndex").getData();
+            if(entity1 == null){
+                return -1;
             }
-            return 0;
+            if(entity2 == null){
+                return 1;
+            }
+            if(entity1.hasAttribute("zIndex") && entity2.hasAttribute("zIndex")){
+                int num1 = (int)entity1.getAttribute("zIndex").getData();
+                int num2 = (int)entity2.getAttribute("zIndex").getData();
+                return (num2 > num1) ? -1 : 1;
+            }
+            return 1;
         });
     }
 

@@ -270,4 +270,27 @@ public class SerializationHelper {
         T value = T.valueOf(cls, name);
         return value;
     }
+
+    public static JsonObject removeAllInstancesOf(String keyName, JsonObject object){
+
+        for(String key : object.keySet()){
+            if(key.equals(keyName)){
+                object.remove(key);
+            }else{
+                if(object.get(key).isJsonObject()){
+                    object.add(key, removeAllInstancesOf(keyName, object.get(key).getAsJsonObject()));
+                }
+                if(object.get(key).isJsonArray()){
+                    JsonArray array = object.get(key).getAsJsonArray();
+                    for(int i = 0; i < array.size(); i++){
+                        if(array.get(i).isJsonObject()){
+                            array.set(i, removeAllInstancesOf(keyName, array.get(i).getAsJsonObject()));
+                        }
+                    }
+                }
+            }
+        }
+
+        return object;
+    }
 }
