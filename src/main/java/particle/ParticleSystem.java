@@ -6,10 +6,8 @@ import entity.component.Attribute;
 import entity.component.AttributeUtils;
 import entity.component.EnumAttributeType;
 import graphics.renderer.DirectDraw;
-import graphics.renderer.Renderer;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import reflection.ProbeManager;
 import util.Callback;
 
 import java.util.Collection;
@@ -27,6 +25,9 @@ public class ParticleSystem extends Entity {
 //    Attribute<LinkedList<Vector3f>> endColors;
 //    Attribute<ColorInterpolation> deriveEndColor;
 
+    //Texture
+    Attribute<Boolean> useMaskTexture;
+
     //Lifespan
         //Curve of lifepsan values, Min, Max, Interpolation
 
@@ -35,9 +36,11 @@ public class ParticleSystem extends Entity {
 
     //Rotation
         //Curve of Rotation values, Start{min max}, End{min max}, Interpolation
+    Attribute<Boolean> alwaysFaceCamera;
 
     //Opacity
         //Curve of Opacity values, Start{min max}, End{min max}, Interpolation
+    Attribute<EnumBlendMode> particleBlendMode;
 
     //Texture
 
@@ -62,7 +65,6 @@ public class ParticleSystem extends Entity {
     //Buttons
     Attribute<Callback> playButton;
     Attribute<Callback> pauseButton;
-
 
 
     public float lifetime = 8.0f;
@@ -99,6 +101,8 @@ public class ParticleSystem extends Entity {
                 return null;
             }
         });
+
+        useMaskTexture = new Attribute<Boolean>("Use Mask Texture" , false);
 
 //        LinkedList<Vector3f> endColorsList = new LinkedList<Vector3f>(){};
 //        endColorsList.add(new Vector3f(1, 0, 0));
@@ -174,6 +178,7 @@ public class ParticleSystem extends Entity {
         this.addAttribute(startColors);
         this.addAttribute(startIndex);
 //        this.addAttribute(endColors);
+        this.addAttribute(useMaskTexture);
 
         // Enums
         this.addAttribute(emissionType);
@@ -403,10 +408,11 @@ public class ParticleSystem extends Entity {
     public ParticleSystem deserialize(JsonObject data) {
         super.deserialize(data);
 
-        startColors   = AttributeUtils.synchronizeWithParent(startColors  , this);
-        emissionShape = AttributeUtils.synchronizeWithParent(emissionShape, this);
-        emissionType  = AttributeUtils.synchronizeWithParent(emissionType , this);
-        numParticles  = AttributeUtils.synchronizeWithParent(numParticles , this);
+        startColors    = AttributeUtils.synchronizeWithParent(startColors  , this);
+        emissionShape  = AttributeUtils.synchronizeWithParent(emissionShape, this);
+        emissionType   = AttributeUtils.synchronizeWithParent(emissionType , this);
+        numParticles   = AttributeUtils.synchronizeWithParent(numParticles , this);
+        useMaskTexture = AttributeUtils.synchronizeWithParent(useMaskTexture , this);
 
         this.updateSystem();
         return this;

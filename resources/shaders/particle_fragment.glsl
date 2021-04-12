@@ -8,5 +8,5 @@ uniform sampler2D textureID;
 
 void main(void){
     vec4 albedo = texture(textureID, passCoords);
-    gl_FragColor = vec4(albedo.xyz * passColor.xyz, passColor.a);
+    gl_FragColor = vec4(passColor.xyz, 1);
 }

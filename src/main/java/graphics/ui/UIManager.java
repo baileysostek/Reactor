@@ -68,7 +68,9 @@ public class UIManager{
             NanoVG.nvgClosePath(vg);
         }
 
-        NanoVG.nvgText(Reactor.getVg(), 4, 4, "FPS:" + Reactor.getFPS() + " Batches:" + Renderer.getInstance().getBatches());
+        if(Reactor.isDev()) {
+            NanoVG.nvgText(Reactor.getVg(), 4, 4, "FPS:" + Reactor.getFPS() + " Batches:" + Renderer.getInstance().getBatches());
+        }
 
         for(Renderable r : drawCalls){
             if(r instanceof TextRender){

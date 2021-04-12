@@ -63,6 +63,11 @@ public class Timeline {
         return 0;
     }
 
+    public void addKeyFrame(String key, float position, float value, EnumInterpolation interpolation){
+        addKeyFrame(key, position, value);
+        this.keyFrames.get(key).setInterpolation(interpolation);
+    }
+
     public void addKeyFrame(String key, float position, float value){
         KeyFrame frame = new KeyFrame(value, position);
         KeyFrame parent = this.keyFrames.get(key);
@@ -134,8 +139,18 @@ public class Timeline {
         return time;
     }
 
+    public void overrideTime(float time){
+        this.time = Math.max(Math.min(time, duration), 0);
+    }
+
     public void setLoop(EnumLoop loop) {
         this.loop = loop;
+//        switch (loop){
+//            case STOP_LAST_VALUE:{
+//                this.time = this.duration;
+//                break;
+//            }
+//        }
     }
 
     public boolean isRunning() {

@@ -68,6 +68,8 @@ public class ParticleManager {
              0.5f,  0.5f, 0, // +,+ bottom right
         };
 
+        verticies = ModelManager.getInstance().loadModel("icosahedron.fbx").getFirst().getHandshake().getAttributeRaw("vPosition");
+
         textureCore = new float[]{
             0, 0, // -,- top left
             1, 0, // +,- top right
@@ -161,9 +163,9 @@ public class ParticleManager {
         GL46.glUniform1i(GL46.glGetUniformLocation(shaderID, "textureID"), 0);
 
         //blending
-        GL46.glEnable(GL46.GL_BLEND);
-        GL46.glDepthMask(false);
-        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE);
+//        GL46.glEnable(GL46.GL_BLEND);
+//        GL46.glDepthMask(false);
+//        GL46.glBlendFunc(GL46.GL_SRC_ALPHA, GL46.GL_ONE);
 
         //Bind the VAO
         GL46.glBindVertexArray(vao_id);
