@@ -18,6 +18,8 @@ public class Animation {
 
     private HashMap<String, KeyFrame[]> keyFrames = new HashMap<>();
 
+    private final KeyFrame GENERIC_START_FRAME = new KeyFrame(0, new Matrix4f().identity());
+
     public Animation(double timescale, float frameRate){
         this.duration = timescale;
         this.frameRate = frameRate;
@@ -41,7 +43,7 @@ public class Animation {
         LinkedHashMap<String , Matrix4f> out = new LinkedHashMap<>();
 
         for(String bone : keyFrames.keySet()){
-            KeyFrame lowerKey = new KeyFrame(0, new Matrix4f().identity());
+            KeyFrame lowerKey = null;
             KeyFrame upperKey = null;
 
             double deltaTime = 0;
@@ -53,7 +55,11 @@ public class Animation {
                     if(index >= 1){
                         lowerKey = keyFrames.get(bone)[index - 1];
                     }
-                    deltaTime = (delta_t - lowerKey.timelinePosition) / (upperKey.timelinePosition - lowerKey.timelinePosition);
+                    if(lowerKey != null){
+                        deltaTime = (delta_t - lowerKey.timelinePosition) / (upperKey.timelinePosition - lowerKey.timelinePosition);
+                    }else{
+                        deltaTime = (delta_t - GENERIC_START_FRAME.timelinePosition) / (upperKey.timelinePosition - GENERIC_START_FRAME.timelinePosition);
+                    }
                     break;
                 }
                 index++;

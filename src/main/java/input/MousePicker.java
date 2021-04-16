@@ -12,6 +12,8 @@ import models.Model;
 import org.joml.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
+import scene.Scene;
+import scene.SceneManager;
 import util.Callback;
 
 import java.lang.Math;
@@ -44,6 +46,8 @@ public class MousePicker{
     private LinkedList<Callback> buttonCallbacks = new LinkedList<Callback>();
     private LinkedList<Callback> motionCallbacks = new LinkedList<Callback>();
     private LinkedList<Callback> scrollCallbacks = new LinkedList<Callback>();
+
+    private HashMap<Callback, Scene> toRemoveOnSceneChange = new HashMap<>();
 
     private HashMap<Integer, Boolean> mouseKeys = new HashMap<>();
 
@@ -156,12 +160,6 @@ public class MousePicker{
         resetOffset();
     }
 
-    public void onScrollWhell(Callback callback){
-        if(!scrollCallbacks.contains(callback)) {
-            this.scrollCallbacks.add(callback);
-        }
-    }
-
     public Vector3f calculateMouseRay() {
         float mouseX = MouseX;
         float mouseY = MouseY;
@@ -233,10 +231,9 @@ public class MousePicker{
         }
     }
 
-    public void removeCallback(Callback mouseCallback) {
-        if(this.buttonCallbacks.contains(mouseCallback)) {
-            this.buttonCallbacks.remove(mouseCallback);
-        }
+    public void addButtonCallbackTiedToScene(Callback callback){
+        addButtonCallback(callback);
+        this.toRemoveOnSceneChange.put(callback, SceneManager.getInstance().getCurrentScene());
     }
 
     public void addMotionCallback(Callback callback){
@@ -245,9 +242,34 @@ public class MousePicker{
         }
     }
 
-    public void removeMotionCallback(Callback callback){
-        if(this.motionCallbacks.contains(callback)) {
-            this.motionCallbacks.remove(callback);
+    public void addMotionCallbackTiedToScene(Callback callback){
+        addMotionCallback(callback);
+        this.toRemoveOnSceneChange.put(callback, SceneManager.getInstance().getCurrentScene());
+    }
+
+    public void addScrollCallback(Callback callback){
+        if(!scrollCallbacks.contains(callback)) {
+            this.scrollCallbacks.add(callback);
+        }
+    }
+
+    public void addScrollCallbackTiedToScene(Callback callback){
+        addScrollCallback(callback);
+        this.toRemoveOnSceneChange.put(callback, SceneManager.getInstance().getCurrentScene());
+    }
+
+    public void removeCallback(Callback callback) {
+        if(buttonCallbacks.contains(callback)){
+            buttonCallbacks.remove(callback);
+        }
+        if(scrollCallbacks.contains(callback)){
+            scrollCallbacks.remove(callback);
+        }
+        if(motionCallbacks.contains(callback)){
+            motionCallbacks.remove(callback);
+        }
+        if(toRemoveOnSceneChange.containsKey(callback)) {
+            toRemoveOnSceneChange.remove(callback);
         }
     }
 
@@ -416,5 +438,13 @@ public class MousePicker{
 
     public float getScrollDeltaY() {
         return scrollDeltaY;
+    }
+
+    public void onSceneChange(Scene newScene){
+        for(Callback callback : toRemoveOnSceneChange.keySet()){
+            if(!toRemoveOnSceneChange.get(callback).equals(newScene)) {
+                removeCallback(callback);
+            }
+        }
     }
 }

@@ -1,14 +1,5 @@
 #version 430
 
-//Set prescision
-precision highp int;
-precision highp float;
-precision highp sampler2D;
-
-const int MAX_JOINTS = 50;
-const int MAX_WEIGHTS = 3;
-const int maxLights = 8;
-
 // Inputs
 layout(location =  0) in vec4 vPosition;
 layout(location =  1) in vec3 vNormal;
@@ -28,31 +19,11 @@ uniform mat4 view;           // Cameras position in space
 uniform vec3 cameraPos;      // Cameras position in worldSpace
 uniform mat4 perspective;    //Perspective of this world
 
-//Lighting
-uniform mat4 lightSpaceMatrix[maxLights];
-
 //Bones
 uniform int numBones;
 layout(std430, binding = 0) buffer Bones{
     mat4 boneTransforms[];
 } bonesLocal;
-
-// Outputs
-out vec3 passNormal;
-out vec3 passWeights;
-out vec3 passIndices;
-out vec3 passCamPos;
-out vec2 passCoords;
-out vec3 WorldPos;
-
-//Reflection
-out vec3 passReflectNormal;
-
-//Lighting
-out vec4[maxLights] passPosLightSpace;
-
-//TBN matrix
-out mat3 TBN;
 
 //Main function to run
 void main(){

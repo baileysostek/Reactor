@@ -30,10 +30,13 @@ public class UIManager{
 
     private final Pattern regex = Pattern.compile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$");
 
-    private final Vector4f WHITE = new Vector4f(255);
+    private final Vector4f WHITE;
 
     private UIManager(){
         vg = NanoVGGL3.nvgCreate(NanoVGGL3.NVG_ANTIALIAS | NanoVGGL3.NVG_STENCIL_STROKES);
+
+        WHITE = getDrawColor("#FFFFFF");
+
         if (vg == NULL) {
             throw new RuntimeException("Could not init nanovg.");
         }else{
@@ -170,6 +173,7 @@ public class UIManager{
 
 
         NanoVG.nvgEndFrame(Reactor.getVg());
+        NanoVG.nvgBeginFrame(Reactor.getVg(), Renderer.getWIDTH(), Renderer.getHEIGHT(), 1);
 
         backgroundColors.clear();
         foregroundColors.clear();
@@ -323,7 +327,7 @@ public class UIManager{
             }
 
             if(!regex.matcher(hexColor).matches() || hexColor.length() < 3){
-                return new Vector4f(255);
+                return WHITE;
             }
 
             //Remove the Hash character
@@ -528,7 +532,7 @@ public class UIManager{
         float height;
         float corner = 0f;
 
-        Vector4f color = new Vector4f(255);
+        Vector4f color = WHITE;
 
         public RectangleRender(float x, float y, float width, float height) {
             this.x = x;

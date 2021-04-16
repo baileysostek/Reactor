@@ -280,7 +280,7 @@ public class Editor {
             public Object callback(Object... objects) {
                 if(Reactor.isDev()){
 //                    saveProject();
-                    Reactor.setDevelopmentLevel(EnumDevelopment.PRODUCTION);
+                    Reactor.setDevelopmentLevel(EnumDevelopment.RELEASE);
                     onPlay();
                 }else{
 //                    loadProject();

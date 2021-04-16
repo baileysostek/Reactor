@@ -309,7 +309,7 @@ public class ShaderManager {
 
                     int errorCheck = GL46.glGetError();
                     while (errorCheck != GL46.GL_NO_ERROR) {
-                        System.out.println("Pre error:");
+                        System.out.println("Pre error:" + errorCheck);
                         errorCheck = GL46.glGetError();
                     }
 

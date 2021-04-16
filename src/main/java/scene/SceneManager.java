@@ -1,5 +1,6 @@
 package scene;
 
+import input.MousePicker;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import scene.transition.FadeOutFadeIn;
@@ -12,7 +13,6 @@ public class SceneManager {
     private static SceneManager manager;
 
     private Scene loadedScene = null;
-    private LinkedList<Scene> scenes = new LinkedList<Scene>();
 
     private Transition transition;
 
@@ -71,6 +71,7 @@ public class SceneManager {
             }
             this.loadedScene = scene;
             this.loadedScene.onLoad();
+            this.onChangeScene(this.loadedScene);
         }
     }
 
@@ -88,6 +89,15 @@ public class SceneManager {
     //Baked transitions
     public final Transition FadeToBlack(){
         return FADE_TO_BLACK;
+    }
+
+    private void onChangeScene(Scene newScene){
+        // Get all of our hooks working
+        MousePicker.getInstance().onSceneChange(newScene);
+    }
+
+    public Scene getCurrentScene(){
+        return this.loadedScene;
     }
 
     //Singleton

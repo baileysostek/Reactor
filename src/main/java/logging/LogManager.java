@@ -1,5 +1,6 @@
 package logging;
 
+import engine.Reactor;
 import org.lwjgl.opengl.GLUtil;
 
 import java.io.IOException;
@@ -12,7 +13,9 @@ public class LogManager {
     private static LogManager logManager;
 
     private LogManager(){
-
+        if(Reactor.isDev()) {
+            enableGLDebug();
+        }
     }
 
     private void enableGLDebug(){

@@ -1,5 +1,7 @@
 package particle;
 
+import camera.CameraManager;
+import input.MousePicker;
 import org.joml.Vector3f;
 
 public class Particle {
@@ -52,16 +54,18 @@ public class Particle {
         //Lifespan
         life -= delta;
 
+
         float lifePercent = (life / lifetime);
 
 //        Vector3f orbitPos = MousePicker.rayHitsPlane(CameraManager.getInstance().getActiveCamera().getPosition(), MousePicker.getInstance().getRay(), new Vector3f(0), new Vector3f(0, 1, 0));
-//        if(orbitPos != null) {
+//        if (orbitPos != null) {
 //            orbit(orbitPos);
 //        }
         pos.add(new Vector3f(velocity.add(acceleration)).mul((float) delta));
         col = new Vector3f(endColor).lerp(startColor, lifePercent);
 
         scale = new Vector3f(0).lerp(new Vector3f(1), lifePercent);
+
 
         if(life <= 0){
             awaitingRespawn = true;
@@ -86,5 +90,9 @@ public class Particle {
         if(new Vector3f(worldPos).distance(point) <= 5){
             velocity = velocity.add(unitDirection);
         }
+    }
+
+    public void setLive(boolean live) {
+        this.awaitingRespawn = live;
     }
 }
