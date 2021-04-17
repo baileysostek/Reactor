@@ -7,16 +7,21 @@ import scene.transition.FadeOutFadeIn;
 import scene.transition.Transition;
 import util.Callback;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Stack;
 
 public class SceneManager {
     private static SceneManager manager;
 
     private Scene loadedScene = null;
+    private Stack<Scene> overlays = new Stack<>();
+    private LinkedHashMap<Scene, LinkedList<OverlayFlags>> overrideFlags = new LinkedHashMap<>();
 
     private Transition transition;
 
     private static final Transition FADE_TO_BLACK = new FadeOutFadeIn(2, new Vector3f(0));
+    private static final Transition FADE_TO_BLACK_QUICK = new FadeOutFadeIn(0.5f, new Vector3f(0));
 
     private SceneManager(){
 //        this.setScene(new LogoScene());
@@ -29,8 +34,26 @@ public class SceneManager {
                 transition.update(delta);
             }
         }
-        if(this.loadedScene != null){
-            loadedScene.update(delta);
+
+        boolean canTickBase = true;
+
+        if(this.overlays.size() > 0){
+            if(overrideFlags.containsKey(this.overlays.firstElement())){
+                LinkedList<OverlayFlags> flags = overrideFlags.get(this.overlays.firstElement());
+                if(flags.contains(OverlayFlags.PAUSE_UPDATE_PREVIOUS_SCENE)){
+                    canTickBase = false;
+                }
+            }
+        }
+
+        if(canTickBase) {
+            if (this.loadedScene != null) {
+                loadedScene.update(delta);
+            }
+        }
+
+        for(Scene overlay : overlays){
+            overlay.update(delta);
         }
     }
 
@@ -55,20 +78,88 @@ public class SceneManager {
     public void render(){
         //Clear frame
 
-        if(this.loadedScene != null){
-            try {
-                loadedScene.render();
-            }catch(NullPointerException e){
+        boolean canRenderBase = true;
 
+        if(this.overlays.size() > 0){
+            if(overrideFlags.containsKey(this.overlays.firstElement())){
+                LinkedList<OverlayFlags> flags = overrideFlags.get(this.overlays.firstElement());
+                if(flags.contains(OverlayFlags.PAUSE_RENDER_PREVIOUS_SCENE)){
+                    canRenderBase = false;
+                }
             }
+        }
+
+        if(canRenderBase) {
+            if (this.loadedScene != null) {
+                loadedScene.render();
+            }
+        }
+
+        for (Scene overlay : overlays){
+            overlay.render();
         }
     }
 
+    public void popOverlay(Scene overlay){
+        if(overlays.contains(overlay)){
+            overlays.remove(overlay);
+            if(overrideFlags.containsKey(overlay)){
+                overrideFlags.remove(overlay);
+            }
+            overlay.onUnload();
+        }
+    }
+
+    public void overlayScene(Scene overlay, Transition transition, OverlayFlags ... flags){
+        this.transition = transition;
+        this.transition.onSwitchScene(new Callback() {
+            @Override
+            public Object callback(Object... objects) {
+                SceneManager.this.overlayScene(overlay);
+                return null;
+            }
+        });
+        this.transition.start(null);
+
+        if(!overrideFlags.containsKey(overlay)){
+            overrideFlags.put(overlay, new LinkedList<>());
+        }
+
+        for(OverlayFlags flag : flags){
+            overrideFlags.get(overlay).push(flag);
+        }
+
+    }
+
+    public void overlayScene(Scene overlay, OverlayFlags ... flags){
+        if(!overrideFlags.containsKey(overlay)){
+            overrideFlags.put(overlay, new LinkedList<>());
+        }
+
+        for(OverlayFlags flag : flags){
+            overrideFlags.get(overlay).push(flag);
+        }
+
+        overlayScene(overlay);
+    }
+
+    public void overlayScene(Scene overlay){
+        this.overlays.add(overlay);
+        overlay.onLoad();
+    }
+
     public void setScene(Scene scene){
+        if(scene == null){
+            return;
+        }
         if(scene != this.loadedScene){
             if(this.loadedScene != null) {
                 this.loadedScene.onUnload();
             }
+            for(Scene overlay : overlays){
+                overlay.onUnload();
+            }
+            overlays.clear();
             this.loadedScene = scene;
             this.loadedScene.onLoad();
             this.onChangeScene(this.loadedScene);

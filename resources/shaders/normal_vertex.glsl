@@ -1,10 +1,5 @@
 #version 430
 
-//Set prescision
-precision highp int;
-precision highp float;
-precision highp sampler2D;
-
 const int MAX_JOINTS = 50;
 const int MAX_WEIGHTS = 3;
 const int maxLights = 8;

@@ -377,6 +377,10 @@ public class ShaderManager {
                 GL46.glUniform1i(location, (int)uniform);
                 break;
             }
+            case BOOL : {
+                GL46.glUniform1i(location, ((boolean)uniform) ? 1 : 0);
+                break;
+            }
             case FLOAT : {
                 GL46.glUniform1f(location, (float)uniform);
                 break;

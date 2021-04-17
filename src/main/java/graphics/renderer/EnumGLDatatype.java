@@ -19,6 +19,9 @@ public enum EnumGLDatatype implements Serializable<EnumGLDatatype> {
     //Matrix
     MAT3(Float.BYTES, 9 ),
     MAT4(Float.BYTES, 16),
+
+    //Bool
+    BOOL(1, 1)
     ;
 
     //Size in bytes of one pice of data

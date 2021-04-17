@@ -8,6 +8,7 @@ import entity.component.AttributeUtils;
 import entity.component.EnumAttributeType;
 import graphics.renderer.DirectDraw;
 import graphics.renderer.Renderer;
+import graphics.renderer.Shader;
 import graphics.renderer.ShaderManager;
 import graphics.sprite.SpriteBinder;
 import models.Model;
@@ -205,12 +206,16 @@ public class ParticleSystem extends Entity {
             }
         }).setShouldBeSerialized(false);
 
+        alwaysFaceCamera = new Attribute<Boolean>("Always Face Camera", false);
+
         // Add attributes
         this.addAttribute(numParticles);
         this.addAttribute(startColors);
         this.addAttribute(startIndex);
 //        this.addAttribute(endColors);
         this.addAttribute(useMaskTexture);
+
+        this.addAttribute(alwaysFaceCamera);
 
         // Physics
         this.addAttribute(gravity);
@@ -481,6 +486,8 @@ public class ParticleSystem extends Entity {
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
         GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "projection"),false, Renderer.getInstance().getProjectionMatrix());
 
+        ShaderManager.getInstance().loadUniformIntoActiveShader("rotateToFaceCamera", alwaysFaceCamera.getData() ? 1 : 0);
+
         //Bind the texture atlas.
         GL46.glActiveTexture(GL46.GL_TEXTURE0);
         GL46.glBindTexture(GL46.GL_TEXTURE_2D, textureID);
@@ -675,12 +682,13 @@ public class ParticleSystem extends Entity {
     public ParticleSystem deserialize(JsonObject data) {
         super.deserialize(data);
 
-        startColors    = AttributeUtils.synchronizeWithParent(startColors  , this);
-        emissionShape  = AttributeUtils.synchronizeWithParent(emissionShape, this);
-        emissionType   = AttributeUtils.synchronizeWithParent(emissionType , this);
-        numParticles   = AttributeUtils.synchronizeWithParent(numParticles , this);
-        useMaskTexture = AttributeUtils.synchronizeWithParent(useMaskTexture , this);
-        gravity        = AttributeUtils.synchronizeWithParent(gravity , this);
+        startColors      = AttributeUtils.synchronizeWithParent(startColors  , this);
+        emissionShape    = AttributeUtils.synchronizeWithParent(emissionShape, this);
+        emissionType     = AttributeUtils.synchronizeWithParent(emissionType , this);
+        numParticles     = AttributeUtils.synchronizeWithParent(numParticles , this);
+        useMaskTexture   = AttributeUtils.synchronizeWithParent(useMaskTexture , this);
+        gravity          = AttributeUtils.synchronizeWithParent(gravity , this);
+        alwaysFaceCamera = AttributeUtils.synchronizeWithParent(alwaysFaceCamera , this);
 
         this.updateSystem();
         return this;

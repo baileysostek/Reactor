@@ -14,9 +14,11 @@ import graphics.ui.UIManager;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWJoystickCallbackI;
 import util.Callback;
+import util.StringUtils;
 
 import javax.script.ScriptEngine;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -43,6 +45,7 @@ public class ControllerManager{
     private Timeline connectTimeline = new Timeline();
 
     private final int CONTROLLER_SVG = SpriteBinder.getInstance().loadSVG("engine/svg/gamepad.svg", 1, 1, 96f);
+    private final LinkedHashMap<String, LinkedList<String>> SUPPORTED_GAMEPADS = new LinkedHashMap<>();
 
     private final float pollingRate = 125.0f;
 
@@ -50,6 +53,18 @@ public class ControllerManager{
         lock = new ReentrantLock();
 
         controllers = new LinkedList<>();
+
+        // Get our CSV and parse it
+        String[] supportedControllers = StringUtils.load("/engine/controllers.csv").split("\n");
+        for(String line : supportedControllers){
+            String[] data = line.split(",");
+            LinkedList<String> buttonMapping = new LinkedList<>();
+            for(int i = 1; i < data.length; i++){
+                buttonMapping.addLast(data[i]);
+            }
+            SUPPORTED_GAMEPADS.put(data[0], buttonMapping);
+        }
+
 
         //Init timeline
         connectTimeline.addKeyFrame("alpha", 0, 0);
@@ -68,7 +83,7 @@ public class ControllerManager{
                 try {
                     lock.lock();
                     if (event == GLFW.GLFW_CONNECTED) {
-                        JavaController controller = new JavaController(jid);
+                        JavaController controller = new JavaController(jid, SUPPORTED_GAMEPADS.get(GLFW.glfwGetJoystickGUID(jid)));
                         controllers.add(controller);
                         for(Callback c : onControllerConnect){
                             c.callback(controller);
@@ -92,7 +107,8 @@ public class ControllerManager{
 
         for(int i = 0; i < GLFW.GLFW_JOYSTICK_LAST; i++){
             if(GLFW.glfwJoystickPresent(i)){
-                JavaController controller = new JavaController(i);
+                LinkedList<String > controllerMetaData = SUPPORTED_GAMEPADS.get(GLFW.glfwGetJoystickGUID(i));
+                JavaController controller = new JavaController(i, controllerMetaData);
                 controllers.add(controller);
                 for(Callback c : onControllerConnect){
                     c.callback(controller);

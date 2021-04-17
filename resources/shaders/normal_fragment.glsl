@@ -3,11 +3,6 @@
 // Floating point values in fragment shaders must have a precision set.
 // This can be done globally (as done here) or per variable.
 
-//Set prescision
-precision highp int;
-precision highp float;
-precision highp sampler2D;
-
 #define maxLights 8
 #define maxPointLights 32
 #define specularStrength 0.1

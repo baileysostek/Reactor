@@ -9,7 +9,8 @@
     },
     "Uniforms": {
       "view": "vec4",
-      "projection": "vec4"
+      "projection": "vec4",
+      "rotateToFaceCamera": "int"
     },
     "Varying": {
     }

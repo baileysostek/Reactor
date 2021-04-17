@@ -20,6 +20,8 @@ import java.lang.Math;
 import java.nio.DoubleBuffer;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class MousePicker{
 
@@ -56,6 +58,9 @@ public class MousePicker{
     public float scrollDeltaX = 0;
     public float scrollDeltaY = 0;
 
+    //Lock for locking our entity set
+    private Lock lock;
+
     private MousePicker(){
         GLFW.glfwSetMouseButtonCallback(Reactor.WINDOW_POINTER, (long window, int button, int action, int mods) -> {
             //Update Editor
@@ -88,6 +93,7 @@ public class MousePicker{
             }
         });
 
+        lock = new ReentrantLock();
     }
 
     private void processMouse(long window, int button, int action, int mods){
@@ -233,7 +239,12 @@ public class MousePicker{
 
     public void addButtonCallbackTiedToScene(Callback callback){
         addButtonCallback(callback);
-        this.toRemoveOnSceneChange.put(callback, SceneManager.getInstance().getCurrentScene());
+        try {
+            lock.lock();
+            this.toRemoveOnSceneChange.put(callback, SceneManager.getInstance().getCurrentScene());
+        }finally {
+            lock.unlock();
+        }
     }
 
     public void addMotionCallback(Callback callback){
@@ -244,7 +255,12 @@ public class MousePicker{
 
     public void addMotionCallbackTiedToScene(Callback callback){
         addMotionCallback(callback);
-        this.toRemoveOnSceneChange.put(callback, SceneManager.getInstance().getCurrentScene());
+        try {
+            lock.lock();
+            this.toRemoveOnSceneChange.put(callback, SceneManager.getInstance().getCurrentScene());
+        }finally {
+            lock.unlock();
+        }
     }
 
     public void addScrollCallback(Callback callback){
@@ -255,7 +271,12 @@ public class MousePicker{
 
     public void addScrollCallbackTiedToScene(Callback callback){
         addScrollCallback(callback);
-        this.toRemoveOnSceneChange.put(callback, SceneManager.getInstance().getCurrentScene());
+        try {
+            lock.lock();
+            this.toRemoveOnSceneChange.put(callback, SceneManager.getInstance().getCurrentScene());
+        }finally {
+            lock.unlock();
+        }
     }
 
     public void removeCallback(Callback callback) {
@@ -441,10 +462,16 @@ public class MousePicker{
     }
 
     public void onSceneChange(Scene newScene){
-        for(Callback callback : toRemoveOnSceneChange.keySet()){
-            if(!toRemoveOnSceneChange.get(callback).equals(newScene)) {
-                removeCallback(callback);
+        try {
+            lock.lock();
+            for (Callback callback : new LinkedList<Callback>(toRemoveOnSceneChange.keySet())) {
+                if (!toRemoveOnSceneChange.get(callback).equals(newScene)) {
+                    removeCallback(callback);
+                }
             }
+            toRemoveOnSceneChange.clear();
+        }finally {
+            lock.unlock();
         }
     }
 }

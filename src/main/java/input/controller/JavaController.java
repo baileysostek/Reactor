@@ -13,6 +13,7 @@ import util.Debouncer;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 
 /**
  *
@@ -41,71 +42,34 @@ public class JavaController {
     
     private final float DEAD_ZONE = 0.1f;
 
-    public JavaController(int index){
+    public JavaController(int index, LinkedList<String> buttonMapping){
         this.index = index;
         EnumButtonType[] mapping = EnumButtonType.values();
         EnumButtonType[] axis_mapping = EnumButtonType.values();
-        
-        if(GLFW.glfwGetJoystickName(index).toLowerCase().contains("xbox")){
-            System.out.println("Xbox controller Recognised.");
-            mapping = new EnumButtonType[]{
-                EnumButtonType.A,
-                EnumButtonType.B,
-                EnumButtonType.X,
-                EnumButtonType.Y,
-                EnumButtonType.LEFT_BUMPER,
-                EnumButtonType.RIGHT_BUMPER,
-                EnumButtonType.START,
-                EnumButtonType.SELECT,
-                EnumButtonType.LEFT_STICK_PRESSED,
-                EnumButtonType.RIGHT_STICK_PRESSED,
-                EnumButtonType.D_PAD_UP,
-                EnumButtonType.D_PAD_RIGHT,
-                EnumButtonType.D_PAD_DOWN,
-                EnumButtonType.D_PAD_LEFT,
-            };
-            axis_mapping = new EnumButtonType[]{
-                EnumButtonType.LEFT_STICK_X,
-                EnumButtonType.LEFT_STICK_Y,
-                EnumButtonType.RIGHT_STICK_X,
-                EnumButtonType.RIGHT_STICK_Y,
-                EnumButtonType.LEFT_TRIGGER,
-                EnumButtonType.RIGHT_TRIGGER,
-            };
-            axis_modifier = new Vector3f(1, -1, 1);
+
+        System.out.println("Connected Gamepad["+index+"]:" + buttonMapping.get(0));
+
+        mapping = new EnumButtonType[30];
+        axis_mapping = new EnumButtonType[10];
+
+        for(String entry : buttonMapping){
+            if(entry.contains(":")) {
+                String[] nameMapping = entry.split(":");
+                EnumButtonType buttonType = ButtonUtils.getButtonForName(nameMapping[0]);
+                String layoutLocation = nameMapping[1];
+                if(layoutLocation.startsWith("a")){
+                    int location = Integer.parseInt(layoutLocation.replaceAll("a", ""));
+                    axis_mapping[location] = buttonType;
+                }
+                if(layoutLocation.startsWith("b")){
+                    int location = Integer.parseInt(layoutLocation.replaceAll("b", ""));
+                    mapping[location] = buttonType;
+                }
+            }
         }
 
-        if(GLFW.glfwGetJoystickGUID(index).equals("030000004c050000da0c000000000000")){
-            System.out.println("PS4 controller Recognised.");
-            mapping = new EnumButtonType[]{
-                EnumButtonType.X,
-                EnumButtonType.A,
-                EnumButtonType.B,
-                EnumButtonType.Y,
-                EnumButtonType.LEFT_BUMPER,
-                EnumButtonType.RIGHT_BUMPER,
-                EnumButtonType.LEFT_TRIGGER,
-                EnumButtonType.RIGHT_TRIGGER,
-                EnumButtonType.START,
-                EnumButtonType.SELECT,
-                EnumButtonType.LEFT_STICK_PRESSED,
-                EnumButtonType.RIGHT_STICK_PRESSED,
-                EnumButtonType.HOME,
-                EnumButtonType.NULL,
-                EnumButtonType.D_PAD_UP,
-                EnumButtonType.D_PAD_RIGHT,
-                EnumButtonType.D_PAD_DOWN,
-                EnumButtonType.D_PAD_LEFT,
-            };
-            axis_mapping = new EnumButtonType[]{
-                EnumButtonType.LEFT_STICK_X,
-                EnumButtonType.LEFT_STICK_Y,
-                EnumButtonType.RIGHT_STICK_X,
-                EnumButtonType.LEFT_TRIGGER,
-                EnumButtonType.RIGHT_TRIGGER,
-                EnumButtonType.RIGHT_STICK_Y,
-            };
-        }
+
+
 
         button_names = mapping;
         axis_names = axis_mapping;
