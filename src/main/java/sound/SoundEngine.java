@@ -9,13 +9,10 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.libc.LibCStdlib;
 import util.StringUtils;
 
-import javax.script.ScriptEngine;
-import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.*;
-import java.net.URL;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.HashMap;
@@ -58,7 +55,7 @@ public class SoundEngine{
 
     public int loadSound(String fileName){
         if(!bufferPointers.containsKey(fileName)) {
-            String path = StringUtils.getRelativePath() + "sound/" + fileName;
+            String path = StringUtils.getPathToResources() + "sound/" + fileName;
             System.out.println("Loading sound at:" + path);
 
             File check = new File(path);

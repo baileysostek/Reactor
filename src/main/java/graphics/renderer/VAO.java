@@ -97,7 +97,7 @@ public class VAO {
                 //Load our float data into a VBO that is attached to our VAO.
                 int vbo_data = GL46.glGenBuffers();
                 GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_data);
-                GL46.glBufferData(GL46.GL_ARRAY_BUFFER, floatBuffer, GL46.GL_STATIC_DRAW);
+                GL46.glBufferData(GL46.GL_ARRAY_BUFFER, floatBuffer, GL46.GL_DYNAMIC_DRAW);
                 GL46.glVertexAttribPointer(index, size, GL46.GL_FLOAT, false, 0, 0);
 
                 //make a VBO to hold our data
@@ -133,7 +133,7 @@ public class VAO {
                     //Load our float data into a VBO that is attached to our VAO.
                     int vbo_data = GL46.glGenBuffers();
                     GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_data);
-                    GL46.glBufferData(GL46.GL_ARRAY_BUFFER, new float[]{}, GL46.GL_STREAM_DRAW);
+                    GL46.glBufferData(GL46.GL_ARRAY_BUFFER, new float[]{}, GL46.GL_DYNAMIC_DRAW);
                     GL46.glVertexAttribPointer(index + i, uniformSizeSquared, GL46.GL_FLOAT, false, 0, 0);
 
                     //make a VBO to hold our data
@@ -189,7 +189,7 @@ public class VAO {
         //Load our float data into a VBO that is attached to our VAO.
         int vbo_data = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_data);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, new float[]{}, GL46.GL_STREAM_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, new float[]{}, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(index, this.uniforms.get(name).sizePerVertex, GL46.GL_FLOAT, false, 0, 0);
 
         //make a VBO to hold our data
@@ -300,7 +300,7 @@ public class VAO {
 
                     //Default uniform load.
                     GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, trueVBO.VBO_ID);
-                    GL46.glBufferData(GL46.GL_ARRAY_BUFFER, uniformData[i], GL46.GL_STREAM_DRAW);
+                    GL46.glBufferData(GL46.GL_ARRAY_BUFFER, uniformData[i], GL46.GL_DYNAMIC_DRAW);
                 }
 
             }else{
@@ -333,7 +333,7 @@ public class VAO {
                     entityIndex++;
                 }
 
-                GL46.glBufferData(GL46.GL_ARRAY_BUFFER, uniformData, GL46.GL_STREAM_DRAW);
+                GL46.glBufferData(GL46.GL_ARRAY_BUFFER, uniformData, GL46.GL_DYNAMIC_DRAW);
             }
 
         }

@@ -10,6 +10,7 @@ import graphics.sprite.SpriteBinder;
 import material.Material;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL46;
+import particle.ParticleManager;
 import skybox.SkyboxManager;
 
 import java.util.LinkedHashMap;
@@ -77,6 +78,8 @@ public class LightingManager {
             }
             rendered.clear();
         }
+
+        ParticleManager.getInstance().render(directionalLight.getLightspaceTransform(), Renderer.getInstance().getProjectionMatrix());
 
         directionalLight.getDepthBuffer().unbindFrameBuffer();
     }

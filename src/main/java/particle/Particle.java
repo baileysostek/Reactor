@@ -27,7 +27,7 @@ public class Particle {
         pos      = new Vector3f(startPosition);
         scale    = new Vector3f(1);
 
-        velocity = new Vector3f(0.5f, 30, 0);
+        velocity = system.getVelocity();
         acceleration = new Vector3f(0, 0, 0);
         startColor = system.determineStartColor();
         endColor = system.determineEndColor();
@@ -36,11 +36,11 @@ public class Particle {
     }
 
     public void reset(){
-        lifetime = (float) (8f * Math.random());
+        lifetime = (float) (this.system.getLifetime() * Math.random());
         life = lifetime;
         pos = new Vector3f(startPosition);
         scale.set(1);
-        velocity.set((float) (Math.random() * 8f - 4f), (float) (Math.random() * 30f), (float) (Math.random() * 8f - 4f));
+        velocity.set(this.system.getVelocity());
     }
 
     public void update(double delta){

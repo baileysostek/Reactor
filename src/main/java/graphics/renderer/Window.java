@@ -1,7 +1,6 @@
 package graphics.renderer;
 
 import engine.Reactor;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -10,16 +9,8 @@ import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
 import util.StringUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
@@ -88,8 +79,8 @@ public class Window {
             ByteBuffer icon16;
             ByteBuffer icon32;
             try {
-                icon16 = StringUtils.loadRaw(StringUtils.getRelativePath() + path, 2048);
-                icon32 = StringUtils.loadRaw(StringUtils.getRelativePath() + path, 4096);
+                icon16 = StringUtils.loadRaw(StringUtils.getPathToResources() + path, 2048);
+                icon32 = StringUtils.loadRaw(StringUtils.getPathToResources() + path, 4096);
             } catch (Exception e) {
                 e.printStackTrace();
                 return;

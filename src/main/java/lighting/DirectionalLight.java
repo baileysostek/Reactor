@@ -106,14 +106,13 @@ public class DirectionalLight extends Light {
         }
     }
 
-    public float[] getLightspaceTransform() {
-        Vector3f frustum = (Vector3f) this.getAttribute("frustum").getData();
-        return new Matrix4f().ortho(-frustum.x, frustum.x, -frustum.x,frustum.x, frustum.y, frustum.z).mul(viewMatrix).get(new float[16]);
-    }
-
     public Matrix4f getLightspaceTransformMatrix() {
         Vector3f frustum = (Vector3f) this.getAttribute("frustum").getData();
         return new Matrix4f().ortho(-frustum.x, frustum.x, -frustum.x,frustum.x, frustum.y, frustum.z).mul(viewMatrix);
+    }
+
+    public float[] getLightspaceTransform() {
+        return getLightspaceTransformMatrix().get(new float[16]);
     }
 
     public FBO getDepthBuffer() {

@@ -58,18 +58,26 @@ public class JavaController {
                 EnumButtonType buttonType = ButtonUtils.getButtonForName(nameMapping[0]);
                 String layoutLocation = nameMapping[1];
                 if(layoutLocation.startsWith("a")){
-                    int location = Integer.parseInt(layoutLocation.replaceAll("a", ""));
-                    axis_mapping[location] = buttonType;
+                    try {
+                        int location = Integer.parseInt(layoutLocation.replaceAll("a", ""));
+                        axis_mapping[location] = buttonType;
+                        System.out.println("Adding map for [" + buttonType + "] = " + location);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
                 if(layoutLocation.startsWith("b")){
-                    int location = Integer.parseInt(layoutLocation.replaceAll("b", ""));
-                    mapping[location] = buttonType;
+                    try {
+                        int location = Integer.parseInt(layoutLocation.replaceAll("b", ""));
+                        mapping[location] = buttonType;
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
             }
         }
 
-
-
+        System.out.println("Finished button mapping!");
 
         button_names = mapping;
         axis_names = axis_mapping;
@@ -83,6 +91,8 @@ public class JavaController {
         for(int i = 0; i < axis_values.length; i++){
             axis_values[i] = 0.0f;
         }
+
+        System.out.println("Finished axis mapping!");
     }
 
 //    public void removeButtonListener(Callback callback){

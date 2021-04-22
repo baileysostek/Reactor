@@ -20,15 +20,15 @@ void main(void){
     vec3 CameraUp_worldspace    = vec3(view[0][1], view[1][1], view[2][1]);
     vec3 vertexPosition_worldspace =
     translation.xyz
-    + CameraRight_worldspace * position.x * scale.x
-    + CameraUp_worldspace * position.y * scale.y;
+    + CameraRight_worldspace * (position.x * scale.x)
+    + CameraUp_worldspace * (position.y * scale.y);
 
     vec4 worldPosition;
 
-    if (rotateToFaceCamera == 1){
+    if (false){
         worldPosition = vec4(vertexPosition_worldspace, 1.0);
     } else {
-        worldPosition = translation + vec4(position * scale, 1.0);
+        worldPosition = (vec4(2) * translation) + vec4(position * scale, 1.0);
     }
 
     gl_Position = projection * view * worldPosition;

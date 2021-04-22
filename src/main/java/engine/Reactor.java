@@ -146,6 +146,9 @@ public class Reactor {
     }
 
     public static void initialize() {
+        //Setup our log manager
+        LogManager.initialize();
+
         //Welcome to Reactor!
         System.out.println( "_________                       __\n" +
                             "\\______   \\ ____ _____    _____/  |_  ___________ \n" +
@@ -160,7 +163,7 @@ public class Reactor {
             INITIALIZED = true;
 
             PlatformManager platformManager = PlatformManager.setTargetPlatform(EnumPlatform.WINDOWS);
-            System.out.println("Initializing...");
+            LogManager.getInstance().logLine();
 
             if (platformManager.targetIs(EnumPlatform.WINDOWS)) {
                 GLFWErrorCallback.createPrint(System.err).set();
@@ -193,9 +196,17 @@ public class Reactor {
                 WINDOW_POINTER = WINDOW.getWindow_p();
 
                 //We have a GL context after this call
-                //init
+                System.out.print("Try create GL instance...");
                 // Set the clear color
                 GL.createCapabilities();
+                System.out.println("success.");
+
+                System.out.println("Graphics Card Information:");
+                System.out.println("Vendor: " + GL46.glGetString(GL46.GL_VENDOR));
+                System.out.println("Renderer: " + GL46.glGetString(GL46.GL_RENDERER));
+                System.out.println("Version: " + GL46.glGetString(GL46.GL_VERSION));
+
+                LogManager.getInstance().enableGLDebug();
 
                 SpriteManager.initialize();
 
@@ -228,7 +239,6 @@ public class Reactor {
 //                    System.out.println("Loaded font.");
 //                }
 
-                LogManager.initialize();
                 SteamManager.initialize();
                 ModelManager.initialize();
                 CameraManager.initialize();
@@ -243,9 +253,8 @@ public class Reactor {
 
                 StopwatchManager.initialize();
 
-
-                //Add our initialized instances to our ScriptingManager
-                ScriptingEngine.initialize();
+//                //Add our initialized instances to our ScriptingManager
+//                ScriptingEngine.initialize();
 
                 //If we are in developent mode init the console.
                 if(isDev()) {
@@ -458,6 +467,9 @@ public class Reactor {
 
 //                DocumentationGenerator.generateDocumentation();
             }
+            LogManager.getInstance().logLine();
+            System.out.println("Initialization finished.");
+            LogManager.getInstance().logLine();
         }
     }
 

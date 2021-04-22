@@ -1,18 +1,12 @@
 package steam;
 
 import com.codedisaster.steamworks.*;
-import engine.Reactor;
 import input.Keyboard;
-import platform.EnumDevelopment;
-import platform.PlatformManager;
 import util.Callback;
 import util.FrequencyLimiter;
 import util.StringUtils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
-import java.security.Key;
 
 public class SteamManager {
     private static SteamManager steamManager;
@@ -189,7 +183,9 @@ public class SteamManager {
         Keyboard.getInstance().addPressCallback(Keyboard.FIVE, new Callback() {
             @Override
             public Object callback(Object... objects) {
-                System.out.println("Unlocked:" + unlockAchievement("NEW_ACHIEVEMENT_1_0"));
+                if(hasInstance) {
+                    System.out.println("Unlocked:" + unlockAchievement("NEW_ACHIEVEMENT_1_0"));
+                }
                 return null;
             }
         });
@@ -197,7 +193,7 @@ public class SteamManager {
         //Try to init steam
         try {
             System.out.println("Try init Steamworks...");
-            String libraryPath = StringUtils.getRelativePath() + "libs/steam/win64/";
+            String libraryPath = StringUtils.getPathToResources() + "libs/steam/win64/";
 //            libraryPath = libraryPath.replaceAll("/", "\\\\");
             System.out.println("Lib Path:"+libraryPath);
             System.out.println("Workspace root:" + System.getProperty("user.dir"));

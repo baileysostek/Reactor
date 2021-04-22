@@ -21,6 +21,7 @@ public class Keyboard {
     private boolean[] keys = new boolean[1024]; // No out of bounds
     private LinkedList<Callback>[] pressedCallbacks  = new LinkedList[keys.length];
     private LinkedList<Callback>[] releasedCallbacks = new LinkedList[keys.length];
+    private LinkedList<Callback> anyKeyCallback = new LinkedList<>();
 
     private HashMap<Entity, LinkedList<Callback>> entityCallbacks = new HashMap<>();
 
@@ -134,6 +135,10 @@ public class Keyboard {
                 for (Callback c : pressedCallbacks[key]) {
                     c.callback();
                 }
+
+                for(Callback callback : anyKeyCallback){
+                    callback.callback(GLFW.glfwGetKeyName(key, scancode), key, action);
+                }
             }
         }
     }
@@ -154,6 +159,10 @@ public class Keyboard {
         keyLookup.put(callback, key);
         //Set the callback
         this.pressedCallbacks[key].add(callback);
+    }
+
+    public void addPressCallback(Callback callback){
+        this.anyKeyCallback.add(callback);
     }
 
     public void addPressCallbackTiedToEntity(Entity entity, int key, Callback callback){

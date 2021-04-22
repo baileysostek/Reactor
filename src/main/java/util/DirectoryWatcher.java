@@ -1,8 +1,6 @@
 package util;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.*;
 import java.util.LinkedList;
 
@@ -28,7 +26,7 @@ public class DirectoryWatcher implements Runnable{
     public void run() {
         running = true;
         String stringPath = this.threadName.replaceFirst("/", "");
-        stringPath = StringUtils.getRelativePath() + stringPath;
+        stringPath = StringUtils.getPathToResources() + stringPath;
         stringPath = stringPath.replaceAll("\\\\", "/");
         if(stringPath.endsWith("/")){
             stringPath = stringPath.substring(0, stringPath.length()-1);

@@ -1,9 +1,6 @@
 package models;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import graphics.renderer.*;
-import graphics.sprite.Colors;
-import graphics.sprite.Sprite;
 import graphics.sprite.SpriteBinder;
 import material.Material;
 import material.MaterialManager;
@@ -20,15 +17,10 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
-import static org.lwjgl.system.MemoryUtil.*;
 import static util.StringUtils.resizeBuffer;
 
 //Singleton design pattern
@@ -67,7 +59,7 @@ public class ModelManager {
             System.err.println("Tried to load model: " + modelName + " however no file extension is specified. This information is needed to correctly parse the file.");
         }
 
-        String resourceName = StringUtils.getRelativePath() + "models/" + modelName;
+        String resourceName = StringUtils.getPathToResources() + "models/" + modelName;
 
         String data = StringUtils.load("models/" + modelName);
         String[] lines = data.split("\n");
@@ -330,7 +322,7 @@ public class ModelManager {
                 String textPath = path.dataString();
                 System.out.println("Texture file:" + textureDirectory+textPath);
                 if(!textPath.isEmpty()) {
-                    mat.setAlbedoID(SpriteBinder.getInstance().load(textureDirectory+textPath, StringUtils.getRelativePath()+"models/").getTextureID());
+                    mat.setAlbedoID(SpriteBinder.getInstance().load(textureDirectory+textPath, StringUtils.getPathToResources()+"models/").getTextureID());
                 }
 
 //                AIString pathNormal = AIString.calloc();
@@ -401,6 +393,10 @@ public class ModelManager {
                     joints.put(name, new Joint(i, name, this.toJOML(aiBone.mOffsetMatrix())));
                 }
 
+                // Control flags
+                boolean hasTangentData = true;
+                boolean hasBitangent = true;
+
                 //For each vertex, get all data we need
                 for (int i = 0; i < mesh.mNumFaces(); i++) {
                     AIFace face = mesh.mFaces().get(i);
@@ -414,13 +410,13 @@ public class ModelManager {
                         try{
                             tangent = mesh.mTangents().get(index);
                         }catch (NullPointerException e){
-                            System.out.println("Error: Imported model does not have tangent data encorporated.");
+                            hasTangentData = false;
                         }
                         AIVector3D bitangent = null;
                         try{
-                            tangent = mesh.mBitangents().get(index);
+                            bitangent = mesh.mBitangents().get(index);
                         }catch (NullPointerException e){
-                            System.out.println("Error: Imported model does not have tangent data encorporated.");
+                            hasBitangent = false;
                         }
 
                         AIVector3D texture = null;
@@ -466,6 +462,14 @@ public class ModelManager {
                         }
 
                     }
+                }
+
+                // Print flags
+                if(!hasTangentData){
+                    System.out.println("Error: Model " + modelPath + " does not have tangent data incorporated.");
+                }
+                if(!hasBitangent){
+                    System.out.println("Error: Model " + modelPath + " does not have bitangent data incorporated.");
                 }
 
                 HashMap<String, Integer> boneMap = new HashMap<>();

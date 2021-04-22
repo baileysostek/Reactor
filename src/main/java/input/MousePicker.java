@@ -469,7 +469,6 @@ public class MousePicker{
                     removeCallback(callback);
                 }
             }
-            toRemoveOnSceneChange.clear();
         }finally {
             lock.unlock();
         }

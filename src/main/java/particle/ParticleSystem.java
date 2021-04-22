@@ -13,6 +13,7 @@ import graphics.renderer.ShaderManager;
 import graphics.sprite.SpriteBinder;
 import models.Model;
 import models.ModelManager;
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -58,6 +59,8 @@ public class ParticleSystem extends Entity {
     //Physics
         //Gravity
     Attribute<Vector3f> gravity;
+    Attribute<Vector3f> velocityMin;
+    Attribute<Vector3f> velocityMax;
         //Collision Detection
         //
 
@@ -187,7 +190,9 @@ public class ParticleSystem extends Entity {
         });
 
         //physics
-        gravity  = new Attribute<Vector3f>( "Gravity" , new Vector3f(0, -109.8f, 0));
+        gravity  = new Attribute<Vector3f>( "Gravity" , new Vector3f(0, -98.0f, 0));
+        velocityMin = new Attribute<Vector3f>("Min Start Velocity", new Vector3f(-1));
+        velocityMax = new Attribute<Vector3f>("Max Start Velocity", new Vector3f(1));
 
         //Buttons
         playButton = new Attribute<Callback>("Play", new Callback() {
@@ -210,6 +215,7 @@ public class ParticleSystem extends Entity {
 
         // Add attributes
         this.addAttribute(numParticles);
+        this.addAttribute(deriveStartColor);
         this.addAttribute(startColors);
         this.addAttribute(startIndex);
 //        this.addAttribute(endColors);
@@ -219,6 +225,8 @@ public class ParticleSystem extends Entity {
 
         // Physics
         this.addAttribute(gravity);
+        this.addAttribute(velocityMin);
+        this.addAttribute(velocityMax);
 
         // Enums
         this.addAttribute(emissionType);
@@ -240,7 +248,7 @@ public class ParticleSystem extends Entity {
             }
         });
 
-        particleMesh = ModelManager.getInstance().loadModel(new String[]{"quad2.obj", "icosahedron.fbx", "Mole_Mesh_1.fbx"}[(int) Math.floor(Math.random() * 3)]).getFirst();
+        particleMesh = ModelManager.getInstance().loadModel("icosahedron.fbx").getFirst();
 
         // Set system based on initial params
         updateSystem();
@@ -332,38 +340,38 @@ public class ParticleSystem extends Entity {
 
         vbo_vertex = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_vertex);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, verticies, GL46.GL_STATIC_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, verticies, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(0, 3, GL46.GL_FLOAT, false, 0, 0);
 
         // The VBO containing the positions and sizes of the particles
         vbo_normal = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_normal);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, normals, GL46.GL_STATIC_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, normals, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(1, 3, GL46.GL_FLOAT, false, 0, 0);
 
         // The VBO containing the positions and sizes of the particles
         vbo_pos = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_pos);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, positions, GL46.GL_STREAM_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, positions, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(2, 3, GL46.GL_FLOAT, false, 0, 0);
 
 
         // The VBO containing the colors of the particles
         vbo_color = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_color);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, colors, GL46.GL_STREAM_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, colors, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(3, 4, GL46.GL_FLOAT, false, 0, 0);
 
         // The VBO containing the scale of the particles
         vbo_scale = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_scale);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, scales, GL46.GL_STREAM_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, scales, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(4, 3, GL46.GL_FLOAT, false, 0, 0);
 
         // The VBO containing the texture coordinates of the particles
         vbo_texture = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_texture);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, textureCore, GL46.GL_STATIC_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, textureCore, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(5, 2, GL46.GL_FLOAT, false, 0, 0);
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);
@@ -480,11 +488,11 @@ public class ParticleSystem extends Entity {
         }
     }
 
-    protected void render(){
+    protected void render(float[] view, float[] projection){
         GL46.glUseProgram(shaderID);
 
-        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, CameraManager.getInstance().getActiveCamera().getTransform());
-        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "projection"),false, Renderer.getInstance().getProjectionMatrix());
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "view"), false, view);
+        GL46.glUniformMatrix4fv(GL46.glGetUniformLocation(shaderID, "projection"),false, projection);
 
         ShaderManager.getInstance().loadUniformIntoActiveShader("rotateToFaceCamera", alwaysFaceCamera.getData() ? 1 : 0);
 
@@ -592,7 +600,7 @@ public class ParticleSystem extends Entity {
     }
 
     protected Vector3f determineEndColor(){
-        return new Vector3f(0);
+        return determineStartColor();
     }
 
     protected Vector3f determineStartPosition(){
@@ -623,6 +631,16 @@ public class ParticleSystem extends Entity {
                     }
                 }
             }
+
+            case RING:{
+                while (true) {
+                    Vector3f cube = new Vector3f((float)(Math.random() - 0.5f),0, (float)(Math.random() - 0.5f)).mul(2).mul(super.getScale());
+                    if ( cube.length() <= (super.getScale().x + 0.25f)  && cube.length() >= (super.getScale().x - 0.25f)){
+                        cube.y = (float)(Math.random() - 0.5f) * (2f * super.getScale().y);
+                        return cube;
+                    }
+                }
+            }
         }
         return new Vector3f(0);
     }
@@ -643,22 +661,24 @@ public class ParticleSystem extends Entity {
         return startIndex.getData();
     }
 
-    @Override
-    public void renderInEditor(boolean selected){
-        switch (this.emissionShape.getData()){
-            case RING:{
+    public void setNumParticles(int numParticles){
+        this.numParticles.setData(numParticles);
+    }
 
-            }
+    public void setBurstType(EmissionType emissionType){
+        this.emissionType.setData(emissionType);
+    }
 
-            default: {
-                DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f(super.getScale().x), new Vector3f(1, 0, 0), 32, new Vector3f(1));
-                DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f(super.getScale().y), new Vector3f(0, 1, 0), 32, new Vector3f(1));
-                DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f(super.getScale().z), new Vector3f(0, 0, 1), 32, new Vector3f(1));
-            }
-        }
+    public void setGravity(Vector3f gravity){
+        this.gravity.setData(gravity);
+    }
 
-        DirectDraw.getInstance().Draw3D.drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), ParticleManager.getInstance().getParticleSystemSVG());
+    public void setLifetime(float lifetime){
+        this.lifetime = lifetime;
+    }
 
+    public float getLifetime() {
+        return lifetime;
     }
 
     public void setStartColor(Vector3f color){
@@ -673,6 +693,40 @@ public class ParticleSystem extends Entity {
         this.updateSystem();
     }
 
+    public void setVelocityMin(Vector3f velocityMin){
+        this.velocityMin.setData(velocityMin);
+    }
+
+    public void setVelocityMax(Vector3f velocityMax){
+        this.velocityMax.setData(velocityMax);
+    }
+
+    public Vector3f getVelocity() {
+        return new Vector3f(
+            (float)((velocityMax.getData().x - velocityMin.getData().x) * Math.random()),
+            (float)((velocityMax.getData().y - velocityMin.getData().y) * Math.random()),
+            (float)((velocityMax.getData().z - velocityMin.getData().z) * Math.random())
+        ).add(velocityMin.getData());
+    }
+
+    @Override
+    public void renderInEditor(boolean selected){
+        switch (this.emissionShape.getData()){
+            case RING:{
+                DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f(super.getScale().x - 0.25f), new Vector3f(0, 1, 0), 32, new Vector3f(0, 1, 1));
+                DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f(super.getScale().x + 0.25f), new Vector3f(0, 1, 0), 32, new Vector3f(0, 1, 1));
+            }
+
+            default: {
+                DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f(super.getScale().x), new Vector3f(1, 0, 0), 32, new Vector3f(1));
+                DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f(super.getScale().y), new Vector3f(0, 1, 0), 32, new Vector3f(1));
+                DirectDraw.getInstance().Draw3D.drawRing(this.getPosition(), new Vector2f(super.getScale().z), new Vector3f(0, 0, 1), 32, new Vector3f(1));
+            }
+        }
+
+        DirectDraw.getInstance().Draw3D.drawBillboard(new Vector3f(this.getPosition()), new Vector2f(1), ParticleManager.getInstance().getParticleSystemSVG());
+
+    }
     @Override
     public JsonObject serialize(){
         return super.serialize();
@@ -682,12 +736,18 @@ public class ParticleSystem extends Entity {
     public ParticleSystem deserialize(JsonObject data) {
         super.deserialize(data);
 
+        deriveStartColor = AttributeUtils.synchronizeWithParent(deriveStartColor , this);
         startColors      = AttributeUtils.synchronizeWithParent(startColors  , this);
         emissionShape    = AttributeUtils.synchronizeWithParent(emissionShape, this);
         emissionType     = AttributeUtils.synchronizeWithParent(emissionType , this);
         numParticles     = AttributeUtils.synchronizeWithParent(numParticles , this);
         useMaskTexture   = AttributeUtils.synchronizeWithParent(useMaskTexture , this);
+
+        // Physics
         gravity          = AttributeUtils.synchronizeWithParent(gravity , this);
+        velocityMin      = AttributeUtils.synchronizeWithParent(velocityMin , this);
+        velocityMax      = AttributeUtils.synchronizeWithParent(velocityMax , this);
+
         alwaysFaceCamera = AttributeUtils.synchronizeWithParent(alwaysFaceCamera , this);
 
         this.updateSystem();

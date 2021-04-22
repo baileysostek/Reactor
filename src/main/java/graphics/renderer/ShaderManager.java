@@ -5,7 +5,7 @@ import editor.Editor;
 import engine.Reactor;
 import entity.Entity;
 import entity.component.Attribute;
-import material.MaterialManager;
+import logging.LogManager;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -129,6 +129,8 @@ public class ShaderManager {
     }
 
     public int loadShader(String name){
+        // Say what we are looking for and doing
+        System.out.println("Compiling shader: " + name);
         //Look at the assets we have available to us, and load a shaders source files
         String info     = StringUtils.load(SHADER_DIRECTORY + "/" + name + "_properties.json");
         String vertex   = StringUtils.load(SHADER_DIRECTORY + "/" + name + "_vertex.glsl");
@@ -136,6 +138,9 @@ public class ShaderManager {
 
         //Buffer for reading compile status
         int[] compileBuffer = new int[]{ 0 };
+
+        //Try to compile the Vertex shader
+        System.out.println("Try compile vertex shader.");
 
         //Now that we have a source, we  need to compile the shaders into GPU code
         int vertexShader   = GL46.glCreateShader(GL46.GL_VERTEX_SHADER);
@@ -148,7 +153,7 @@ public class ShaderManager {
             if (compileBuffer[0] > 0) {
                 String errorMesssage = GL46.glGetShaderInfoLog(vertexShader);
                 String lineNumber = errorMesssage.substring(errorMesssage.indexOf("(")+ 1, errorMesssage.indexOf(")"));
-                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + SHADER_DIRECTORY + "/" + name + "_vertex.glsl:" + lineNumber + " | " + GL46.glGetShaderInfoLog(vertexShader));
+                System.err.println("Error compiling fragment shader| " + StringUtils.getPathToResources() + SHADER_DIRECTORY + "/" + name + "_vertex.glsl:" + lineNumber + " | " + GL46.glGetShaderInfoLog(vertexShader));
                 //Cleanup our broken shader
                 GL46.glDeleteShader(vertexShader);
                 return -1;
@@ -161,6 +166,9 @@ public class ShaderManager {
             }
         }
 
+        //Try to compile the Vertex shader
+        System.out.println("Try compile fragment shader.");
+
         int fragmentShader = GL46.glCreateShader(GL46.GL_FRAGMENT_SHADER);
         GL46.glShaderSource(fragmentShader, fragment);
         GL46.glCompileShader(fragmentShader);
@@ -172,7 +180,7 @@ public class ShaderManager {
                 String errorMesssage = GL46.glGetShaderInfoLog(fragmentShader);
 //                String lineNumber = errorMesssage.substring(errorMesssage.indexOf("(")+ 1, errorMesssage.indexOf(")"));
 //                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + "shaders/" + name + "_fragment.glsl:" + lineNumber + " | " + GL46.glGetShaderInfoLog(fragmentShader));
-                System.err.println("Error compiling fragment shader| " + StringUtils.getRelativePath() + SHADER_DIRECTORY + "/" + name + "_fragment.glsl:" + errorMesssage + " | " + GL46.glGetShaderInfoLog(fragmentShader));
+                System.err.println("Error compiling fragment shader| " + StringUtils.getPathToResources() + SHADER_DIRECTORY + "/" + name + "_fragment.glsl:" + errorMesssage + " | " + GL46.glGetShaderInfoLog(fragmentShader));
                 //Cleanup our broken shader
                 GL46.glDeleteShader(vertexShader);
                 GL46.glDeleteShader(fragmentShader);
@@ -189,10 +197,13 @@ public class ShaderManager {
         //Now that we have our shaders compiled, we link them to a shader program.
         int programID = GL46.glCreateProgram();
 
+        System.out.println("Linking Vertex and Fragment shaders to Program...");
+
         //Add the parsed meta data into this
         JsonParser parser = new JsonParser();
         JsonObject shaderMeta = parser.parse(info).getAsJsonObject();
         String version = shaderMeta.get("Version").getAsString();
+        System.out.println("Shader Version:" + version);
 
         //IN's are attributes that need to be bound to the current context.
         JsonObject vertexData = shaderMeta.get("Vertex").getAsJsonObject();
@@ -203,7 +214,7 @@ public class ShaderManager {
         for(String uniformName : attributesJSON.keySet()){
             String attributeName = uniformName;
             attributes[index] = attributeName;
-            System.out.println("Adding attribute: " + attributes[index]);
+            System.out.println("Adding IN attribute to vertex shader:" + attributes[index]);
             index++;
         }
 
@@ -252,13 +263,13 @@ public class ShaderManager {
         for(String uniformName : uniformsJSON.keySet()){
             String uniformType = uniformsJSON.get(uniformName).getAsString();
             shader.addUniform(uniformName, uniformType);
-            System.out.println("Adding uniform named: " + uniformName + " type:" + uniformType);
+            System.out.println("Adding vertex uniform named: " + uniformName + " type:" + uniformType);
         }
         uniformsJSON = fragmentData.get("Uniforms").getAsJsonObject();
         for(String uniformName : uniformsJSON.keySet()){
             String uniformType = uniformsJSON.get(uniformName).getAsString();
             shader.addUniform(uniformName, uniformType);
-            System.out.println("Adding uniform named: " + uniformName + " type:" + uniformType);
+            System.out.println("Adding fragment uniform named: " + uniformName + " type:" + uniformType);
         }
 
         //SSBO
@@ -266,11 +277,14 @@ public class ShaderManager {
             JsonObject ssboJson = vertexData.get("SSBO").getAsJsonObject();
             for (String ssboName : ssboJson.keySet()) {
                 JsonObject ssboData = ssboJson.get(ssboName).getAsJsonObject();
-                System.out.println(ssboData);
+                System.out.println("Adding SSBO:" + ssboData);
             }
         }
 
+        // Add the shader to our shader cache
         shaders.put(name, shader);
+
+        LogManager.getInstance().logLine();
 
         //Return the program ID, and store this shader's name hashed to its program id. That way we can skip loading in the future
         return programID;

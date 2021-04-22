@@ -41,7 +41,13 @@ public class ParticleManager {
 
     public void render(){
         for(ParticleSystem system : systems){
-            system.render();
+            system.render(CameraManager.getInstance().getActiveCamera().getTransform(), Renderer.getInstance().getProjectionMatrix());
+        }
+    }
+
+    public void render(float[] view, float[] projection){
+        for(ParticleSystem system : systems){
+            system.render(view, projection);
         }
     }
 

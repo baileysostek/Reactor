@@ -80,41 +80,45 @@ public class ControllerManager{
         GLFW.glfwSetJoystickCallback(new GLFWJoystickCallbackI(){
             @Override
             public void invoke(int jid, int event) {
-                try {
-                    lock.lock();
-                    if (event == GLFW.GLFW_CONNECTED) {
-                        JavaController controller = new JavaController(jid, SUPPORTED_GAMEPADS.get(GLFW.glfwGetJoystickGUID(jid)));
-                        controllers.add(controller);
-                        for(Callback c : onControllerConnect){
-                            c.callback(controller);
-                        }
-                        connectTimeline.start();
-                    }
-                    else if (event == GLFW.GLFW_DISCONNECTED){
-                        if(controllers.contains(jid)) {
-                            JavaController controller = controllers.get(jid);
-                            for (Callback c : onControllerConnect) {
-                                c.callback(controller);
-                            }
-                            controllers.remove(controller);
-                        }
-                    }
-                } finally {
-                    lock.unlock();
-                }
+//                try {
+//                    lock.lock();
+//                    if (event == GLFW.GLFW_CONNECTED) {
+//                        if(SUPPORTED_GAMEPADS.containsKey(GLFW.glfwGetJoystickGUID(jid))) {
+//                            JavaController controller = new JavaController(jid, SUPPORTED_GAMEPADS.get(GLFW.glfwGetJoystickGUID(jid)));
+//                            controllers.add(controller);
+//                            for (Callback c : onControllerConnect) {
+//                                c.callback(controller);
+//                            }
+//                            connectTimeline.start();
+//                        }
+//                    }
+//                    else if (event == GLFW.GLFW_DISCONNECTED){
+//                        if(controllers.contains(jid)) {
+//                            JavaController controller = controllers.get(jid);
+//                            for (Callback c : onControllerConnect) {
+//                                c.callback(controller);
+//                            }
+//                            controllers.remove(controller);
+//                        }
+//                    }
+//                } finally {
+//                    lock.unlock();
+//                }
             }
         });
 
-        for(int i = 0; i < GLFW.GLFW_JOYSTICK_LAST; i++){
-            if(GLFW.glfwJoystickPresent(i)){
-                LinkedList<String > controllerMetaData = SUPPORTED_GAMEPADS.get(GLFW.glfwGetJoystickGUID(i));
-                JavaController controller = new JavaController(i, controllerMetaData);
-                controllers.add(controller);
-                for(Callback c : onControllerConnect){
-                    c.callback(controller);
-                }
-            }
-        }
+//        for(int i = 0; i < GLFW.GLFW_JOYSTICK_LAST; i++){
+//            if(GLFW.glfwJoystickPresent(i)){
+//                if(SUPPORTED_GAMEPADS.containsKey(GLFW.glfwGetJoystickGUID(i))) {
+//                    LinkedList<String> controllerMetaData = SUPPORTED_GAMEPADS.get(GLFW.glfwGetJoystickGUID(i));
+//                    JavaController controller = new JavaController(i, controllerMetaData);
+//                    controllers.add(controller);
+//                    for (Callback c : onControllerConnect) {
+//                        c.callback(controller);
+//                    }
+//                }
+//            }
+//        }
     }
 
     public void update(double delta) {

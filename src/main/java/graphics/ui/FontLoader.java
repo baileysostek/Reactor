@@ -1,6 +1,5 @@
 package graphics.ui;
 
-import engine.Singleton;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.system.MemoryUtil;
 import util.StringUtils;
@@ -8,7 +7,6 @@ import util.StringUtils;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
-import java.util.Queue;
 
 public class FontLoader{
     private HashMap<String, ByteBuffer> loadedFonts = new HashMap<>();
@@ -22,7 +20,7 @@ public class FontLoader{
     public void loadFont(String filePath, String id){
         int result = 0;
         try {
-            ByteBuffer fontBuffer = StringUtils.loadRaw(StringUtils.getRelativePath() + filePath, 450 * 1024);
+            ByteBuffer fontBuffer = StringUtils.loadRaw(StringUtils.getPathToResources() + filePath, 450 * 1024);
             result = NanoVG.nvgCreateFontMem(UIManager.getInstance().getNanoVG(), id, fontBuffer, 0);
             loadedFonts.put(id, fontBuffer);
         } catch (IOException e) {

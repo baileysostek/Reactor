@@ -21,7 +21,7 @@ public class FileObject{
 
     public FileObject(String directory){
         //Get the file Object
-        file = new File(StringUtils.getRelativePath()+directory);
+        file = new File(StringUtils.getPathToResources()+directory);
         //Define our name
         name = directory;
         //Define our Path

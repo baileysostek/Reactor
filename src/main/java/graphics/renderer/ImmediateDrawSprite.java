@@ -87,31 +87,31 @@ public class ImmediateDrawSprite {
 
         vbo_vertex = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_vertex);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, verticies, GL46.GL_STATIC_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, verticies, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(0, 3, GL46.GL_FLOAT, false, 0, 0);
 
         // The VBO containing the positions and sizes of the particles
         vbo_pos = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_pos);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, positions, GL46.GL_STREAM_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, positions, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(1, 3, GL46.GL_FLOAT, false, 0, 0);
 
         // The VBO containing the scale of the particles
         vbo_scale = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_scale);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, scales, GL46.GL_STREAM_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, scales, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(2, 3, GL46.GL_FLOAT, false, 0, 0);
 
         // The VBO containing the texture coordinates of the particles
         vbo_texture = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_texture);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, textureCore, GL46.GL_STATIC_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, textureCore, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(3, 2, GL46.GL_FLOAT, false, 0, 0);
 
         // The VBO containing the color of the billboard
         vbo_colors = GL46.glGenBuffers();
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, vbo_colors);
-        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, colors, GL46.GL_STREAM_DRAW);
+        GL46.glBufferData(GL46.GL_ARRAY_BUFFER, colors, GL46.GL_DYNAMIC_DRAW);
         GL46.glVertexAttribPointer(4, 3, GL46.GL_FLOAT, false, 0, 0);
 
         GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, 0);

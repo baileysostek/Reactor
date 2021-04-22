@@ -180,6 +180,15 @@ public class UIManager{
         drawCalls.clear();
     }
 
+    //Utility
+    public float getWidthPercent(float percent){
+        return (Renderer.getWIDTH() / 100f) * percent;
+    }
+
+    public float getHeightPercent(float percent){
+        return (Renderer.getHEIGHT() / 100f) * percent;
+    }
+
     // Text functions
     public void drawText(float posx, float posy, String string){
         drawCalls.addLast(new TextRender(posx, posy, string));

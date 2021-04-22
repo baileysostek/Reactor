@@ -52,7 +52,7 @@ public class SceneManager {
             }
         }
 
-        for(Scene overlay : overlays){
+        for(Scene overlay : new LinkedList<>(overlays)){
             overlay.update(delta);
         }
     }

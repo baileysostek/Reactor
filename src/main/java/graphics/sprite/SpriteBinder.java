@@ -1,22 +1,17 @@
 package graphics.sprite;
 
-import camera.CameraManager;
 import graphics.renderer.*;
-import models.Model;
-import models.ModelManager;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.nanovg.NSVGImage;
 import org.lwjgl.nanovg.NanoSVG;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL46;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.stb.STBImageResize;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import skybox.SkyboxManager;
 import util.StringUtils;
 
 import javax.imageio.ImageIO;
@@ -34,7 +29,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Random;
 import java.util.zip.GZIPInputStream;
 
 public class SpriteBinder {
@@ -457,7 +451,7 @@ public class SpriteBinder {
         IntBuffer height    = BufferUtils.createIntBuffer(1);
         IntBuffer channels  = BufferUtils.createIntBuffer(1);
 
-        String resourcePath = StringUtils.getRelativePath()+ "textures/IBL/" + location;
+        String resourcePath = StringUtils.getPathToResources()+ "textures/IBL/" + location;
 
         System.out.println("Resource:" + resourcePath);
 

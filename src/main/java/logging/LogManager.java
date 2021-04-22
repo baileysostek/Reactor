@@ -1,24 +1,38 @@
 package logging;
 
-import engine.Reactor;
 import org.lwjgl.opengl.GLUtil;
+import util.StringUtils;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.LinkedList;
 
 public class LogManager {
     //Singleton instance
     private static LogManager logManager;
 
+    private static final String LOGS_DIRECTORY = "/logs/";
+
     private LogManager(){
-        if(Reactor.isDev()) {
-            enableGLDebug();
+
+    }
+
+    public void routeOutputToFile(){
+        try {
+            System.out.println("Logs folder:" + StringUtils.getRelativePath()+LOGS_DIRECTORY+System.currentTimeMillis()+"_log.txt");
+            File file = new File(StringUtils.getRelativePath()+LOGS_DIRECTORY+System.currentTimeMillis()+"_log.txt");
+            FileOutputStream fileStream = new FileOutputStream(file);
+            PrintStream ps = new PrintStream(fileStream);
+            System.setOut(ps);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
-    private void enableGLDebug(){
+    public void logLine(){
+        System.out.println("----------------------------------------------------------------");
+    }
+
+    public void enableGLDebug(){
         final StringBuilder[] string = {new StringBuilder()};
         LinkedList<String> logMessage = new LinkedList<>();
         GLUtil.setupDebugMessageCallback(new PrintStream(new OutputStream() {
@@ -41,17 +55,23 @@ public class LogManager {
                     if(line.startsWith("[LWJGL]")){
                         String message = "";
                         String severity = "";
+                        String type = "";
                         //Loop through print message to find severity level
                         for(String msgLine : logMessage){
-                            if(line.startsWith("Severity:")){
-                                severity = line.replace("Severity: ", "").replace("\n", "");
+                            if(msgLine.startsWith("Severity:")){
+                                severity = msgLine.replace("Severity: ", "").replace("\n", "");
+                            }
+                            if(msgLine.startsWith("Type:")){
+                                type = msgLine.replace("Type: ", "").replace("\n", "");
                             }
                             message+=msgLine;
                         }
 
                         //Print if severe
-                        if(!(severity.toUpperCase().equals("NOTIFICATION"))){
-                            System.out.println(message);
+                        if(type.equals("ERROR")) {
+                            if (!(severity.toUpperCase().equals("NOTIFICATION"))) {
+                                System.out.println(message);
+                            }
                         }
 
                         //Clear our logMessages
@@ -72,7 +92,7 @@ public class LogManager {
         }
     }
 
-    public LogManager getInstance(){
+    public static LogManager getInstance(){
         return logManager;
     }
 

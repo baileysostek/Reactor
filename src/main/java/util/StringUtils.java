@@ -25,28 +25,35 @@ public class StringUtils {
 
     private static JsonParser parser = new JsonParser();
 
-    public static String load(String filePath){
-        if(fileCache.containsKey(filePath)){
-            return fileCache.get(filePath);
-        }
+    public static String loadNoCache(String filePath){
         StringBuilder fileData = new StringBuilder();
         try{
             String path = PATH + filePath;
+            System.out.println("Looking for file on disk at: "+path);
             BufferedReader reader = new BufferedReader(new FileReader(path));
             String line;
             while((line = reader.readLine()) != null){
                 fileData.append(line).append("\n");
             }
             reader.close();
-            fileCache.put(filePath, fileData.toString());
             return fileData.toString();
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.out.println("Error: could not find file.");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error: IOException.");
         }
 
         return null;
+    }
+
+    public static String load(String filePath){
+        if(fileCache.containsKey(filePath)){
+            System.out.println("Loaded \""+filePath+"\" file from cache.");
+            return fileCache.get(filePath);
+        }
+        System.out.println("Caching file: " + filePath);
+        fileCache.put(filePath, loadNoCache(filePath));
+        return fileCache.get(filePath);
     }
 
     public static boolean exists(String filePath){
@@ -134,7 +141,7 @@ public class StringUtils {
 
     public static JsonObject loadJson(String fileName){
         System.out.println("Loading JSON:"+PATH + fileName);
-        String data = load(fileName);
+        String data = loadNoCache(fileName);
         if(data != null) {
             return parser.parse(data).getAsJsonObject();
         }else{
@@ -148,8 +155,12 @@ public class StringUtils {
         return parser.parse(reader).getAsJsonObject();
     }
 
-    public static String getRelativePath(){
+    public static String getPathToResources(){
         return PATH;
+    }
+
+    public static String getRelativePath(){
+        return PATH.replace(RESOURCES_DIRECTORY, "");
     }
 
     public static void write(String data, String filePath){
