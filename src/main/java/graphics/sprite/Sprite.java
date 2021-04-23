@@ -333,6 +333,10 @@ public class Sprite implements Serializable<Sprite> {
         return out;
     }
 
+    public float getAspectRatio(){
+        return (float)height / (float)width;
+    }
+
     //Serialize sprite call.
     @Override
     public JsonObject serialize(JsonObject meta) {

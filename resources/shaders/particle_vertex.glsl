@@ -25,7 +25,7 @@ void main(void){
 
     vec4 worldPosition;
 
-    if (false){
+    if (true){
         worldPosition = vec4(vertexPosition_worldspace, 1.0);
     } else {
         worldPosition = (vec4(2) * translation) + vec4(position * scale, 1.0);

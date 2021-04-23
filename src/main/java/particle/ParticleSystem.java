@@ -6,6 +6,7 @@ import entity.Entity;
 import entity.component.Attribute;
 import entity.component.AttributeUtils;
 import entity.component.EnumAttributeType;
+import graphics.animation.Timeline;
 import graphics.renderer.DirectDraw;
 import graphics.renderer.Renderer;
 import graphics.renderer.Shader;
@@ -28,6 +29,7 @@ public class ParticleSystem extends Entity {
 
     //Attributes are variables controlled in editor.
     Attribute<Integer> numParticles;
+    Attribute<Boolean> parentToEmitterSource;
 
     //Color
     Attribute<LinkedList<Vector3f>> startColors;
@@ -78,6 +80,9 @@ public class ParticleSystem extends Entity {
     //Buttons
     Attribute<Callback> playButton;
     Attribute<Callback> pauseButton;
+
+    //Start of timeline
+    private Attribute<Timeline> scaleOverTime = new Attribute<Timeline>("Scale over Life", new Timeline());
 
     private Model particleMesh;
 
@@ -177,6 +182,9 @@ public class ParticleSystem extends Entity {
             }
         });
 
+        // If we are locked to the position or not
+        parentToEmitterSource = new Attribute<Boolean>("Parent Particles to Emitter", true);
+
         //Emission type
         emissionType  = new Attribute<EmissionType>( "Emission Type" , EmissionType.CONTINUOUS);
         emissionShape = new Attribute<EmissionShape>("Emission Shape", EmissionShape.CUBE);
@@ -184,7 +192,6 @@ public class ParticleSystem extends Entity {
             @Override
             public Object callback(Object... objects) {
                 updateSystem();
-                System.out.println("Test");
                 return null;
             }
         });
@@ -224,13 +231,16 @@ public class ParticleSystem extends Entity {
         this.addAttribute(alwaysFaceCamera);
 
         // Physics
-        this.addAttribute(gravity);
-        this.addAttribute(velocityMin);
-        this.addAttribute(velocityMax);
+        this.addAttribute("Physics", gravity);
+        this.addAttribute("Physics",velocityMin);
+        this.addAttribute("Physics",velocityMax);
+
+        // Settings
+        this.addAttribute("Settings", parentToEmitterSource);
 
         // Enums
-        this.addAttribute(emissionType);
-        this.addAttribute(emissionShape);
+        this.addAttribute("Emission", emissionType);
+        this.addAttribute("Emission",emissionShape);
 
         // Buttons
         this.addAttribute(playButton);
@@ -436,7 +446,9 @@ public class ParticleSystem extends Entity {
                     pos.y = p.pos.y;
                     pos.z = p.pos.z;
 
-                    pos = pos.mul(this.getTransform());
+                    if(parentToEmitterSource.getData()) {
+                        pos = pos.mul(this.getTransform());
+                    }
 
                     if(pos.y < 0){
                         pos.y = 0;
@@ -748,7 +760,13 @@ public class ParticleSystem extends Entity {
         velocityMin      = AttributeUtils.synchronizeWithParent(velocityMin , this);
         velocityMax      = AttributeUtils.synchronizeWithParent(velocityMax , this);
 
+        // Settings
+        parentToEmitterSource = AttributeUtils.synchronizeWithParent(parentToEmitterSource , this);
+
         alwaysFaceCamera = AttributeUtils.synchronizeWithParent(alwaysFaceCamera , this);
+
+        //Timeline stuff
+        scaleOverTime = AttributeUtils.synchronizeWithParent(scaleOverTime , this);
 
         this.updateSystem();
         return this;

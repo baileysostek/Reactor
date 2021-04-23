@@ -34,6 +34,7 @@ import models.ModelManager;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
@@ -490,20 +491,23 @@ public class Reactor {
                 runningDelta += frameDelta;
                 StopwatchManager.getInstance().getTimer("reactor_internal").stop();
 
-                tick(frameDelta);
-                StopwatchManager.getInstance().getTimer("reactor_internal").start();
-                if (runningDelta > 1) {
-                    FRAMES = frames;
-                    frames = 0;
-                    runningDelta -= 1;
+                if(GLFW.glfwGetWindowAttrib(WINDOW_POINTER, GLFW.GLFW_FOCUSED) == 1) {
+                    tick(frameDelta);
+                    StopwatchManager.getInstance().getTimer("reactor_internal").start();
+                    if (runningDelta > 1) {
+                        FRAMES = frames;
+                        frames = 0;
+                        runningDelta -= 1;
+                    }
+                    StopwatchManager.getInstance().getTimer("reactor_internal").stop();
+
+                    render();
+
+                    StopwatchManager.getInstance().getTimer("reactor_internal_swap_buffers").start();
+                    glfwSwapBuffers(WINDOW_POINTER); // swap the color buffer //Actual render call
+                    StopwatchManager.getInstance().getTimer("reactor_internal_swap_buffers").stop();
                 }
-                StopwatchManager.getInstance().getTimer("reactor_internal").stop();
 
-                render();
-
-                StopwatchManager.getInstance().getTimer("reactor_internal_swap_buffers").start();
-                glfwSwapBuffers(WINDOW_POINTER); // swap the color buffer //Actual render call
-                StopwatchManager.getInstance().getTimer("reactor_internal_swap_buffers").stop();
                 StopwatchManager.getInstance().getTimer("reactor_internal_poll").start();
                 glfwPollEvents();
                 StopwatchManager.getInstance().getTimer("reactor_internal_poll").stop();
@@ -514,7 +518,6 @@ public class Reactor {
                 last = now;
 
                 StopwatchManager.getInstance().getTimer("reactor_internal").stop();
-
             }
 
             //Set running to false.
@@ -575,7 +578,7 @@ public class Reactor {
     }
 
     private static void render(){
-        //Render World.
+        //Render World only when window is focused.
         StopwatchManager.getInstance().getTimer("render_reactor_pre").start();
         Renderer.getInstance().render();
         StopwatchManager.getInstance().getTimer("render_reactor_pre").stop();
@@ -586,7 +589,7 @@ public class Reactor {
 
 //        StopwatchManager.getInstance().getTimer("render_editor").lapStart();
         //If Dev render UI
-        if(isDev()){
+        if (isDev()) {
             StopwatchManager.getInstance().getTimer("render_editor").start();
             Editor.getInstance().preUIRender();
             StopwatchManager.getInstance().getTimer("render_editor").stop();
@@ -610,14 +613,14 @@ public class Reactor {
 
         //If Dev render UI
         StopwatchManager.getInstance().getTimer("render_editor").start();
-        if(isDev()){
+        if (isDev()) {
             Editor.getInstance().render();
         }
         StopwatchManager.getInstance().getTimer("render_editor").stop();
 
         //At this point we stop the stopwatch manager and print the delta times
         StopwatchManager.getInstance().getTimer("render_hud").start();
-        if(DEBUG_DRAW) {
+        if (DEBUG_DRAW) {
             StopwatchManager.getInstance().drawTextDeltas(4, 256);
             StopwatchManager.getInstance().clearAll();
         }

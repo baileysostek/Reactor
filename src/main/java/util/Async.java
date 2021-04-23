@@ -31,6 +31,9 @@ public class Async implements Runnable {
     @Override
     public void run() {
         this.callback.callback();
+        if(then != null) {
+            this.then.callback();
+        }
     }
 
     public void then(Callback callback) {

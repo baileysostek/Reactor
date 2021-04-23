@@ -47,6 +47,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'io.imgui.java:binding:1.75-0.7.2'
     implementation 'io.imgui.java:lwjgl3:1.75-0.7.2'
+    implementation "org.lwjgl:lwjgl-nanovg:$lwjglVersion"
     runtimeOnly "org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-assimp:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
@@ -54,9 +55,13 @@ dependencies {
     runtimeOnly "org.lwjgl:lwjgl-opengl:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives"
     runtimeOnly "io.imgui.java:$lwjglNatives:1.75-0.7.2"
+    runtimeOnly "org.lwjgl:lwjgl-nanovg::$lwjglNatives"
 
     compile fileTree(include: ['*.jar'], dir: 'libs/JChroma')
     compile fileTree(include: ['*.jar'], dir: 'libs/steam')
+    compile fileTree(include: ['*.jar'], dir: 'libs/vecmath')
+    compile fileTree(include: ['*.jar'], dir: 'libs/JBullet')
+    compile fileTree(include: ['*.jar'], dir: 'libs/FMOD')
 }
 jar {
     archiveName = 'Name.jar'

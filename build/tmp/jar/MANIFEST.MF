@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Main-Class: engine.Game
+Class-Path: lib/jchroma-0.1-sources.jar lib/jchroma-0.1.jar lib/steamw
+ orks4j-1.8.0.jar lib/vecmath.jar lib/jbullet.jar lib/fmod.jar lib/jna
+ -4.2.1.jar
+Implementation-Version: 1.0-SNAPSHOT
+

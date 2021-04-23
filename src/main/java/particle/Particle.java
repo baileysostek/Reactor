@@ -2,11 +2,11 @@ package particle;
 
 import camera.CameraManager;
 import input.MousePicker;
+import math.VectorUtils;
 import org.joml.Vector3f;
 
 public class Particle {
 
-    private Vector3f startPosition;
     public Vector3f pos;
 
     public Vector3f scale;
@@ -23,8 +23,7 @@ public class Particle {
     private boolean awaitingRespawn = false;
 
     public Particle(ParticleSystem system){
-        startPosition = system.determineStartPosition();
-        pos      = new Vector3f(startPosition);
+        pos      = VectorUtils.transform(system.determineStartPosition(), system.getTransform());
         scale    = new Vector3f(1);
 
         velocity = system.getVelocity();
@@ -38,7 +37,7 @@ public class Particle {
     public void reset(){
         lifetime = (float) (this.system.getLifetime() * Math.random());
         life = lifetime;
-        pos = new Vector3f(startPosition);
+        pos      = VectorUtils.transform(system.determineStartPosition(), system.getTransform());
         scale.set(1);
         velocity.set(this.system.getVelocity());
     }
@@ -64,7 +63,7 @@ public class Particle {
         pos.add(new Vector3f(velocity.add(acceleration)).mul((float) delta));
         col = new Vector3f(endColor).lerp(startColor, lifePercent);
 
-        scale = new Vector3f(0).lerp(new Vector3f(1), lifePercent);
+        scale = system.getScaleForTime(lifePercent);
 
 
         if(life <= 0){
